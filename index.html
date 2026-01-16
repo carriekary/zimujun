@@ -15,12 +15,13 @@
           padding: 0;
           height: 100%;
           width: 100%;
-          overflow: hidden; /* 完全禁止頁面滾動 */
-          position: fixed; /* 防止滾動 */
+          overflow: hidden;
+          position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
+          -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
         }
         
         body {
@@ -28,6 +29,7 @@
           display: flex;
           flex-direction: column;
           background-color: #f8f9fa;
+          touch-action: none; /* 防止默認觸摸行為 */
         }
         
         /* Header 区域 - 桌面版 */
@@ -204,16 +206,16 @@
         #main-container {
           display: flex;
           width: 100%;
-          flex: 1; /* 佔據剩餘空間 */
-          overflow: hidden; /* 禁止滾動 */
+          flex: 1;
+          overflow: hidden;
           padding: 15px;
           gap: 15px;
-          min-height: 0; /* 重要：讓flex子元素可以收縮 */
+          min-height: 0;
         }
         
         /* 视频区域 - 左側2/3 */
         #video-container {
-          flex: 2; /* 佔2/3 */
+          flex: 2;
           border-radius: 10px;
           overflow: hidden;
           position: relative;
@@ -221,17 +223,17 @@
           box-shadow: 0 5px 15px rgba(0,0,0,0.2);
           display: flex;
           flex-direction: column;
-          min-width: 0; /* 防止flex元素溢出 */
-          min-height: 0; /* 重要：讓flex子元素可以收縮 */
+          min-width: 0;
+          min-height: 0;
         }
         
         /* 视频播放器容器 - 16:9比例 */
         #videoPlayerContainer {
           position: relative;
           width: 100%;
-          flex: 1; /* 佔據視頻容器內剩餘空間 */
-          min-height: 0; /* 防止flex元素溢出 */
-          cursor: pointer; /* 讓用戶知道可以點擊 */
+          flex: 1;
+          min-height: 0;
+          cursor: pointer;
         }
         
         #videoPlayer {
@@ -247,20 +249,12 @@
         #videoPlayer video {
           width: 100%;
           height: 100%;
-          object-fit: cover; /* 視頻完全填充視頻框 */
+          object-fit: cover;
         }
         
-        /* 视频信息显示 */
+        /* 移除視頻信息顯示 */
         #videoInfo {
-          position: absolute;
-          top: 15px;
-          left: 15px;
-          background: rgba(0, 0, 0, 0.7);
-          color: white;
-          padding: 8px 15px;
-          border-radius: 5px;
-          font-size: 14px;
-          z-index: 10;
+          display: none !important;
         }
         
         /* 视频控制条 - 放在视频内部 */
@@ -276,7 +270,7 @@
           flex-direction: column;
           gap: 10px;
           transition: opacity 0.3s ease;
-          opacity: 1; /* 默認顯示 */
+          opacity: 1;
           z-index: 5;
         }
         
@@ -328,15 +322,15 @@
         
         /* 字幕区域 - 右側1/3 */
         #subtitleContainer {
-          flex: 1; /* 佔1/3 */
+          flex: 1;
           background-color: white;
           border-radius: 10px;
           box-shadow: 0 5px 15px rgba(0,0,0,0.1);
           display: flex;
           flex-direction: column;
-          min-width: 0; /* 防止flex元素溢出 */
-          min-height: 0; /* 重要：讓flex子元素可以收縮 */
-          overflow: hidden; /* 禁止外部滾動 */
+          min-width: 0;
+          min-height: 0;
+          overflow: hidden;
         }
         
         #subtitleContainer h3 {
@@ -358,10 +352,10 @@
         
         #subListContainer {
           flex: 1;
-          overflow-y: auto; /* 僅字幕列表內部滾動 */
+          overflow-y: auto;
           min-height: 0;
-          -webkit-overflow-scrolling: touch; /* iOS平滑滾動 */
-          overscroll-behavior: contain; /* 防止滾動傳播 */
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
         }
         
         #subList {
@@ -549,13 +543,14 @@
           
           /* 移动端视频区域 - 固定高度 */
           #video-container {
-            height: 40vh; /* 手机版视频区域40vh */
+            height: 40vh;
             min-height: 200px;
+            position: relative;
           }
           
           /* 移动端字幕区域 - 固定高度 */
           #subtitleContainer {
-            height: 60vh; /* 手机版字幕区域60vh */
+            height: 60vh;
             min-height: 300px;
           }
           
@@ -628,11 +623,11 @@
           }
           
           #video-container {
-            height: 35vh; /* 更小屏幕视频区域更小 */
+            height: 35vh;
           }
           
           #subtitleContainer {
-            height: 65vh; /* 更小屏幕字幕区域更大 */
+            height: 65vh;
           }
           
           #subList li {
@@ -698,11 +693,11 @@
         /* 特別針對小屏幕手機優化 */
         @media (max-width: 360px) {
           #video-container {
-            height: 30vh; /* 超小屏幕视频区域更小 */
+            height: 30vh;
           }
           
           #subtitleContainer {
-            height: 70vh; /* 超小屏幕字幕区域更大 */
+            height: 70vh;
           }
           
           .video-control-buttons button {
@@ -783,7 +778,7 @@
     <!-- 主容器：左側視頻（2/3），右側字幕（1/3） -->
     <div id="main-container">
         <div id="video-container">
-            <div id="videoInfo">请上传视频文件</div>
+            <!-- 视频信息已移除 -->
             <div id="videoPlayerContainer">
                 <div id="videoPlayer">
                     <!-- 视频将通过JavaScript动态添加 -->
@@ -842,7 +837,6 @@
         const videoFileInputMobile = document.getElementById('videoFileMobile');
         const srtFileInput = document.getElementById('srtFile');
         const srtFileInputMobile = document.getElementById('srtFileMobile');
-        const videoInfo = document.getElementById('videoInfo');
         const emptySubtitle = document.getElementById('emptySubtitle');
         const emptyVideo = document.getElementById('emptyVideo');
         const progressBar = document.getElementById('progressBar');
@@ -884,7 +878,7 @@
         
         // 防止鍵盤滾動
         function preventKeyScroll(e) {
-            const keys = [32, 33, 34, 35, 36, 37, 38, 39, 40]; // 空格、Page Up/Down、Home、End、方向鍵
+            const keys = [32, 33, 34, 35, 36, 37, 38, 39, 40];
             if (keys.includes(e.keyCode)) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -896,13 +890,11 @@
         function showControls() {
             videoContainerElement.classList.add('controls-visible');
             
-            // 清除之前的隱藏定時器
             if (hideControlsTimeout) {
                 clearTimeout(hideControlsTimeout);
                 hideControlsTimeout = null;
             }
             
-            // 如果正在播放，3秒後自動隱藏控制條
             if (videoPlayer && !videoPlayer.paused) {
                 hideControlsTimeout = setTimeout(() => {
                     hideControls();
@@ -926,16 +918,24 @@
             }
         }
         
-        // 初始化視頻播放器
+        // 初始化視頻播放器 - 修正手機播放問題
         function initVideoPlayer() {
             videoPlayerContainer.innerHTML = '';
             
             videoPlayer = document.createElement('video');
             videoPlayer.id = 'videoElement';
-            videoPlayer.controls = false; // 隱藏原生控制條
+            videoPlayer.controls = false;
             videoPlayer.style.width = '100%';
             videoPlayer.style.height = '100%';
             videoPlayer.style.backgroundColor = '#000';
+            
+            // 關鍵修正：添加這些屬性確保視頻在手機上正確播放
+            videoPlayer.setAttribute('playsinline', 'true');
+            videoPlayer.setAttribute('webkit-playsinline', 'true');
+            videoPlayer.setAttribute('x5-playsinline', 'true');
+            videoPlayer.setAttribute('x5-video-player-type', 'h5');
+            videoPlayer.setAttribute('x5-video-player-fullscreen', 'false');
+            videoPlayer.setAttribute('preload', 'auto');
             
             videoPlayerContainer.appendChild(videoPlayer);
             
@@ -943,11 +943,6 @@
             videoPlayer.addEventListener('loadedmetadata', function() {
                 videoDuration = videoPlayer.duration;
                 updateTimeDisplay();
-                videoInfo.textContent = `視頻時長: ${formatTimeMMSS(videoDuration)}`;
-                
-                // 設置視頻填充模式
-                const isWideScreen = videoPlayer.videoWidth / videoPlayer.videoHeight > 16/9;
-                videoPlayer.style.objectFit = isWideScreen ? 'cover' : 'contain';
             });
             
             videoPlayer.addEventListener('timeupdate', function() {
@@ -955,7 +950,6 @@
                 updateProgressBar();
                 updateTimeDisplay();
                 
-                // 如果正在同步字幕，更新字幕高亮
                 if (isSyncing) {
                     updateSubtitles();
                 }
@@ -965,7 +959,6 @@
                 if (isSyncing) {
                     stopSyncing();
                 }
-                // 視頻結束時顯示控制條
                 videoContainerElement.classList.remove('playing');
                 showControls();
             });
@@ -976,7 +969,6 @@
                 pauseBtn.disabled = false;
                 videoContainerElement.classList.add('playing');
                 
-                // 播放時延遲隱藏控制條
                 setTimeout(() => {
                     if (!videoContainerElement.classList.contains('controls-visible')) {
                         hideControls();
@@ -988,8 +980,6 @@
                 playBtn.disabled = false;
                 pauseBtn.disabled = true;
                 videoContainerElement.classList.remove('playing');
-                
-                // 暫停時顯示控制條
                 showControls();
             });
             
@@ -1015,7 +1005,6 @@
             // 鼠標離開視頻區域時隱藏控制條
             videoContainerElement.addEventListener('mouseleave', function() {
                 if (videoPlayer && !videoPlayer.paused) {
-                    // 延遲隱藏，避免用戶快速移動鼠標時閃爍
                     hideControlsTimeout = setTimeout(() => {
                         hideControls();
                     }, 1000);
@@ -1184,7 +1173,6 @@
           emptySubtitle.style.display = 'none';
           emptyVideo.style.display = 'none';
           
-          // 遍歷生成字幕列表項，不顯示時間
           for (const sub of subtitles) {
             let annotatedText = "";
             if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(sub.text)) {
@@ -1196,7 +1184,7 @@
             }
             
             const li = document.createElement("li");
-            li.innerHTML = annotatedText; // 只顯示字幕文本，不顯示時間
+            li.innerHTML = annotatedText;
             
             li.addEventListener("click", function() {
               jumpToSubtitle(sub.start);
@@ -1219,7 +1207,6 @@
             if (li) {
               if (!activeFound && displayTime >= subtitles[i].start && displayTime <= subtitles[i].end) {
                 li.classList.add("active");
-                // 使用更平穩的滾動方式
                 setTimeout(() => {
                   li.scrollIntoView({ 
                     block: "center", 
@@ -1261,9 +1248,11 @@
           document.documentElement.scrollTop = 0;
           document.body.scrollTop = 0;
           
-          // 開始播放視頻
+          // 開始播放視頻 - 確保在視頻框中播放
           videoPlayer.play().catch(e => {
             console.log("自動播放失敗，需要用戶交互", e);
+            // 如果自動播放失敗，提示用戶點擊播放按鈕
+            alert("請點擊視頻播放按鈕開始播放");
           });
           
           // 立即更新字幕高亮
@@ -1303,12 +1292,10 @@
           const offset = parseFloat(timeOffsetInput.value) || 0;
           videoPlayer.currentTime = Math.max(0, time - offset);
           
-          // 如果正在同步，更新字幕高亮
           if (isSyncing) {
             updateSubtitles();
           }
           
-          // 顯示控制條
           showControls();
         }
         
@@ -1319,12 +1306,10 @@
           if (isMobileMenuOpen) {
             mobileControlsPanel.classList.add('show');
             mobileMenuBtn.classList.add('active');
-            // 打開菜單時禁止頁面滾動
             disablePageScroll();
           } else {
             mobileControlsPanel.classList.remove('show');
             mobileMenuBtn.classList.remove('active');
-            // 關閉菜單時，如果不在同步狀態，恢復滾動
             if (!isSyncing) {
               enablePageScroll();
             }
@@ -1334,7 +1319,11 @@
         // 事件監聽器
         playBtn.addEventListener("click", function() {
           if (videoPlayer && videoPlayer.src) {
-            videoPlayer.play();
+            // 確保視頻在視圖中播放
+            videoPlayer.play().catch(e => {
+              console.log("播放失敗:", e);
+              alert("播放失敗，請確保視頻已正確加載");
+            });
             playBtn.disabled = true;
             pauseBtn.disabled = false;
           } else {
@@ -1383,13 +1372,11 @@
         function handleVideoFileUpload(file) {
           if (!file) return;
           
-          // 檢查文件類型
           if (!file.type.startsWith('video/')) {
             alert("请选择视频文件 (MP4, WebM, OGG等)");
             return;
           }
           
-          // 初始化視頻播放器
           if (!videoPlayer) {
             initVideoPlayer();
           }
@@ -1397,8 +1384,6 @@
           const url = URL.createObjectURL(file);
           videoPlayer.src = url;
           
-          // 更新視頻信息
-          videoInfo.textContent = `正在加載: ${file.name}`;
           emptyVideo.style.display = 'none';
           
           // 啟用播放按鈕
@@ -1406,8 +1391,6 @@
           
           // 監聽視頻加載完成
           videoPlayer.onloadeddata = function() {
-            videoInfo.textContent = `${file.name} (${(file.size / (1024*1024)).toFixed(1)}MB)`;
-            
             // 根據視頻寬高比設置填充模式
             if (videoPlayer.videoWidth && videoPlayer.videoHeight) {
               const isWideScreen = videoPlayer.videoWidth / videoPlayer.videoHeight > 16/9;
@@ -1415,7 +1398,6 @@
             }
           };
           
-          // 如果是移動端，關閉菜單
           if (window.innerWidth <= 768) {
             toggleMobileMenu();
           }
@@ -1450,14 +1432,12 @@
             } else {
               buildSubtitleList();
               
-              // 如果已經有視頻，啟用同步按鈕
               if (videoPlayer && videoPlayer.src) {
                 syncBtn.disabled = false;
                 syncBtnMobile.disabled = false;
               }
             }
             
-            // 如果是移動端，關閉菜單
             if (window.innerWidth <= 768) {
               toggleMobileMenu();
             }
@@ -1502,12 +1482,10 @@
         document.addEventListener('DOMContentLoaded', function() {
           initVideoPlayer();
           
-          // 顯示初始提示
           if (!videoPlayer || !videoPlayer.src) {
             emptyVideo.style.display = 'flex';
           }
           
-          // 初始化時間偏移輸入框同步
           timeOffsetInputMobile.value = timeOffsetInput.value;
           
           // 初始禁止頁面滾動
@@ -1526,7 +1504,6 @@
         // 移動端點擊視頻顯示/隱藏控制條
         if ('ontouchstart' in window) {
           videoContainerElement.addEventListener('touchstart', function(event) {
-            // 防止觸發視頻的點擊事件
             if (event.target === videoContainerElement || event.target === videoPlayer) {
               toggleControls();
             }
@@ -1549,7 +1526,6 @@
             const currentY = e.touches[0].clientY;
             const diffY = startY - currentY;
             
-            // 如果字幕區域已經滾動到頂部或底部，阻止默認行為防止整體滾動
             const isAtTop = subListContainer.scrollTop <= 0;
             const isAtBottom = subListContainer.scrollTop + subListContainer.clientHeight >= subListContainer.scrollHeight - 1;
             
@@ -1567,14 +1543,11 @@
         
         // 監聽視窗大小變化
         window.addEventListener('resize', function() {
-          // 確保視頻和字幕區域高度正確
           if (window.innerWidth <= 768) {
-            // 移動端布局
             const headerHeight = document.querySelector('header').offsetHeight;
             const windowHeight = window.innerHeight;
-            const availableHeight = windowHeight - headerHeight - 20; // 減去padding
+            const availableHeight = windowHeight - headerHeight - 20;
             
-            // 設置視頻和字幕區域高度
             const videoHeight = Math.min(availableHeight * 0.4, 400);
             const subtitleHeight = Math.min(availableHeight * 0.6, 600);
             
