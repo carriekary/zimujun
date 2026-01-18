@@ -6,6 +6,7 @@
     <title>小野字幕君</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* 全局样式 */
         * {
           box-sizing: border-box;
         }
@@ -32,6 +33,7 @@
           touch-action: none;
         }
         
+        /* 头部样式 */
         header {
           display: flex;
           justify-content: space-between;
@@ -195,6 +197,7 @@
           overflow-y: auto;
         }
         
+        /* 主容器 */
         #main-container {
           display: flex;
           width: 100%;
@@ -205,6 +208,7 @@
           min-height: 0;
         }
         
+        /* 视频容器 */
         #video-container {
           flex: 2;
           border-radius: 10px;
@@ -242,10 +246,35 @@
           object-fit: cover;
         }
         
-        #videoInfo {
-          display: none !important;
+        /* 顶部控制条 - 包含进度条 */
+        #topVideoControls {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+          color: white;
+          padding: 15px 15px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          transition: opacity 0.3s ease;
+          opacity: 1;
+          z-index: 10;
         }
         
+        #videoPlayerContainer.playing #topVideoControls {
+          opacity: 0;
+          pointer-events: none;
+        }
+        
+        #videoPlayerContainer:hover #topVideoControls,
+        #videoPlayerContainer.controls-visible #topVideoControls {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        
+        /* 底部控制条 */
         #videoControls {
           position: absolute;
           bottom: 0;
@@ -253,7 +282,7 @@
           width: 100%;
           background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
           color: white;
-          padding: 20px 15px 15px;
+          padding: 15px 15px 20px;
           display: flex;
           flex-direction: column;
           gap: 10px;
@@ -273,6 +302,37 @@
           pointer-events: auto;
         }
         
+        /* 视频内字幕显示 - 浅灰色背景，橙色字体 */
+        #video-subtitle-overlay {
+          position: absolute;
+          bottom: 80px;
+          left: 0;
+          width: 100%;
+          text-align: center;
+          z-index: 4;
+          pointer-events: none;
+          padding: 0 20px;
+        }
+        
+        .video-subtitle-text {
+          display: inline-block;
+          background-color: rgba(240, 240, 240, 0.9); /* 浅灰色背景 */
+          color: #FF8C00; /* 橙色字体，比FFA500稍深一点 */
+          padding: 10px 18px;
+          border-radius: 8px;
+          font-size: 16px; /* 字体适中，不要太大 */
+          line-height: 1.4;
+          max-width: 80%;
+          text-align: center;
+          word-wrap: break-word;
+          white-space: pre-line;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 140, 0, 0.2); /* 橙色边框 */
+          text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5); /* 白色阴影增加可读性 */
+          font-weight: 500;
+        }
+        
+        /* 控制按钮 */
         .video-control-buttons {
           display: flex;
           gap: 10px;
@@ -280,6 +340,7 @@
           justify-content: center;
         }
         
+        /* 进度条样式 */
         #progressContainer {
           width: 100%;
           background-color: rgba(255, 255, 255, 0.2);
@@ -296,13 +357,24 @@
           transition: width 0.1s;
         }
         
-        #currentTime {
+        /* 时间显示 */
+        .time-display-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
           color: white;
           font-size: 14px;
-          text-align: center;
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
         
+        #currentTimeDisplay {
+          color: white;
+          font-size: 14px;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* 字幕容器 */
         #subtitleContainer {
           flex: 1;
           background-color: white;
@@ -346,32 +418,51 @@
           margin: 0;
         }
         
-        /* 桌面版字幕樣式 - 單行居中 */
+        /* 桌面版字幕列表样式 */
         #subList li {
-          padding: 15px;
+          padding: 12px 15px;
           cursor: pointer;
           border-bottom: 1px solid #f0f0f0;
-          line-height: 1.6;
-          font-size: 16px;
+          line-height: 1.5;
+          font-size: 14px;
           transition: all 0.2s ease;
           word-wrap: break-word;
           overflow-wrap: break-word;
-          text-align: center;
+          text-align: left;
+          white-space: pre-line; /* 保留换行 */
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
         }
         
-        /* 桌面版：時間標記隱藏 */
+        /* 时间标记 */
         .subtitle-time {
-          display: none;
-        }
-        
-        /* 桌面版：手機版文本容器隱藏 */
-        .subtitle-mobile-container {
-          display: none;
-        }
-        
-        /* 桌面版：顯示桌面版文本 */
-        .subtitle-desktop-text {
           display: block;
+          flex-shrink: 0;
+          width: 60px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #ff6b6b;
+          text-align: left;
+          margin-top: 2px;
+        }
+        
+        /* 字幕文本容器 */
+        .subtitle-text-container {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          gap: 4px;
+        }
+        
+        .subtitle-original {
+          color: #333;
+          font-weight: 500;
+        }
+        
+        .subtitle-translation {
+          color: #666;
+          font-size: 13px;
         }
         
         #subList li:nth-child(odd) {
@@ -395,6 +486,7 @@
           box-shadow: inset 0 0 10px rgba(255, 193, 7, 0.1);
         }
         
+        /* 输入框样式 */
         input[type="text"], input[type="number"] {
           padding: 10px 12px;
           border: 1px solid #ced4da;
@@ -423,6 +515,50 @@
           background-color: rgba(255, 255, 255, 0.9);
         }
         
+        /* B站输入组 */
+        .bilibili-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.15);
+          padding: 8px 12px;
+          border-radius: 8px;
+          backdrop-filter: blur(10px);
+        }
+        
+        .bilibili-input {
+          flex: 1;
+          min-width: 200px;
+          background-color: rgba(255, 255, 255, 0.9);
+          color: #333;
+        }
+        
+        .bilibili-btn {
+          background-color: #fb7299; /* B站粉色 */
+        }
+        
+        .bilibili-btn:hover {
+          background-color: #e65a87;
+        }
+        
+        /* B站视频容器 */
+        .bilibili-video-container {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          background-color: #000;
+          display: none;
+        }
+        
+        .bilibili-iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+        
+        /* 空状态 */
         .empty-state {
           text-align: center;
           padding: 40px 20px;
@@ -442,6 +578,7 @@
           opacity: 0.5;
         }
         
+        /* 注音样式 */
         ruby {
           ruby-align: center;
         }
@@ -451,7 +588,27 @@
           color: #666;
         }
         
-        /* 移動端適配 */
+        /* 视频控制按钮 */
+        .video-control-btn {
+          padding: 10px 15px;
+          background-color: rgba(0, 0, 0, 0.7);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 6px;
+          font-size: 14px;
+          transition: all 0.2s ease;
+        }
+        
+        .video-control-btn:hover {
+          background-color: rgba(74, 134, 232, 0.8);
+          border-color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .video-control-btn:active {
+          transform: scale(0.98);
+        }
+        
+        /* 移动端适配 */
         @media (max-width: 768px) {
           header {
             padding: 8px 10px;
@@ -508,9 +665,20 @@
             border-radius: 8px;
           }
           
-          #mobileControlsPanel .time-offset-container input {
+          #mobileControlsPanel .bilibili-group {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+          }
+          
+          #mobileControlsPanel .time-offset-container input,
+          #mobileControlsPanel .bilibili-input {
             width: 100%;
             background-color: white;
+            color: #333;
           }
           
           #main-container {
@@ -540,59 +708,46 @@
             font-size: 15px;
           }
           
-          /* 手機版字幕樣式 */
-          #subList li {
-            padding: 12px 15px;
-            font-size: 14px;
+          /* 移动端视频内字幕 - 浅灰色背景，橙色字体 */
+          #video-subtitle-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 4;
+            pointer-events: none;
+            padding: 0 15px;
+          }
+          
+          .video-subtitle-text {
+            display: inline-block;
+            background-color: rgba(240, 240, 240, 0.9); /* 浅灰色背景 */
+            color: #FF8C00; /* 橙色字体 */
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 15px; /* 移动端字体适中 */
             line-height: 1.4;
-            text-align: left;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-          }
-          
-          /* 手機版：顯示時間標記 */
-          .subtitle-time {
-            display: block;
-            flex-shrink: 0;
-            width: 50px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #ff6b6b;
-            text-align: left;
-            margin-top: 2px;
-          }
-          
-          /* 手機版：顯示手機版文本容器 */
-          .subtitle-mobile-container {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-          }
-          
-          /* 手機版：隱藏桌面版文本 */
-          .subtitle-desktop-text {
-            display: none;
-          }
-          
-          /* 英文和中文分開顯示 */
-          .subtitle-english {
-            color: #333;
+            max-width: 90%;
+            text-align: center;
+            word-wrap: break-word;
+            white-space: pre-line;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 140, 0, 0.2); /* 橙色边框 */
+            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
             font-weight: 500;
-            margin-bottom: 4px;
           }
           
-          .subtitle-chinese {
-            color: #666;
+          /* 移动端字幕列表 */
+          #subList li {
+            padding: 10px 15px;
             font-size: 13px;
+            gap: 8px;
           }
           
-          /* 高亮當前播放的字幕 */
-          #subList li.active {
-            background-color: #fff3cd !important;
-            border-left: 5px solid #ffc107;
-            padding-left: 15px;
-            padding-right: 15px;
+          .subtitle-time {
+            width: 50px;
+            font-size: 11px;
           }
           
           .video-control-buttons {
@@ -600,19 +755,14 @@
           }
           
           .video-control-buttons button {
-            padding: 10px 8px;
+            padding: 8px 8px;
             font-size: 13px;
             flex: 1;
             min-width: 80px;
           }
           
-          #currentTime {
+          #currentTimeDisplay {
             font-size: 13px;
-          }
-          
-          .main-controls {
-            display: flex;
-            gap: 5px;
           }
           
           .main-controls button {
@@ -627,6 +777,10 @@
           
           .empty-state::before {
             font-size: 36px;
+          }
+          
+          .bilibili-input {
+            min-width: 0;
           }
         }
         
@@ -658,13 +812,23 @@
           }
           
           #subList li {
-            font-size: 14px;
-            padding: 10px 15px;
+            font-size: 12px;
+            padding: 8px 12px;
           }
           
           .subtitle-time {
             width: 45px;
-            font-size: 12px;
+            font-size: 10px;
+          }
+          
+          /* 更小屏幕的视频内字幕调整 */
+          #video-subtitle-overlay {
+            bottom: 15px;
+          }
+          
+          .video-subtitle-text {
+            font-size: 14px;
+            padding: 7px 12px;
           }
           
           .main-controls button {
@@ -679,6 +843,7 @@
           }
         }
         
+        /* 移动菜单按钮动画 */
         #mobileMenuBtn span {
           display: block;
           width: 25px;
@@ -700,25 +865,6 @@
           transform: rotate(45deg) translate(-5px, -6px);
         }
         
-        .video-control-btn {
-          padding: 10px 15px;
-          background-color: rgba(0, 0, 0, 0.7);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 6px;
-          font-size: 14px;
-          transition: all 0.2s ease;
-        }
-        
-        .video-control-btn:hover {
-          background-color: rgba(74, 134, 232, 0.8);
-          border-color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .video-control-btn:active {
-          transform: scale(0.98);
-        }
-        
         @media (max-width: 360px) {
           #video-container {
             height: 30vh;
@@ -734,8 +880,13 @@
             min-width: 60px;
           }
           
-          #currentTime {
+          #currentTimeDisplay {
             font-size: 12px;
+          }
+          
+          .video-subtitle-text {
+            font-size: 13px;
+            padding: 6px 10px;
           }
         }
     </style>
@@ -764,6 +915,12 @@
                 </div>
             </div>
             
+            <!-- B站输入组 -->
+            <div class="bilibili-group">
+                <input type="text" id="bilibiliUrlInput" class="bilibili-input" placeholder="B站链接/BV号/AV号">
+                <button id="loadBilibiliBtn" class="bilibili-btn">加载B站</button>
+            </div>
+            
             <div class="main-controls">
                 <button id="stopSyncBtn" disabled class="warning-btn">⏹ 停止同步</button>
             </div>
@@ -787,6 +944,12 @@
             </div>
         </div>
         
+        <!-- 移动端B站输入组 -->
+        <div class="bilibili-group">
+            <input type="text" id="bilibiliUrlInputMobile" class="bilibili-input" placeholder="B站链接/BV号/AV号">
+            <button id="loadBilibiliBtnMobile" class="bilibili-btn">加载B站</button>
+        </div>
+        
         <div class="control-group">
             <button id="stopSyncBtnMobile" disabled class="warning-btn">⏹ 停止同步</button>
         </div>
@@ -801,11 +964,25 @@
         <div id="video-container">
             <div id="videoPlayerContainer">
                 <div id="videoPlayer"></div>
-                <div id="videoControls">
+                <!-- B站视频容器 -->
+                <div id="bilibiliContainer" class="bilibili-video-container"></div>
+                
+                <!-- 视频内字幕显示 -->
+                <div id="video-subtitle-overlay"></div>
+                
+                <!-- 顶部控制条（包含进度条） -->
+                <div id="topVideoControls">
                     <div id="progressContainer">
                         <div id="progressBar"></div>
                     </div>
-                    <div id="currentTime">00:00 / 00:00</div>
+                    <div class="time-display-container">
+                        <span id="currentTimeDisplay">00:00</span>
+                        <span id="durationDisplay">00:00</span>
+                    </div>
+                </div>
+                
+                <!-- 底部控制条 -->
+                <div id="videoControls">
                     <div class="video-control-buttons">
                         <button id="rewindBtn" class="video-control-btn">⏪ 后退5秒</button>
                         <button id="playBtn" class="video-control-btn primary-btn">▶ 播放</button>
@@ -839,8 +1016,16 @@
         let isMobileMenuOpen = false;
         let hideControlsTimeout = null;
         let hasAutoSynced = false;
-        let isMobileView = window.innerWidth <= 768; // 當前是否為手機視圖
+        let isMobileView = window.innerWidth <= 768;
+        let currentPlayerType = 'local'; // 'local' 或 'bilibili'
+        let bilibiliPlayer = null;
+        
+        // 当前在视频上显示的字幕索引
+        let currentVideoSubtitleIndex = -1;
+        // 视频内字幕显示元素
+        let videoSubtitleOverlay = null;
             
+        // DOM元素引用
         const playBtn = document.getElementById('playBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const stopSyncBtn = document.getElementById('stopSyncBtn');
@@ -852,10 +1037,15 @@
         const videoFileInputMobile = document.getElementById('videoFileMobile');
         const srtFileInput = document.getElementById('srtFile');
         const srtFileInputMobile = document.getElementById('srtFileMobile');
+        const bilibiliUrlInput = document.getElementById('bilibiliUrlInput');
+        const bilibiliUrlInputMobile = document.getElementById('bilibiliUrlInputMobile');
+        const loadBilibiliBtn = document.getElementById('loadBilibiliBtn');
+        const loadBilibiliBtnMobile = document.getElementById('loadBilibiliBtnMobile');
         const emptySubtitle = document.getElementById('emptySubtitle');
         const emptyVideo = document.getElementById('emptyVideo');
         const progressBar = document.getElementById('progressBar');
-        const currentTimeDisplay = document.getElementById('currentTime');
+        const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+        const durationDisplay = document.getElementById('durationDisplay');
         const rewindBtn = document.getElementById('rewindBtn');
         const forwardBtn = document.getElementById('forwardBtn');
         const videoPlayerContainer = document.getElementById('videoPlayer');
@@ -863,34 +1053,167 @@
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileControlsPanel = document.getElementById('mobileControlsPanel');
         const subListContainer = document.getElementById('subListContainer');
+        const bilibiliContainer = document.getElementById('bilibiliContainer');
         
-        // 檢查是否為手機設備
+        // 初始化视频内字幕显示
+        videoSubtitleOverlay = document.getElementById('video-subtitle-overlay');
+        
+        // B站视频ID提取函数
+        function extractBilibiliVideoId(url) {
+            // 处理BV号
+            if (url.includes('BV') || url.includes('bv')) {
+                const bvMatch = url.match(/[Bb][Vv]([A-Za-z0-9]{10})/);
+                if (bvMatch) {
+                    return {
+                        type: 'bv',
+                        id: bvMatch[0]
+                    };
+                }
+            }
+            
+            // 处理AV号（旧版）
+            if (url.includes('av')) {
+                const avMatch = url.match(/av(\d+)/i);
+                if (avMatch) {
+                    return {
+                        type: 'av',
+                        id: avMatch[1]
+                    };
+                }
+            }
+            
+            // 处理URL
+            try {
+                const urlObj = new URL(url);
+                const params = new URLSearchParams(urlObj.search);
+                
+                const bvid = params.get('bvid') || params.get('BV');
+                if (bvid) {
+                    return {
+                        type: 'bv',
+                        id: bvid
+                    };
+                }
+                
+                const avid = params.get('aid');
+                if (avid) {
+                    return {
+                        type: 'av',
+                        id: avid
+                    };
+                }
+                
+                const pathParts = urlObj.pathname.split('/');
+                for (let i = 0; i < pathParts.length; i++) {
+                    if (pathParts[i] === 'video' && pathParts[i + 1]) {
+                        const videoId = pathParts[i + 1];
+                        if (videoId.includes('BV')) {
+                            return {
+                                type: 'bv',
+                                id: videoId
+                            };
+                        } else if (videoId.includes('av')) {
+                            return {
+                                type: 'av',
+                                id: videoId.replace('av', '')
+                            };
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('URL解析失败，尝试直接匹配');
+            }
+            
+            // 尝试直接匹配
+            const directMatch = url.match(/(BV[A-Za-z0-9]{10})/);
+            if (directMatch) {
+                return {
+                    type: 'bv',
+                    id: directMatch[1]
+                };
+            }
+            
+            return null;
+        }
+        
+        // 加载B站视频
+        function loadBilibiliVideo(urlOrId) {
+            if (!urlOrId.trim()) {
+                alert('请输入B站视频链接或BV号');
+                return;
+            }
+            
+            const videoInfo = extractBilibiliVideoId(urlOrId);
+            if (!videoInfo) {
+                alert('无法识别B站视频链接，请确保输入正确的BV号或完整链接');
+                return;
+            }
+            
+            // 清除现有视频
+            videoPlayerContainer.innerHTML = '';
+            
+            // 创建B站视频容器
+            const bilibiliVideoContainer = document.createElement('div');
+            bilibiliVideoContainer.className = 'bilibili-video-container';
+            
+            // 构建iframe URL
+            let iframeSrc = 'https://player.bilibili.com/player.html';
+            
+            if (videoInfo.type === 'bv') {
+                iframeSrc += `?bvid=${videoInfo.id}&autoplay=false`;
+            } else if (videoInfo.type === 'av') {
+                iframeSrc += `?aid=${videoInfo.id}&autoplay=false`;
+            }
+            
+            // 添加其他参数
+            iframeSrc += '&page=1&high_quality=1';
+            
+            const iframe = document.createElement('iframe');
+            iframe.className = 'bilibili-iframe';
+            iframe.src = iframeSrc;
+            iframe.allowFullscreen = true;
+            iframe.scrolling = 'no';
+            iframe.frameBorder = 'no';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            
+            bilibiliVideoContainer.appendChild(iframe);
+            bilibiliContainer.appendChild(bilibiliVideoContainer);
+            
+            // 显示B站容器
+            bilibiliContainer.style.display = 'block';
+            
+            // 保存B站播放器引用
+            bilibiliPlayer = iframe;
+            currentPlayerType = 'bilibili';
+            
+            // 更新UI状态
+            emptyVideo.style.display = 'none';
+            playBtn.disabled = true;
+            pauseBtn.disabled = true;
+            rewindBtn.disabled = true;
+            forwardBtn.disabled = true;
+            progressBar.style.width = '0%';
+            currentTimeDisplay.textContent = '00:00';
+            durationDisplay.textContent = '00:00';
+            
+            // 隐藏本地视频控制条
+            document.getElementById('videoControls').style.display = 'none';
+            document.getElementById('topVideoControls').style.display = 'none';
+            
+            // 如果有字幕，提示用户
+            if (subtitles.length > 0) {
+                alert('B站视频已加载！注意：字幕同步功能有限，只能手动点击字幕跳转到指定时间。');
+            }
+            
+            // 关闭移动端菜单
+            if (isMobileView) {
+                toggleMobileMenu();
+            }
+        }
+        
         function checkIfMobile() {
             isMobileView = window.innerWidth <= 768;
             return isMobileView;
-        }
-        
-        function separateLanguages(text) {
-            const lines = text.split('\n');
-            if (lines.length >= 2) {
-                return {
-                    english: lines[0].trim(),
-                    chinese: lines[1].trim()
-                };
-            }
-            
-            const parts = text.split('---');
-            if (parts.length >= 2) {
-                return {
-                    english: parts[0].trim(),
-                    chinese: parts[1].trim()
-                };
-            }
-            
-            return {
-                english: text,
-                chinese: ''
-            };
         }
         
         function formatTimeForDisplay(seconds) {
@@ -957,6 +1280,47 @@
             }
         }
         
+        // 在视频上显示字幕
+        function displaySubtitleOnVideo(subtitleIndex) {
+            if (subtitleIndex < 0 || subtitleIndex >= subtitles.length) {
+                // 清除视频上的字幕
+                videoSubtitleOverlay.innerHTML = '';
+                currentVideoSubtitleIndex = -1;
+                return;
+            }
+            
+            const subtitle = subtitles[subtitleIndex];
+            if (!subtitle) return;
+            
+            // 如果已经在显示这个字幕，不再重复显示
+            if (currentVideoSubtitleIndex === subtitleIndex) return;
+            
+            currentVideoSubtitleIndex = subtitleIndex;
+            
+            // 创建字幕显示元素
+            videoSubtitleOverlay.innerHTML = '';
+            const subtitleElement = document.createElement('div');
+            subtitleElement.className = 'video-subtitle-text';
+            
+            // 处理字幕文本（保留换行）
+            let textContent = subtitle.text;
+            
+            // 如果有注音，处理注音
+            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(textContent)) {
+                textContent = applyFurigana(textContent);
+                subtitleElement.innerHTML = textContent;
+            } else if (isJapanese(textContent)) {
+                // 日语文本，可能需要添加注音
+                addFurigana(textContent).then(annotatedText => {
+                    subtitleElement.innerHTML = annotatedText;
+                });
+            } else {
+                subtitleElement.textContent = textContent;
+            }
+            
+            videoSubtitleOverlay.appendChild(subtitleElement);
+        }
+        
         function initVideoPlayer() {
             videoPlayerContainer.innerHTML = '';
             
@@ -979,6 +1343,7 @@
             videoPlayer.addEventListener('loadedmetadata', function() {
                 videoDuration = videoPlayer.duration;
                 updateTimeDisplay();
+                durationDisplay.textContent = formatTimeForDisplay(videoDuration);
             });
             
             videoPlayer.addEventListener('timeupdate', function() {
@@ -998,6 +1363,9 @@
                 videoContainerElement.classList.remove('playing');
                 showControls();
                 hasAutoSynced = false;
+                
+                // 清除视频上的字幕
+                displaySubtitleOnVideo(-1);
             });
             
             videoPlayer.addEventListener('play', function() {
@@ -1034,6 +1402,11 @@
                 showControls();
             });
             
+            document.getElementById('topVideoControls').addEventListener('click', function(event) {
+                event.stopPropagation();
+                showControls();
+            });
+            
             videoContainerElement.addEventListener('mousemove', function() {
                 if (videoPlayer && !videoPlayer.paused) {
                     showControls();
@@ -1053,6 +1426,7 @@
                 videoPlayer.style.objectFit = isWideScreen ? 'cover' : 'contain';
             });
             
+            // 进度条点击事件
             document.getElementById('progressContainer').addEventListener('click', function(event) {
                 if (!videoPlayer || !videoPlayer.src) return;
                 
@@ -1064,6 +1438,10 @@
                 updateSubtitles();
                 showControls();
             });
+            
+            // 显示控制条
+            document.getElementById('videoControls').style.display = 'flex';
+            document.getElementById('topVideoControls').style.display = 'flex';
         }
         
         function formatTimeMMSS(seconds) {
@@ -1080,7 +1458,7 @@
         }
         
         function updateTimeDisplay() {
-            currentTimeDisplay.textContent = `${formatTimeMMSS(currentVideoTime)} / ${formatTimeMMSS(videoDuration)}`;
+            currentTimeDisplay.textContent = formatTimeForDisplay(currentVideoTime);
         }
         
         function applyFurigana(text) {
@@ -1184,7 +1562,47 @@
           return parsed;
         }
         
-        // 修改後的 buildSubtitleList 函數
+        // 分隔语言
+        function separateLanguages(text) {
+          const lines = text.split('\n');
+          if (lines.length >= 2) {
+            return {
+              original: lines[0].trim(),
+              translation: lines[1].trim()
+            };
+          }
+          
+          const parts = text.split('---');
+          if (parts.length >= 2) {
+            return {
+              original: parts[0].trim(),
+              translation: parts[1].trim()
+            };
+          }
+          
+          // 如果没有明确分隔符，尝试根据字符类型判断
+          const hasCJK = /[\u4E00-\u9FFF\u3040-\u30FF]/.test(text);
+          const hasLatin = /[a-zA-Z]/.test(text);
+          
+          if (hasCJK && hasLatin) {
+            // 如果同时包含中/日文和拉丁字母，假设拉丁字母是原文
+            const latinMatch = text.match(/[a-zA-Z][^a-zA-Z]*/);
+            if (latinMatch) {
+              const latinPart = latinMatch[0].trim();
+              const cjkPart = text.replace(latinPart, '').trim();
+              return {
+                original: latinPart,
+                translation: cjkPart
+              };
+            }
+          }
+          
+          return {
+            original: text,
+            translation: ''
+          };
+        }
+        
         async function buildSubtitleList() {
           subListUl.innerHTML = '';
           
@@ -1199,63 +1617,48 @@
           for (const sub of subtitles) {
             const li = document.createElement("li");
             
-            // 分離中英文文本
-            const separated = separateLanguages(sub.text);
-            
-            // 創建時間標記（手機版用）
+            // 时间标记
             const timeSpan = document.createElement("div");
             timeSpan.className = "subtitle-time";
             timeSpan.textContent = formatTimeForDisplay(sub.start);
             
-            // 創建手機版文本容器
-            const mobileContainer = document.createElement("div");
-            mobileContainer.className = "subtitle-mobile-container";
+            // 分隔语言
+            const separated = separateLanguages(sub.text);
             
-            const englishSpan = document.createElement("div");
-            englishSpan.className = "subtitle-english";
-            englishSpan.textContent = separated.english;
+            // 创建文本容器
+            const textContainer = document.createElement("div");
+            textContainer.className = "subtitle-text-container";
             
-            const chineseSpan = document.createElement("div");
-            chineseSpan.className = "subtitle-chinese";
-            chineseSpan.textContent = separated.chinese;
+            // 原文
+            const originalSpan = document.createElement("div");
+            originalSpan.className = "subtitle-original";
+            originalSpan.textContent = separated.original;
             
-            // 處理注音（如果有日文）
-            let chineseText = separated.chinese;
-            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(chineseText)) {
-              chineseText = applyFurigana(chineseText);
-              chineseSpan.innerHTML = chineseText;
-            } else if (isJapanese(chineseText)) {
-              chineseText = await addFurigana(chineseText);
-              chineseSpan.innerHTML = chineseText;
-            }
+            // 译文
+            const translationSpan = document.createElement("div");
+            translationSpan.className = "subtitle-translation";
             
-            mobileContainer.appendChild(englishSpan);
-            mobileContainer.appendChild(chineseSpan);
+            let translationText = separated.translation;
             
-            // 創建桌面版文本
-            const desktopText = document.createElement("div");
-            desktopText.className = "subtitle-desktop-text";
-            
-            let displayText = sub.text.replace(/\n/g, ' | ');
-            if (separated.english && separated.chinese) {
-              displayText = `${separated.english} | ${separated.chinese}`;
-            }
-            
-            let annotatedText = "";
-            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(displayText)) {
-              annotatedText = applyFurigana(displayText);
-            } else if (isJapanese(displayText)) {
-              annotatedText = await addFurigana(displayText);
+            // 处理注音
+            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(translationText)) {
+              translationText = applyFurigana(translationText);
+              translationSpan.innerHTML = translationText;
+            } else if (isJapanese(translationText)) {
+              translationText = await addFurigana(translationText);
+              translationSpan.innerHTML = translationText;
             } else {
-              annotatedText = displayText;
+              translationSpan.textContent = translationText;
             }
             
-            desktopText.innerHTML = annotatedText;
+            // 添加到容器
+            textContainer.appendChild(originalSpan);
+            if (separated.translation) {
+              textContainer.appendChild(translationSpan);
+            }
             
-            // 組裝元素
             li.appendChild(timeSpan);
-            li.appendChild(mobileContainer);
-            li.appendChild(desktopText);
+            li.appendChild(textContainer);
             
             li.addEventListener("click", function() {
               jumpToSubtitle(sub.start);
@@ -1264,25 +1667,32 @@
             subListUl.appendChild(li);
           }
           
-          // 如果視頻正在播放且尚未同步，則開始同步
-          if (videoPlayer && !videoPlayer.paused && !isSyncing && !hasAutoSynced) {
+          if (videoPlayer && !videoPlayer.paused && !isSyncing && !hasAutoSynced && currentPlayerType === 'local') {
             startSyncing();
             hasAutoSynced = true;
           }
         }
         
         function updateSubtitles() {
-          if (!videoPlayer || subtitles.length === 0) return;
+          if (subtitles.length === 0) return;
+          
+          if (currentPlayerType === 'bilibili') return;
+          
+          if (!videoPlayer) return;
           
           const offset = parseFloat(timeOffsetInput.value) || 0;
           const displayTime = currentVideoTime + offset;
           let activeFound = false;
+          let currentSubtitleIndex = -1;
           
           for (let i = 0; i < subtitles.length; i++) {
             const li = subListUl.children[i];
             if (li) {
               if (!activeFound && displayTime >= subtitles[i].start && displayTime <= subtitles[i].end) {
                 li.classList.add("active");
+                currentSubtitleIndex = i;
+                
+                // 滚动到当前字幕
                 setTimeout(() => {
                   li.scrollIntoView({ 
                     block: "center", 
@@ -1290,15 +1700,28 @@
                     inline: "nearest"
                   });
                 }, 10);
+                
                 activeFound = true;
               } else {
                 li.classList.remove("active");
               }
             }
           }
+          
+          // 在视频上显示当前字幕
+          if (activeFound && currentSubtitleIndex !== -1) {
+            displaySubtitleOnVideo(currentSubtitleIndex);
+          } else {
+            displaySubtitleOnVideo(-1);
+          }
         }
         
         function startSyncing() {
+          if (currentPlayerType === 'bilibili') {
+            alert('B站视频无法自动同步字幕，请手动点击字幕跳转');
+            return;
+          }
+          
           if (!videoPlayer || !videoPlayer.src) {
             alert("请先上传视频文件");
             return;
@@ -1338,22 +1761,44 @@
           activeItems.forEach(item => {
             item.classList.remove('active');
           });
+          
+          // 清除视频上的字幕
+          displaySubtitleOnVideo(-1);
         }
         
         function jumpToSubtitle(time) {
-          if (!videoPlayer || !videoPlayer.src) {
-            alert("请先上传视频文件");
-            return;
+          if (currentPlayerType === 'bilibili') {
+            if (bilibiliPlayer) {
+              const currentSrc = bilibiliPlayer.src;
+              let newSrc;
+              
+              if (currentSrc.includes('&t=') || currentSrc.includes('?t=')) {
+                newSrc = currentSrc.replace(/[&?]t=\d+/g, '');
+              } else {
+                newSrc = currentSrc;
+              }
+              
+              const separator = newSrc.includes('?') ? '&' : '?';
+              newSrc = `${newSrc}${separator}t=${Math.floor(time)}`;
+              
+              bilibiliPlayer.src = newSrc;
+              alert(`已跳转到 ${formatTimeForDisplay(time)}`);
+            }
+          } else {
+            if (!videoPlayer || !videoPlayer.src) {
+              alert("请先上传视频文件");
+              return;
+            }
+            
+            const offset = parseFloat(timeOffsetInput.value) || 0;
+            videoPlayer.currentTime = Math.max(0, time - offset);
+            
+            if (isSyncing) {
+              updateSubtitles();
+            }
+            
+            showControls();
           }
-          
-          const offset = parseFloat(timeOffsetInput.value) || 0;
-          videoPlayer.currentTime = Math.max(0, time - offset);
-          
-          if (isSyncing) {
-            updateSubtitles();
-          }
-          
-          showControls();
         }
         
         function toggleMobileMenu() {
@@ -1373,10 +1818,15 @@
         }
         
         playBtn.addEventListener("click", function() {
+          if (currentPlayerType === 'bilibili') {
+            alert('B站视频请使用B站播放器的控制按钮');
+            return;
+          }
+          
           if (videoPlayer && videoPlayer.src) {
             videoPlayer.play().catch(e => {
-              console.log("播放失敗:", e);
-              alert("播放失敗，請確保視頻已正確加載");
+              console.log("播放失败:", e);
+              alert("播放失败，请确保视频已正确加载");
             });
             playBtn.disabled = true;
             pauseBtn.disabled = false;
@@ -1386,6 +1836,11 @@
         });
         
         pauseBtn.addEventListener("click", function() {
+          if (currentPlayerType === 'bilibili') {
+            alert('B站视频请使用B站播放器的控制按钮');
+            return;
+          }
+          
           if (videoPlayer) {
             videoPlayer.pause();
             playBtn.disabled = false;
@@ -1397,6 +1852,11 @@
         stopSyncBtnMobile.addEventListener("click", stopSyncing);
         
         rewindBtn.addEventListener("click", function() {
+          if (currentPlayerType === 'bilibili') {
+            alert('B站视频请使用B站播放器的控制按钮');
+            return;
+          }
+          
           if (videoPlayer && videoPlayer.src) {
             videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
             updateSubtitles();
@@ -1407,6 +1867,11 @@
         });
         
         forwardBtn.addEventListener("click", function() {
+          if (currentPlayerType === 'bilibili') {
+            alert('B站视频请使用B站播放器的控制按钮');
+            return;
+          }
+          
           if (videoPlayer && videoPlayer.src) {
             videoPlayer.currentTime = Math.min(videoDuration, videoPlayer.currentTime + 5);
             updateSubtitles();
@@ -1426,6 +1891,18 @@
             return;
           }
           
+          currentPlayerType = 'local';
+          
+          // 隐藏B站视频容器
+          bilibiliContainer.style.display = 'none';
+          if (bilibiliPlayer) {
+            bilibiliPlayer = null;
+            const bilibiliVideoContainer = bilibiliContainer.querySelector('.bilibili-video-container');
+            if (bilibiliVideoContainer) {
+              bilibiliVideoContainer.remove();
+            }
+          }
+          
           if (!videoPlayer) {
             initVideoPlayer();
           }
@@ -1435,6 +1912,12 @@
           
           emptyVideo.style.display = 'none';
           playBtn.disabled = false;
+          pauseBtn.disabled = true;
+          rewindBtn.disabled = false;
+          forwardBtn.disabled = false;
+          
+          document.getElementById('videoControls').style.display = 'flex';
+          document.getElementById('topVideoControls').style.display = 'flex';
           
           videoPlayer.onloadeddata = function() {
             if (videoPlayer.videoWidth && videoPlayer.videoHeight) {
@@ -1454,6 +1937,23 @@
         
         videoFileInputMobile.addEventListener('change', function(event) {
           handleVideoFileUpload(event.target.files[0]);
+        });
+        
+        loadBilibiliBtn.addEventListener('click', function() {
+          loadBilibiliVideo(bilibiliUrlInput.value);
+        });
+        
+        loadBilibiliBtnMobile.addEventListener('click', function() {
+          loadBilibiliVideo(bilibiliUrlInputMobile.value);
+        });
+        
+        // 同步输入框内容
+        bilibiliUrlInput.addEventListener('input', function() {
+          bilibiliUrlInputMobile.value = this.value;
+        });
+        
+        bilibiliUrlInputMobile.addEventListener('input', function() {
+          bilibiliUrlInput.value = this.value;
         });
         
         function handleSubtitleFileUpload(file) {
@@ -1503,7 +2003,7 @@
           timeOffsetInput.value = numValue;
           timeOffsetInputMobile.value = numValue;
           
-          if (isSyncing) {
+          if (isSyncing && currentPlayerType === 'local') {
             updateSubtitles();
           }
         }
@@ -1524,9 +2024,9 @@
           }
           
           timeOffsetInputMobile.value = timeOffsetInput.value;
+          bilibiliUrlInputMobile.value = bilibiliUrlInput.value;
           disablePageScroll();
           
-          // 初始檢查視圖類型
           checkIfMobile();
         });
         
@@ -1576,25 +2076,20 @@
           });
         }
         
-        // 優化的窗口大小變化處理
         let resizeTimeout;
         window.addEventListener('resize', function() {
-          // 清除之前的計時器
           if (resizeTimeout) {
             clearTimeout(resizeTimeout);
           }
           
-          // 設置新的計時器，避免頻繁重繪
           resizeTimeout = setTimeout(function() {
             const wasMobile = isMobileView;
             const isNowMobile = checkIfMobile();
             
-            // 只有當設備類型發生變化時才重新構建字幕列表
             if (wasMobile !== isNowMobile && subtitles.length > 0) {
               buildSubtitleList();
             }
             
-            // 調整佈局大小
             if (isNowMobile) {
               const headerHeight = document.querySelector('header').offsetHeight;
               const windowHeight = window.innerHeight;
@@ -1606,14 +2101,12 @@
               document.getElementById('video-container').style.height = videoHeight + 'px';
               document.getElementById('subtitleContainer').style.height = subtitleHeight + 'px';
             } else {
-              // 桌面版重置高度
               document.getElementById('video-container').style.height = '';
               document.getElementById('subtitleContainer').style.height = '';
             }
-          }, 250); // 250ms延遲，避免頻繁執行
+          }, 250);
         });
         
-        // 初始調整
         setTimeout(() => {
           window.dispatchEvent(new Event('resize'));
         }, 100);
