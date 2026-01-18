@@ -6,7 +6,7 @@
     <title>小野字幕君</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* 全局样式 */
+        /* 全局樣式 */
         * {
           box-sizing: border-box;
         }
@@ -33,7 +33,7 @@
           touch-action: none;
         }
         
-        /* 头部样式 */
+        /* 頭部樣式 */
         header {
           display: flex;
           justify-content: space-between;
@@ -208,7 +208,7 @@
           min-height: 0;
         }
         
-        /* 视频容器 */
+        /* 視頻容器 */
         #video-container {
           flex: 2;
           border-radius: 10px;
@@ -246,7 +246,7 @@
           object-fit: cover;
         }
         
-        /* 顶部控制条 - 包含进度条 */
+        /* 頂部控制條 - 包含進度條 */
         #topVideoControls {
           position: absolute;
           top: 0;
@@ -274,7 +274,7 @@
           pointer-events: auto;
         }
         
-        /* 底部控制条 */
+        /* 底部控制條 */
         #videoControls {
           position: absolute;
           bottom: 0;
@@ -302,10 +302,10 @@
           pointer-events: auto;
         }
         
-        /* 视频内字幕显示 - 浅灰色背景，橙色字体 */
+        /* 視頻內字幕顯示 - 更淺的背景，無邊框 */
         #video-subtitle-overlay {
           position: absolute;
-          bottom: 80px;
+          bottom: 20px;
           left: 0;
           width: 100%;
           text-align: center;
@@ -316,23 +316,23 @@
         
         .video-subtitle-text {
           display: inline-block;
-          background-color: rgba(240, 240, 240, 0.9); /* 浅灰色背景 */
-          color: #FF8C00; /* 橙色字体，比FFA500稍深一点 */
+          background-color: rgba(91, 95, 80, 0.75); /* 更淺的背景 */
+          color: #facc15; /* 橙色字體 */
           padding: 10px 18px;
           border-radius: 8px;
-          font-size: 16px; /* 字体适中，不要太大 */
+          font-size: 16px;
           line-height: 1.4;
           max-width: 80%;
           text-align: center;
           word-wrap: break-word;
           white-space: pre-line;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 140, 0, 0.2); /* 橙色边框 */
-          text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5); /* 白色阴影增加可读性 */
-          font-weight: 500;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          /* 移除了邊框效果 */
+          text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+          font-weight: 600;
         }
         
-        /* 控制按钮 */
+        /* 控制按鈕 */
         .video-control-buttons {
           display: flex;
           gap: 10px;
@@ -340,7 +340,7 @@
           justify-content: center;
         }
         
-        /* 进度条样式 */
+        /* 進度條樣式 */
         #progressContainer {
           width: 100%;
           background-color: rgba(255, 255, 255, 0.2);
@@ -357,7 +357,7 @@
           transition: width 0.1s;
         }
         
-        /* 时间显示 */
+        /* 時間顯示 */
         .time-display-container {
           display: flex;
           justify-content: space-between;
@@ -418,7 +418,7 @@
           margin: 0;
         }
         
-        /* 桌面版字幕列表样式 */
+        /* 桌面版字幕列表樣式 */
         #subList li {
           padding: 12px 15px;
           cursor: pointer;
@@ -429,13 +429,13 @@
           word-wrap: break-word;
           overflow-wrap: break-word;
           text-align: left;
-          white-space: pre-line; /* 保留换行 */
+          white-space: pre-line; /* 保留換行 */
           display: flex;
           align-items: flex-start;
           gap: 10px;
         }
         
-        /* 时间标记 */
+        /* 時間標記 */
         .subtitle-time {
           display: block;
           flex-shrink: 0;
@@ -486,7 +486,7 @@
           box-shadow: inset 0 0 10px rgba(255, 193, 7, 0.1);
         }
         
-        /* 输入框样式 */
+        /* 輸入框樣式 */
         input[type="text"], input[type="number"] {
           padding: 10px 12px;
           border: 1px solid #ced4da;
@@ -515,50 +515,7 @@
           background-color: rgba(255, 255, 255, 0.9);
         }
         
-        /* B站输入组 */
-        .bilibili-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(255, 255, 255, 0.15);
-          padding: 8px 12px;
-          border-radius: 8px;
-          backdrop-filter: blur(10px);
-        }
-        
-        .bilibili-input {
-          flex: 1;
-          min-width: 200px;
-          background-color: rgba(255, 255, 255, 0.9);
-          color: #333;
-        }
-        
-        .bilibili-btn {
-          background-color: #fb7299; /* B站粉色 */
-        }
-        
-        .bilibili-btn:hover {
-          background-color: #e65a87;
-        }
-        
-        /* B站视频容器 */
-        .bilibili-video-container {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          top: 0;
-          left: 0;
-          background-color: #000;
-          display: none;
-        }
-        
-        .bilibili-iframe {
-          width: 100%;
-          height: 100%;
-          border: none;
-        }
-        
-        /* 空状态 */
+        /* 空狀態 */
         .empty-state {
           text-align: center;
           padding: 40px 20px;
@@ -578,7 +535,7 @@
           opacity: 0.5;
         }
         
-        /* 注音样式 */
+        /* 注音樣式 */
         ruby {
           ruby-align: center;
         }
@@ -588,7 +545,7 @@
           color: #666;
         }
         
-        /* 视频控制按钮 */
+        /* 視頻控制按鈕 */
         .video-control-btn {
           padding: 10px 15px;
           background-color: rgba(0, 0, 0, 0.7);
@@ -608,7 +565,7 @@
           transform: scale(0.98);
         }
         
-        /* 移动端适配 */
+        /* 移動端適配 */
         @media (max-width: 768px) {
           header {
             padding: 8px 10px;
@@ -665,22 +622,6 @@
             border-radius: 8px;
           }
           
-          #mobileControlsPanel .bilibili-group {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 10px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-          }
-          
-          #mobileControlsPanel .time-offset-container input,
-          #mobileControlsPanel .bilibili-input {
-            width: 100%;
-            background-color: white;
-            color: #333;
-          }
-          
           #main-container {
             flex-direction: column;
             padding: 10px;
@@ -708,10 +649,10 @@
             font-size: 15px;
           }
           
-          /* 移动端视频内字幕 - 浅灰色背景，橙色字体 */
+          /* 移動端視頻內字幕 - 更淺的背景，無邊框 */
           #video-subtitle-overlay {
             position: absolute;
-            bottom: 20px;
+            bottom: 8px;
             left: 0;
             width: 100%;
             text-align: center;
@@ -722,23 +663,23 @@
           
           .video-subtitle-text {
             display: inline-block;
-            background-color: rgba(240, 240, 240, 0.9); /* 浅灰色背景 */
-            color: #FF8C00; /* 橙色字体 */
+            background-color: rgba(91, 95, 80, 0.75); /* 更淺的背景 */
+            color: #facc15; /* 橙色字體 */
             padding: 8px 14px;
             border-radius: 8px;
-            font-size: 15px; /* 移动端字体适中 */
+            font-size: 12px;
             line-height: 1.4;
             max-width: 90%;
             text-align: center;
             word-wrap: break-word;
             white-space: pre-line;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 140, 0, 0.2); /* 橙色边框 */
-            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            /* 移除了邊框效果 */
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
             font-weight: 500;
           }
           
-          /* 移动端字幕列表 */
+          /* 移動端字幕列表 */
           #subList li {
             padding: 10px 15px;
             font-size: 13px;
@@ -777,10 +718,6 @@
           
           .empty-state::before {
             font-size: 36px;
-          }
-          
-          .bilibili-input {
-            min-width: 0;
           }
         }
         
@@ -821,7 +758,7 @@
             font-size: 10px;
           }
           
-          /* 更小屏幕的视频内字幕调整 */
+          /* 更小屏幕的視頻內字幕調整 */
           #video-subtitle-overlay {
             bottom: 15px;
           }
@@ -843,7 +780,7 @@
           }
         }
         
-        /* 移动菜单按钮动画 */
+        /* 移動菜單按鈕動畫 */
         #mobileMenuBtn span {
           display: block;
           width: 25px;
@@ -907,18 +844,12 @@
             <div class="control-group">
                 <div class="file-upload-container">
                     <input type="file" id="videoFile" accept="video/*">
-                    <div class="file-upload-label">选择视频</div>
+                    <div class="file-upload-label">選擇視頻</div>
                 </div>
                 <div class="file-upload-container">
                     <input type="file" id="srtFile" accept=".srt,.ass">
-                    <div class="file-upload-label">选择字幕</div>
+                    <div class="file-upload-label">選擇字幕</div>
                 </div>
-            </div>
-            
-            <!-- B站输入组 -->
-            <div class="bilibili-group">
-                <input type="text" id="bilibiliUrlInput" class="bilibili-input" placeholder="B站链接/BV号/AV号">
-                <button id="loadBilibiliBtn" class="bilibili-btn">加载B站</button>
             </div>
             
             <div class="main-controls">
@@ -926,7 +857,7 @@
             </div>
             
             <div class="time-offset-container">
-                <label>时间偏移 (秒):</label>
+                <label>時間偏移 (秒):</label>
                 <input type="number" id="timeOffset" value="0" step="0.1">
             </div>
         </div>
@@ -936,18 +867,12 @@
         <div class="control-group">
             <div class="file-upload-container">
                 <input type="file" id="videoFileMobile" accept="video/*">
-                <div class="file-upload-label">选择视频</div>
+                <div class="file-upload-label">選擇視頻</div>
             </div>
             <div class="file-upload-container">
                 <input type="file" id="srtFileMobile" accept=".srt,.ass">
-                <div class="file-upload-label">选择字幕</div>
+                <div class="file-upload-label">選擇字幕</div>
             </div>
-        </div>
-        
-        <!-- 移动端B站输入组 -->
-        <div class="bilibili-group">
-            <input type="text" id="bilibiliUrlInputMobile" class="bilibili-input" placeholder="B站链接/BV号/AV号">
-            <button id="loadBilibiliBtnMobile" class="bilibili-btn">加载B站</button>
         </div>
         
         <div class="control-group">
@@ -955,7 +880,7 @@
         </div>
         
         <div class="time-offset-container">
-            <label>时间偏移 (秒):</label>
+            <label>時間偏移 (秒):</label>
             <input type="number" id="timeOffsetMobile" value="0" step="0.1">
         </div>
     </div>
@@ -964,13 +889,11 @@
         <div id="video-container">
             <div id="videoPlayerContainer">
                 <div id="videoPlayer"></div>
-                <!-- B站视频容器 -->
-                <div id="bilibiliContainer" class="bilibili-video-container"></div>
                 
-                <!-- 视频内字幕显示 -->
+                <!-- 視頻內字幕顯示 -->
                 <div id="video-subtitle-overlay"></div>
                 
-                <!-- 顶部控制条（包含进度条） -->
+                <!-- 頂部控制條（包含進度條） -->
                 <div id="topVideoControls">
                     <div id="progressContainer">
                         <div id="progressBar"></div>
@@ -981,13 +904,13 @@
                     </div>
                 </div>
                 
-                <!-- 底部控制条 -->
+                <!-- 底部控制條 -->
                 <div id="videoControls">
                     <div class="video-control-buttons">
-                        <button id="rewindBtn" class="video-control-btn">⏪ 后退5秒</button>
+                        <button id="rewindBtn" class="video-control-btn">⏪ 後退5秒</button>
                         <button id="playBtn" class="video-control-btn primary-btn">▶ 播放</button>
-                        <button id="pauseBtn" class="video-control-btn" disabled>⏸ 暂停</button>
-                        <button id="forwardBtn" class="video-control-btn">⏩ 前进5秒</button>
+                        <button id="pauseBtn" class="video-control-btn" disabled>⏸ 暫停</button>
+                        <button id="forwardBtn" class="video-control-btn">⏩ 前進5秒</button>
                     </div>
                 </div>
             </div>
@@ -998,10 +921,10 @@
             <div id="subListContainer">
                 <ul id="subList"></ul>
                 <div class="empty-state" id="emptySubtitle">
-                    请上传字幕文件 (.srt 或 .ass)
+                    請上傳字幕文件 (.srt 或 .ass)
                 </div>
                 <div class="empty-state" id="emptyVideo" style="display: none;">
-                    请先上传视频文件
+                    請先上傳視頻文件
                 </div>
             </div>
         </div>
@@ -1017,12 +940,10 @@
         let hideControlsTimeout = null;
         let hasAutoSynced = false;
         let isMobileView = window.innerWidth <= 768;
-        let currentPlayerType = 'local'; // 'local' 或 'bilibili'
-        let bilibiliPlayer = null;
         
-        // 当前在视频上显示的字幕索引
+        // 當前在視頻上顯示的字幕索引
         let currentVideoSubtitleIndex = -1;
-        // 视频内字幕显示元素
+        // 視頻內字幕顯示元素
         let videoSubtitleOverlay = null;
             
         // DOM元素引用
@@ -1037,10 +958,6 @@
         const videoFileInputMobile = document.getElementById('videoFileMobile');
         const srtFileInput = document.getElementById('srtFile');
         const srtFileInputMobile = document.getElementById('srtFileMobile');
-        const bilibiliUrlInput = document.getElementById('bilibiliUrlInput');
-        const bilibiliUrlInputMobile = document.getElementById('bilibiliUrlInputMobile');
-        const loadBilibiliBtn = document.getElementById('loadBilibiliBtn');
-        const loadBilibiliBtnMobile = document.getElementById('loadBilibiliBtnMobile');
         const emptySubtitle = document.getElementById('emptySubtitle');
         const emptyVideo = document.getElementById('emptyVideo');
         const progressBar = document.getElementById('progressBar');
@@ -1053,163 +970,9 @@
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileControlsPanel = document.getElementById('mobileControlsPanel');
         const subListContainer = document.getElementById('subListContainer');
-        const bilibiliContainer = document.getElementById('bilibiliContainer');
         
-        // 初始化视频内字幕显示
+        // 初始化視頻內字幕顯示
         videoSubtitleOverlay = document.getElementById('video-subtitle-overlay');
-        
-        // B站视频ID提取函数
-        function extractBilibiliVideoId(url) {
-            // 处理BV号
-            if (url.includes('BV') || url.includes('bv')) {
-                const bvMatch = url.match(/[Bb][Vv]([A-Za-z0-9]{10})/);
-                if (bvMatch) {
-                    return {
-                        type: 'bv',
-                        id: bvMatch[0]
-                    };
-                }
-            }
-            
-            // 处理AV号（旧版）
-            if (url.includes('av')) {
-                const avMatch = url.match(/av(\d+)/i);
-                if (avMatch) {
-                    return {
-                        type: 'av',
-                        id: avMatch[1]
-                    };
-                }
-            }
-            
-            // 处理URL
-            try {
-                const urlObj = new URL(url);
-                const params = new URLSearchParams(urlObj.search);
-                
-                const bvid = params.get('bvid') || params.get('BV');
-                if (bvid) {
-                    return {
-                        type: 'bv',
-                        id: bvid
-                    };
-                }
-                
-                const avid = params.get('aid');
-                if (avid) {
-                    return {
-                        type: 'av',
-                        id: avid
-                    };
-                }
-                
-                const pathParts = urlObj.pathname.split('/');
-                for (let i = 0; i < pathParts.length; i++) {
-                    if (pathParts[i] === 'video' && pathParts[i + 1]) {
-                        const videoId = pathParts[i + 1];
-                        if (videoId.includes('BV')) {
-                            return {
-                                type: 'bv',
-                                id: videoId
-                            };
-                        } else if (videoId.includes('av')) {
-                            return {
-                                type: 'av',
-                                id: videoId.replace('av', '')
-                            };
-                        }
-                    }
-                }
-            } catch (e) {
-                console.log('URL解析失败，尝试直接匹配');
-            }
-            
-            // 尝试直接匹配
-            const directMatch = url.match(/(BV[A-Za-z0-9]{10})/);
-            if (directMatch) {
-                return {
-                    type: 'bv',
-                    id: directMatch[1]
-                };
-            }
-            
-            return null;
-        }
-        
-        // 加载B站视频
-        function loadBilibiliVideo(urlOrId) {
-            if (!urlOrId.trim()) {
-                alert('请输入B站视频链接或BV号');
-                return;
-            }
-            
-            const videoInfo = extractBilibiliVideoId(urlOrId);
-            if (!videoInfo) {
-                alert('无法识别B站视频链接，请确保输入正确的BV号或完整链接');
-                return;
-            }
-            
-            // 清除现有视频
-            videoPlayerContainer.innerHTML = '';
-            
-            // 创建B站视频容器
-            const bilibiliVideoContainer = document.createElement('div');
-            bilibiliVideoContainer.className = 'bilibili-video-container';
-            
-            // 构建iframe URL
-            let iframeSrc = 'https://player.bilibili.com/player.html';
-            
-            if (videoInfo.type === 'bv') {
-                iframeSrc += `?bvid=${videoInfo.id}&autoplay=false`;
-            } else if (videoInfo.type === 'av') {
-                iframeSrc += `?aid=${videoInfo.id}&autoplay=false`;
-            }
-            
-            // 添加其他参数
-            iframeSrc += '&page=1&high_quality=1';
-            
-            const iframe = document.createElement('iframe');
-            iframe.className = 'bilibili-iframe';
-            iframe.src = iframeSrc;
-            iframe.allowFullscreen = true;
-            iframe.scrolling = 'no';
-            iframe.frameBorder = 'no';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            
-            bilibiliVideoContainer.appendChild(iframe);
-            bilibiliContainer.appendChild(bilibiliVideoContainer);
-            
-            // 显示B站容器
-            bilibiliContainer.style.display = 'block';
-            
-            // 保存B站播放器引用
-            bilibiliPlayer = iframe;
-            currentPlayerType = 'bilibili';
-            
-            // 更新UI状态
-            emptyVideo.style.display = 'none';
-            playBtn.disabled = true;
-            pauseBtn.disabled = true;
-            rewindBtn.disabled = true;
-            forwardBtn.disabled = true;
-            progressBar.style.width = '0%';
-            currentTimeDisplay.textContent = '00:00';
-            durationDisplay.textContent = '00:00';
-            
-            // 隐藏本地视频控制条
-            document.getElementById('videoControls').style.display = 'none';
-            document.getElementById('topVideoControls').style.display = 'none';
-            
-            // 如果有字幕，提示用户
-            if (subtitles.length > 0) {
-                alert('B站视频已加载！注意：字幕同步功能有限，只能手动点击字幕跳转到指定时间。');
-            }
-            
-            // 关闭移动端菜单
-            if (isMobileView) {
-                toggleMobileMenu();
-            }
-        }
         
         function checkIfMobile() {
             isMobileView = window.innerWidth <= 768;
@@ -1280,10 +1043,10 @@
             }
         }
         
-        // 在视频上显示字幕
+        // 在視頻上顯示字幕
         function displaySubtitleOnVideo(subtitleIndex) {
             if (subtitleIndex < 0 || subtitleIndex >= subtitles.length) {
-                // 清除视频上的字幕
+                // 清除視頻上的字幕
                 videoSubtitleOverlay.innerHTML = '';
                 currentVideoSubtitleIndex = -1;
                 return;
@@ -1292,25 +1055,25 @@
             const subtitle = subtitles[subtitleIndex];
             if (!subtitle) return;
             
-            // 如果已经在显示这个字幕，不再重复显示
+            // 如果已經在顯示這個字幕，不再重複顯示
             if (currentVideoSubtitleIndex === subtitleIndex) return;
             
             currentVideoSubtitleIndex = subtitleIndex;
             
-            // 创建字幕显示元素
+            // 創建字幕顯示元素
             videoSubtitleOverlay.innerHTML = '';
             const subtitleElement = document.createElement('div');
             subtitleElement.className = 'video-subtitle-text';
             
-            // 处理字幕文本（保留换行）
+            // 處理字幕文本（保留換行）
             let textContent = subtitle.text;
             
-            // 如果有注音，处理注音
+            // 如果有注音，處理注音
             if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(textContent)) {
                 textContent = applyFurigana(textContent);
                 subtitleElement.innerHTML = textContent;
             } else if (isJapanese(textContent)) {
-                // 日语文本，可能需要添加注音
+                // 日語文本，可能需要添加注音
                 addFurigana(textContent).then(annotatedText => {
                     subtitleElement.innerHTML = annotatedText;
                 });
@@ -1364,7 +1127,7 @@
                 showControls();
                 hasAutoSynced = false;
                 
-                // 清除视频上的字幕
+                // 清除視頻上的字幕
                 displaySubtitleOnVideo(-1);
             });
             
@@ -1426,7 +1189,7 @@
                 videoPlayer.style.objectFit = isWideScreen ? 'cover' : 'contain';
             });
             
-            // 进度条点击事件
+            // 進度條點擊事件
             document.getElementById('progressContainer').addEventListener('click', function(event) {
                 if (!videoPlayer || !videoPlayer.src) return;
                 
@@ -1439,7 +1202,7 @@
                 showControls();
             });
             
-            // 显示控制条
+            // 顯示控制條
             document.getElementById('videoControls').style.display = 'flex';
             document.getElementById('topVideoControls').style.display = 'flex';
         }
@@ -1562,7 +1325,7 @@
           return parsed;
         }
         
-        // 分隔语言
+        // 分隔語言
         function separateLanguages(text) {
           const lines = text.split('\n');
           if (lines.length >= 2) {
@@ -1580,12 +1343,12 @@
             };
           }
           
-          // 如果没有明确分隔符，尝试根据字符类型判断
+          // 如果沒有明確分隔符，嘗試根據字符類型判斷
           const hasCJK = /[\u4E00-\u9FFF\u3040-\u30FF]/.test(text);
           const hasLatin = /[a-zA-Z]/.test(text);
           
           if (hasCJK && hasLatin) {
-            // 如果同时包含中/日文和拉丁字母，假设拉丁字母是原文
+            // 如果同時包含中/日文和拉丁字母，假設拉丁字母是原文
             const latinMatch = text.match(/[a-zA-Z][^a-zA-Z]*/);
             if (latinMatch) {
               const latinPart = latinMatch[0].trim();
@@ -1617,15 +1380,15 @@
           for (const sub of subtitles) {
             const li = document.createElement("li");
             
-            // 时间标记
+            // 時間標記
             const timeSpan = document.createElement("div");
             timeSpan.className = "subtitle-time";
             timeSpan.textContent = formatTimeForDisplay(sub.start);
             
-            // 分隔语言
+            // 分隔語言
             const separated = separateLanguages(sub.text);
             
-            // 创建文本容器
+            // 創建文本容器
             const textContainer = document.createElement("div");
             textContainer.className = "subtitle-text-container";
             
@@ -1634,13 +1397,13 @@
             originalSpan.className = "subtitle-original";
             originalSpan.textContent = separated.original;
             
-            // 译文
+            // 譯文
             const translationSpan = document.createElement("div");
             translationSpan.className = "subtitle-translation";
             
             let translationText = separated.translation;
             
-            // 处理注音
+            // 處理注音
             if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(translationText)) {
               translationText = applyFurigana(translationText);
               translationSpan.innerHTML = translationText;
@@ -1667,7 +1430,7 @@
             subListUl.appendChild(li);
           }
           
-          if (videoPlayer && !videoPlayer.paused && !isSyncing && !hasAutoSynced && currentPlayerType === 'local') {
+          if (videoPlayer && !videoPlayer.paused && !isSyncing && !hasAutoSynced) {
             startSyncing();
             hasAutoSynced = true;
           }
@@ -1675,8 +1438,6 @@
         
         function updateSubtitles() {
           if (subtitles.length === 0) return;
-          
-          if (currentPlayerType === 'bilibili') return;
           
           if (!videoPlayer) return;
           
@@ -1692,7 +1453,7 @@
                 li.classList.add("active");
                 currentSubtitleIndex = i;
                 
-                // 滚动到当前字幕
+                // 滾動到當前字幕
                 setTimeout(() => {
                   li.scrollIntoView({ 
                     block: "center", 
@@ -1708,7 +1469,7 @@
             }
           }
           
-          // 在视频上显示当前字幕
+          // 在視頻上顯示當前字幕
           if (activeFound && currentSubtitleIndex !== -1) {
             displaySubtitleOnVideo(currentSubtitleIndex);
           } else {
@@ -1717,18 +1478,13 @@
         }
         
         function startSyncing() {
-          if (currentPlayerType === 'bilibili') {
-            alert('B站视频无法自动同步字幕，请手动点击字幕跳转');
-            return;
-          }
-          
           if (!videoPlayer || !videoPlayer.src) {
-            alert("请先上传视频文件");
+            alert("請先上傳視頻文件");
             return;
           }
           
           if (subtitles.length === 0) {
-            alert("请先上传字幕文件");
+            alert("請先上傳字幕文件");
             return;
           }
           
@@ -1762,43 +1518,24 @@
             item.classList.remove('active');
           });
           
-          // 清除视频上的字幕
+          // 清除視頻上的字幕
           displaySubtitleOnVideo(-1);
         }
         
         function jumpToSubtitle(time) {
-          if (currentPlayerType === 'bilibili') {
-            if (bilibiliPlayer) {
-              const currentSrc = bilibiliPlayer.src;
-              let newSrc;
-              
-              if (currentSrc.includes('&t=') || currentSrc.includes('?t=')) {
-                newSrc = currentSrc.replace(/[&?]t=\d+/g, '');
-              } else {
-                newSrc = currentSrc;
-              }
-              
-              const separator = newSrc.includes('?') ? '&' : '?';
-              newSrc = `${newSrc}${separator}t=${Math.floor(time)}`;
-              
-              bilibiliPlayer.src = newSrc;
-              alert(`已跳转到 ${formatTimeForDisplay(time)}`);
-            }
-          } else {
-            if (!videoPlayer || !videoPlayer.src) {
-              alert("请先上传视频文件");
-              return;
-            }
-            
-            const offset = parseFloat(timeOffsetInput.value) || 0;
-            videoPlayer.currentTime = Math.max(0, time - offset);
-            
-            if (isSyncing) {
-              updateSubtitles();
-            }
-            
-            showControls();
+          if (!videoPlayer || !videoPlayer.src) {
+            alert("請先上傳視頻文件");
+            return;
           }
+          
+          const offset = parseFloat(timeOffsetInput.value) || 0;
+          videoPlayer.currentTime = Math.max(0, time - offset);
+          
+          if (isSyncing) {
+            updateSubtitles();
+          }
+          
+          showControls();
         }
         
         function toggleMobileMenu() {
@@ -1818,29 +1555,19 @@
         }
         
         playBtn.addEventListener("click", function() {
-          if (currentPlayerType === 'bilibili') {
-            alert('B站视频请使用B站播放器的控制按钮');
-            return;
-          }
-          
           if (videoPlayer && videoPlayer.src) {
             videoPlayer.play().catch(e => {
-              console.log("播放失败:", e);
-              alert("播放失败，请确保视频已正确加载");
+              console.log("播放失敗:", e);
+              alert("播放失敗，請確保視頻已正確加載");
             });
             playBtn.disabled = true;
             pauseBtn.disabled = false;
           } else {
-            alert("请先上传视频文件");
+            alert("請先上傳視頻文件");
           }
         });
         
         pauseBtn.addEventListener("click", function() {
-          if (currentPlayerType === 'bilibili') {
-            alert('B站视频请使用B站播放器的控制按钮');
-            return;
-          }
-          
           if (videoPlayer) {
             videoPlayer.pause();
             playBtn.disabled = false;
@@ -1852,32 +1579,22 @@
         stopSyncBtnMobile.addEventListener("click", stopSyncing);
         
         rewindBtn.addEventListener("click", function() {
-          if (currentPlayerType === 'bilibili') {
-            alert('B站视频请使用B站播放器的控制按钮');
-            return;
-          }
-          
           if (videoPlayer && videoPlayer.src) {
             videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
             updateSubtitles();
             showControls();
           } else {
-            alert("请先上传视频文件");
+            alert("請先上傳視頻文件");
           }
         });
         
         forwardBtn.addEventListener("click", function() {
-          if (currentPlayerType === 'bilibili') {
-            alert('B站视频请使用B站播放器的控制按钮');
-            return;
-          }
-          
           if (videoPlayer && videoPlayer.src) {
             videoPlayer.currentTime = Math.min(videoDuration, videoPlayer.currentTime + 5);
             updateSubtitles();
             showControls();
           } else {
-            alert("请先上传视频文件");
+            alert("請先上傳視頻文件");
           }
         });
         
@@ -1887,20 +1604,8 @@
           if (!file) return;
           
           if (!file.type.startsWith('video/')) {
-            alert("请选择视频文件 (MP4, WebM, OGG等)");
+            alert("請選擇視頻文件 (MP4, WebM, OGG等)");
             return;
-          }
-          
-          currentPlayerType = 'local';
-          
-          // 隐藏B站视频容器
-          bilibiliContainer.style.display = 'none';
-          if (bilibiliPlayer) {
-            bilibiliPlayer = null;
-            const bilibiliVideoContainer = bilibiliContainer.querySelector('.bilibili-video-container');
-            if (bilibiliVideoContainer) {
-              bilibiliVideoContainer.remove();
-            }
           }
           
           if (!videoPlayer) {
@@ -1939,23 +1644,6 @@
           handleVideoFileUpload(event.target.files[0]);
         });
         
-        loadBilibiliBtn.addEventListener('click', function() {
-          loadBilibiliVideo(bilibiliUrlInput.value);
-        });
-        
-        loadBilibiliBtnMobile.addEventListener('click', function() {
-          loadBilibiliVideo(bilibiliUrlInputMobile.value);
-        });
-        
-        // 同步输入框内容
-        bilibiliUrlInput.addEventListener('input', function() {
-          bilibiliUrlInputMobile.value = this.value;
-        });
-        
-        bilibiliUrlInputMobile.addEventListener('input', function() {
-          bilibiliUrlInput.value = this.value;
-        });
-        
         function handleSubtitleFileUpload(file) {
           if (!file) return;
           
@@ -1967,12 +1655,12 @@
             } else if (file.name.endsWith('.srt')) {
               subtitles = parseSRT(content);
             } else {
-              alert("不支持的字幕文件格式！请选择 .srt 或 .ass 文件。");
+              alert("不支持的字幕文件格式！請選擇 .srt 或 .ass 文件。");
               return;
             }
             
             if (subtitles.length === 0) {
-              alert("未能解析字幕，请检查文件格式");
+              alert("未能解析字幕，請檢查文件格式");
             } else {
               buildSubtitleList();
             }
@@ -1984,7 +1672,7 @@
           
           reader.onerror = function(e) {
             console.error("讀取文件出錯：", e);
-            alert("读取文件出错");
+            alert("讀取文件出錯");
           };
           
           reader.readAsText(file, "UTF-8");
@@ -2003,7 +1691,7 @@
           timeOffsetInput.value = numValue;
           timeOffsetInputMobile.value = numValue;
           
-          if (isSyncing && currentPlayerType === 'local') {
+          if (isSyncing) {
             updateSubtitles();
           }
         }
@@ -2024,7 +1712,6 @@
           }
           
           timeOffsetInputMobile.value = timeOffsetInput.value;
-          bilibiliUrlInputMobile.value = bilibiliUrlInput.value;
           disablePageScroll();
           
           checkIfMobile();
