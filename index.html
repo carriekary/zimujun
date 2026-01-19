@@ -1500,8 +1500,9 @@
           
           updateSubtitles();
           
-          if (checkIfMobile()) {
-            toggleMobileMenu();
+          // 修正：只在移動端且菜單打開時才關閉菜單
+          if (isMobileView && isMobileMenuOpen) {
+            closeMobileMenu();
           }
         }
         
@@ -1551,6 +1552,16 @@
             if (!isSyncing) {
               enablePageScroll();
             }
+          }
+        }
+        
+        // 新增：專門關閉移動菜單的函數
+        function closeMobileMenu() {
+          isMobileMenuOpen = false;
+          mobileControlsPanel.classList.remove('show');
+          mobileMenuBtn.classList.remove('active');
+          if (!isSyncing) {
+            enablePageScroll();
           }
         }
         
@@ -1631,8 +1642,9 @@
             }
           };
           
-          if (checkIfMobile()) {
-            toggleMobileMenu();
+          // 修正：只在移動端且菜單打開時才關閉菜單
+          if (isMobileView && isMobileMenuOpen) {
+            closeMobileMenu();
           }
         }
         
@@ -1665,8 +1677,9 @@
               buildSubtitleList();
             }
             
-            if (checkIfMobile()) {
-              toggleMobileMenu();
+            // 修正：只在移動端且菜單打開時才關閉菜單
+            if (isMobileView && isMobileMenuOpen) {
+              closeMobileMenu();
             }
           };
           
@@ -1720,7 +1733,7 @@
         document.addEventListener('click', function(event) {
           if (window.innerWidth <= 768 && isMobileMenuOpen) {
             if (!mobileMenuBtn.contains(event.target) && !mobileControlsPanel.contains(event.target)) {
-              toggleMobileMenu();
+              closeMobileMenu();  // 修改：點擊外部時關閉菜單
             }
           }
         });
@@ -1772,6 +1785,11 @@
           resizeTimeout = setTimeout(function() {
             const wasMobile = isMobileView;
             const isNowMobile = checkIfMobile();
+            
+            // 如果從移動端切換到桌面端，關閉菜單
+            if (wasMobile && !isNowMobile && isMobileMenuOpen) {
+              closeMobileMenu();
+            }
             
             if (wasMobile !== isNowMobile && subtitles.length > 0) {
               buildSubtitleList();
