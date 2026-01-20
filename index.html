@@ -26,91 +26,44 @@
         }
         
         body {
-          font-family: "Meiryo", "Hiragino Sans", "Noto Serif CJK JP", "Arial", Roboto, sans-serif;
+          font-family: "Arial", "Hiragino Sans", "Meiryo", "Noto Serif CJK JP", Roboto, Arial, Noto Serif;
           display: flex;
           flex-direction: column;
           background-color: #f8f9fa;
           touch-action: none;
         }
         
-        /* 頭部樣式 - 日本紅白色系主題 */
+        /* 頭部樣式 */
         header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 12px 15px;
-          background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%); /* 日本紅漸變 */
+          background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
           color: white;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
           flex-shrink: 0;
           z-index: 1000;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        /* 添加日本風格的裝飾性元素 */
-        header::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: 
-              radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 2%, transparent 2.5%),
-              radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 2%, transparent 2.5%);
-          background-size: 60px 60px;
-          pointer-events: none;
-        }
-        
-        header::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, 
-              #ffffff 0%, 
-              #ffffff 20%, 
-              transparent 20%, 
-              transparent 40%, 
-              #ffffff 40%, 
-              #ffffff 60%, 
-              transparent 60%, 
-              transparent 80%, 
-              #ffffff 80%, 
-              #ffffff 100%);
-          background-size: 50px 100%;
         }
         
         #siteTitle {
-          font-size: 24px;
+          font-size: 22px;
           font-weight: bold;
           margin-left: 5px;
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           white-space: nowrap;
-          color: white;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-          position: relative;
-          z-index: 1;
-          font-family: "Meiryo", "Hiragino Sans", "Noto Serif CJK JP", "Arial", sans-serif;
         }
         
         #siteTitle::before {
-          content: "🎬"; 
-          font-size: 28px;
-          filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+          content: "🎬";
         }
         
         #controlsPanel {
           display: flex;
           align-items: center;
           gap: 15px;
-          position: relative;
-          z-index: 1;
         }
         
         .control-group {
@@ -121,7 +74,6 @@
           padding: 8px 12px;
           border-radius: 8px;
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .file-upload-container {
@@ -144,28 +96,24 @@
           align-items: center;
           gap: 8px;
           padding: 10px 18px;
-          background-color: rgba(255, 255, 255, 0.9);
-          color: #d32f2f; /* 日本紅文字 */
+          background-color: #6f42c1;
+          color: white;
           border-radius: 6px;
           cursor: pointer;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 500;
           transition: all 0.3s ease;
           white-space: nowrap;
           box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-          border: 1px solid rgba(255, 255, 255, 0.5);
         }
         
         .file-upload-label:hover {
-          background-color: white;
+          background-color: #5a32a3;
           transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-          color: #b71c1c;
         }
         
         .file-upload-label::before {
           content: "📁";
-          filter: sepia(1) hue-rotate(-20deg) saturate(5); /* 調為紅色系 */
         }
         
         .main-controls {
@@ -176,23 +124,22 @@
         
         button {
           padding: 10px 18px;
-          background-color: rgba(255, 255, 255, 0.9);
-          color: #d32f2f; /* 日本紅文字 */
-          border: 1px solid rgba(255, 255, 255, 0.5);
+          background-color: #4a86e8;
+          color: white;
+          border: none;
           border-radius: 6px;
           cursor: pointer;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 500;
           transition: all 0.3s ease;
           white-space: nowrap;
           box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         button:hover {
-          background-color: white;
+          background-color: #3a76d8;
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-          color: #b71c1c;
         }
         
         button:active {
@@ -200,33 +147,26 @@
         }
         
         button:disabled {
-          background-color: rgba(255, 255, 255, 0.5);
-          color: rgba(211, 47, 47, 0.5);
+          background-color: #a0a0a0;
           cursor: not-allowed;
           transform: none;
           box-shadow: none;
         }
         
         .primary-btn {
-          background-color: #d32f2f;
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          background-color: #28a745;
         }
         
         .primary-btn:hover {
-          background-color: #b71c1c;
-          color: white;
+          background-color: #218838;
         }
         
         .warning-btn {
-          background-color: #c62828;
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          background-color: #dc3545;
         }
         
         .warning-btn:hover {
-          background-color: #8e0000;
-          color: white;
+          background-color: #c82333;
         }
         
         #mobileMenuBtn {
@@ -237,8 +177,6 @@
           font-size: 24px;
           cursor: pointer;
           padding: 8px;
-          position: relative;
-          z-index: 1;
         }
         
         #mobileControlsPanel {
@@ -249,7 +187,7 @@
           background: rgba(255, 255, 255, 0.95);
           border-radius: 10px;
           margin-top: 10px;
-          box-shadow: 0 5px 15px rgba(183, 28, 28, 0.2);
+          box-shadow: 0 5px 15px rgba(0,0,0,0.2);
           position: absolute;
           top: 70px;
           left: 10px;
@@ -257,27 +195,6 @@
           z-index: 1001;
           max-height: 80vh;
           overflow-y: auto;
-          border: 1px solid rgba(211, 47, 47, 0.1);
-        }
-        
-        .time-offset-container {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: white;
-          font-weight: 600;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-        }
-        
-        .time-offset-container label {
-          color: white;
-        }
-        
-        .time-offset-container input {
-          width: 80px;
-          background-color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(211, 47, 47, 0.3);
-          color: #333;
         }
         
         /* 主容器 */
@@ -388,7 +305,7 @@
         /* 視頻內字幕顯示 - 更淺的背景，無邊框 */
         #video-subtitle-overlay {
           position: absolute;
-          bottom: 15px;
+          bottom: 20px;
           left: 0;
           width: 100%;
           text-align: center;
@@ -507,7 +424,7 @@
           cursor: pointer;
           border-bottom: 1px solid #f0f0f0;
           line-height: 1.5;
-          font-size: 15px;
+          font-size: 14px;
           transition: all 0.2s ease;
           word-wrap: break-word;
           overflow-wrap: break-word;
@@ -585,6 +502,19 @@
           box-shadow: 0 0 0 3px rgba(74, 134, 232, 0.1);
         }
         
+        .time-offset-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: white;
+          font-weight: 500;
+        }
+        
+        .time-offset-container input {
+          width: 80px;
+          background-color: rgba(255, 255, 255, 0.9);
+        }
+        
         /* 空狀態 */
         .empty-state {
           text-align: center;
@@ -645,13 +575,9 @@
           }
           
           #siteTitle {
-            font-size: 20px;
+            font-size: 18px;
             margin-left: 0;
             flex-shrink: 0;
-          }
-          
-          #siteTitle::before {
-            font-size: 24px;
           }
           
           #controlsPanel {
@@ -684,26 +610,16 @@
             gap: 10px;
             padding: 12px;
             background: rgba(255, 255, 255, 0.95);
-            color: #d32f2f;
-            border: 1px solid rgba(211, 47, 47, 0.1);
+            color: #333;
           }
           
           #mobileControlsPanel .time-offset-container {
             flex-direction: column;
             align-items: stretch;
-            color: #d32f2f;
+            color: #333;
             padding: 12px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 8px;
-          }
-          
-          #mobileControlsPanel .time-offset-container label {
-            color: #d32f2f;
-          }
-          
-          #mobileControlsPanel .time-offset-container input {
-            background-color: white;
-            border: 1px solid rgba(211, 47, 47, 0.3);
           }
           
           #main-container {
@@ -736,7 +652,7 @@
           /* 移動端視頻內字幕 - 更淺的背景，無邊框 */
           #video-subtitle-overlay {
             position: absolute;
-            bottom: 5px;
+            bottom: 8px;
             left: 0;
             width: 100%;
             text-align: center;
@@ -751,7 +667,7 @@
             color: #facc15; /* 橙色字體 */
             padding: 8px 14px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 12px;
             line-height: 1.4;
             max-width: 90%;
             text-align: center;
@@ -812,11 +728,7 @@
           }
           
           #siteTitle {
-            font-size: 18px;
-          }
-          
-          #siteTitle::before {
-            font-size: 20px;
+            font-size: 16px;
           }
           
           #mobileMenuBtn {
@@ -940,10 +852,6 @@
                 </div>
             </div>
             
-            <div class="main-controls">
-                <button id="stopSyncBtn" disabled class="warning-btn">⏹ 停止同步</button>
-            </div>
-            
             <div class="time-offset-container">
                 <label>時間偏移 (秒):</label>
                 <input type="number" id="timeOffset" value="0" step="0.1">
@@ -961,10 +869,6 @@
                 <input type="file" id="srtFileMobile" accept=".srt,.ass">
                 <div class="file-upload-label">選擇字幕</div>
             </div>
-        </div>
-        
-        <div class="control-group">
-            <button id="stopSyncBtnMobile" disabled class="warning-btn">⏹ 停止同步</button>
         </div>
         
         <div class="time-offset-container">
@@ -994,12 +898,7 @@
                 
                 <!-- 底部控制條 -->
                 <div id="videoControls">
-                    <div class="video-control-buttons">
-                        <button id="rewindBtn" class="video-control-btn">⏪ 後退5秒</button>
-                        <button id="playBtn" class="video-control-btn primary-btn">▶ 播放</button>
-                        <button id="pauseBtn" class="video-control-btn" disabled>⏸ 暫停</button>
-                        <button id="forwardBtn" class="video-control-btn">⏩ 前進5秒</button>
-                    </div>
+                    <!-- 已刪除控制按鈕 -->
                 </div>
             </div>
         </div>
@@ -1026,7 +925,6 @@
         let videoDuration = 0;
         let isMobileMenuOpen = false;
         let hideControlsTimeout = null;
-        let hasAutoSynced = false;
         let isMobileView = window.innerWidth <= 768;
         
         // 當前在視頻上顯示的字幕索引
@@ -1035,10 +933,6 @@
         let videoSubtitleOverlay = null;
             
         // DOM元素引用
-        const playBtn = document.getElementById('playBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const stopSyncBtn = document.getElementById('stopSyncBtn');
-        const stopSyncBtnMobile = document.getElementById('stopSyncBtnMobile');
         const timeOffsetInput = document.getElementById('timeOffset');
         const timeOffsetInputMobile = document.getElementById('timeOffsetMobile');
         const subListUl = document.getElementById('subList');
@@ -1051,8 +945,6 @@
         const progressBar = document.getElementById('progressBar');
         const currentTimeDisplay = document.getElementById('currentTimeDisplay');
         const durationDisplay = document.getElementById('durationDisplay');
-        const rewindBtn = document.getElementById('rewindBtn');
-        const forwardBtn = document.getElementById('forwardBtn');
         const videoPlayerContainer = document.getElementById('videoPlayer');
         const videoContainerElement = document.getElementById('videoPlayerContainer');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -1209,24 +1101,24 @@
             
             videoPlayer.addEventListener('ended', function() {
                 if (isSyncing) {
-                    stopSyncing();
+                    isSyncing = false;
+                    enablePageScroll();
                 }
                 videoContainerElement.classList.remove('playing');
                 showControls();
-                hasAutoSynced = false;
                 
                 // 清除視頻上的字幕
                 displaySubtitleOnVideo(-1);
             });
             
             videoPlayer.addEventListener('play', function() {
-                playBtn.disabled = true;
-                pauseBtn.disabled = false;
                 videoContainerElement.classList.add('playing');
                 
-                if (subtitles.length > 0 && !isSyncing && !hasAutoSynced) {
-                    startSyncing();
-                    hasAutoSynced = true;
+                // 自動開始同步字幕
+                if (subtitles.length > 0 && !isSyncing) {
+                    isSyncing = true;
+                    disablePageScroll();
+                    updateSubtitles();
                 }
                 
                 setTimeout(() => {
@@ -1237,15 +1129,25 @@
             });
             
             videoPlayer.addEventListener('pause', function() {
-                playBtn.disabled = false;
-                pauseBtn.disabled = true;
                 videoContainerElement.classList.remove('playing');
                 showControls();
             });
             
+            // 修改點擊事件：點擊視頻框播放/暫停
             videoPlayer.addEventListener('click', function(event) {
                 event.stopPropagation();
-                toggleControls();
+                
+                if (videoPlayer && videoPlayer.src) {
+                    if (videoPlayer.paused) {
+                        videoPlayer.play();
+                    } else {
+                        videoPlayer.pause();
+                    }
+                } else {
+                    alert("請先上傳視頻文件");
+                }
+                
+                showControls();
             });
             
             document.getElementById('videoControls').addEventListener('click', function(event) {
@@ -1293,12 +1195,6 @@
             // 顯示控制條
             document.getElementById('videoControls').style.display = 'flex';
             document.getElementById('topVideoControls').style.display = 'flex';
-        }
-        
-        function formatTimeMMSS(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
         
         function updateProgressBar() {
@@ -1511,16 +1407,42 @@
             li.appendChild(timeSpan);
             li.appendChild(textContainer);
             
+            // 修改點擊事件：點擊字幕時控制視頻播放/暫停
             li.addEventListener("click", function() {
-              jumpToSubtitle(sub.start);
+              if (!videoPlayer || !videoPlayer.src) {
+                alert("請先上傳視頻文件");
+                return;
+              }
+              
+              if (videoPlayer.paused) {
+                // 如果視頻暫停，跳轉到該字幕時間並播放
+                const offset = parseFloat(timeOffsetInput.value) || 0;
+                videoPlayer.currentTime = Math.max(0, sub.start - offset);
+                videoPlayer.play();
+                isSyncing = true;
+                disablePageScroll();
+              } else {
+                // 如果視頻正在播放，暫停
+                videoPlayer.pause();
+                if (isSyncing) {
+                  isSyncing = false;
+                  enablePageScroll();
+                }
+              }
+              
+              // 更新字幕顯示
+              updateSubtitles();
+              showControls();
             });
             
             subListUl.appendChild(li);
           }
           
-          if (videoPlayer && !videoPlayer.paused && !isSyncing && !hasAutoSynced) {
-            startSyncing();
-            hasAutoSynced = true;
+          // 如果視頻正在播放，開始同步字幕
+          if (videoPlayer && !videoPlayer.paused && !isSyncing) {
+            isSyncing = true;
+            disablePageScroll();
+            updateSubtitles();
           }
         }
         
@@ -1565,68 +1487,6 @@
           }
         }
         
-        function startSyncing() {
-          if (!videoPlayer || !videoPlayer.src) {
-            alert("請先上傳視頻文件");
-            return;
-          }
-          
-          if (subtitles.length === 0) {
-            alert("請先上傳字幕文件");
-            return;
-          }
-          
-          isSyncing = true;
-          stopSyncBtn.disabled = false;
-          stopSyncBtnMobile.disabled = false;
-          
-          disablePageScroll();
-          
-          window.scrollTo(0, 0);
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          
-          updateSubtitles();
-          
-          // 修正：只在移動端且菜單打開時才關閉菜單
-          if (isMobileView && isMobileMenuOpen) {
-            closeMobileMenu();
-          }
-        }
-        
-        function stopSyncing() {
-          isSyncing = false;
-          stopSyncBtn.disabled = true;
-          stopSyncBtnMobile.disabled = true;
-          hasAutoSynced = false;
-          
-          enablePageScroll();
-          
-          const activeItems = subListUl.querySelectorAll('.active');
-          activeItems.forEach(item => {
-            item.classList.remove('active');
-          });
-          
-          // 清除視頻上的字幕
-          displaySubtitleOnVideo(-1);
-        }
-        
-        function jumpToSubtitle(time) {
-          if (!videoPlayer || !videoPlayer.src) {
-            alert("請先上傳視頻文件");
-            return;
-          }
-          
-          const offset = parseFloat(timeOffsetInput.value) || 0;
-          videoPlayer.currentTime = Math.max(0, time - offset);
-          
-          if (isSyncing) {
-            updateSubtitles();
-          }
-          
-          showControls();
-        }
-        
         function toggleMobileMenu() {
           isMobileMenuOpen = !isMobileMenuOpen;
           
@@ -1643,7 +1503,7 @@
           }
         }
         
-        // 新增：專門關閉移動菜單的函數
+        // 專門關閉移動菜單的函數
         function closeMobileMenu() {
           isMobileMenuOpen = false;
           mobileControlsPanel.classList.remove('show');
@@ -1652,50 +1512,6 @@
             enablePageScroll();
           }
         }
-        
-        playBtn.addEventListener("click", function() {
-          if (videoPlayer && videoPlayer.src) {
-            videoPlayer.play().catch(e => {
-              console.log("播放失敗:", e);
-              alert("播放失敗，請確保視頻已正確加載");
-            });
-            playBtn.disabled = true;
-            pauseBtn.disabled = false;
-          } else {
-            alert("請先上傳視頻文件");
-          }
-        });
-        
-        pauseBtn.addEventListener("click", function() {
-          if (videoPlayer) {
-            videoPlayer.pause();
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
-          }
-        });
-        
-        stopSyncBtn.addEventListener("click", stopSyncing);
-        stopSyncBtnMobile.addEventListener("click", stopSyncing);
-        
-        rewindBtn.addEventListener("click", function() {
-          if (videoPlayer && videoPlayer.src) {
-            videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
-            updateSubtitles();
-            showControls();
-          } else {
-            alert("請先上傳視頻文件");
-          }
-        });
-        
-        forwardBtn.addEventListener("click", function() {
-          if (videoPlayer && videoPlayer.src) {
-            videoPlayer.currentTime = Math.min(videoDuration, videoPlayer.currentTime + 5);
-            updateSubtitles();
-            showControls();
-          } else {
-            alert("請先上傳視頻文件");
-          }
-        });
         
         mobileMenuBtn.addEventListener("click", toggleMobileMenu);
         
@@ -1715,10 +1531,6 @@
           videoPlayer.src = url;
           
           emptyVideo.style.display = 'none';
-          playBtn.disabled = false;
-          pauseBtn.disabled = true;
-          rewindBtn.disabled = false;
-          forwardBtn.disabled = false;
           
           document.getElementById('videoControls').style.display = 'flex';
           document.getElementById('topVideoControls').style.display = 'flex';
@@ -1730,7 +1542,7 @@
             }
           };
           
-          // 修正：只在移動端且菜單打開時才關閉菜單
+          // 只在移動端且菜單打開時才關閉菜單
           if (isMobileView && isMobileMenuOpen) {
             closeMobileMenu();
           }
@@ -1765,7 +1577,7 @@
               buildSubtitleList();
             }
             
-            // 修正：只在移動端且菜單打開時才關閉菜單
+            // 只在移動端且菜單打開時才關閉菜單
             if (isMobileView && isMobileMenuOpen) {
               closeMobileMenu();
             }
@@ -1821,7 +1633,7 @@
         document.addEventListener('click', function(event) {
           if (window.innerWidth <= 768 && isMobileMenuOpen) {
             if (!mobileMenuBtn.contains(event.target) && !mobileControlsPanel.contains(event.target)) {
-              closeMobileMenu();  // 修改：點擊外部時關閉菜單
+              closeMobileMenu();
             }
           }
         });
@@ -1829,7 +1641,14 @@
         if ('ontouchstart' in window) {
           videoContainerElement.addEventListener('touchstart', function(event) {
             if (event.target === videoContainerElement || event.target === videoPlayer) {
-              toggleControls();
+              if (videoPlayer && videoPlayer.src) {
+                if (videoPlayer.paused) {
+                  videoPlayer.play();
+                } else {
+                  videoPlayer.pause();
+                }
+              }
+              showControls();
             }
           });
         }
@@ -1905,4 +1724,5 @@
         }, 100);
     </script>
 </body>
+
 </html>
