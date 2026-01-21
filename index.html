@@ -458,7 +458,7 @@
         
         .video-subtitle-text {
           display: inline-block;
-          background-color: rgba(0, 0, 0, 0.75);
+          background-color: rgba(91, 95, 80, 0.75);
           color: #facc15;
           padding: 12px 20px;
           border-radius: 10px;
@@ -468,21 +468,11 @@
           text-align: center;
           word-wrap: break-word;
           white-space: pre-line;
-          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
           font-weight: 500;
           border: 1px solid rgba(255, 255, 255, 0.3);
           backdrop-filter: blur(5px);
-        }
-        
-        /* 視頻內字幕翻譯樣式 */
-        .video-subtitle-translation {
-          color: #ffffff;
-          font-size: 14px;
-          line-height: 1.4;
-          margin-top: 5px;
-          opacity: 0.9;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
         
         /* 進度條樣式 */
@@ -567,7 +557,7 @@
           margin: 0;
         }
         
-        /* 字幕列表樣式 */
+        /* 字幕列表樣式 - 修改以允許多行顯示 */
         #subList li {
           padding: 12px 15px;
           cursor: pointer;
@@ -578,11 +568,12 @@
           word-wrap: break-word;
           overflow-wrap: break-word;
           text-align: left;
-          white-space: pre-line;
+          white-space: normal; /* 改為normal以允許換行 */
           display: flex;
           align-items: flex-start;
           gap: 10px;
           position: relative;
+          min-height: 60px; /* 最小高度以適應多行內容 */
         }
         
         /* 時間標記 */
@@ -606,13 +597,18 @@
           min-width: 0;
         }
         
+        /* 原文樣式 - 允許多行顯示 */
         .subtitle-original {
           color: #e2e8f0;
           font-weight: 500;
           position: relative;
           padding-right: 30px;
+          white-space: normal; /* 改為normal以允許換行 */
+          word-break: break-word; /* 允許單詞內斷行 */
+          overflow-wrap: break-word; /* 強制換行 */
         }
         
+        /* 翻譯樣式 - 允許多行完全顯示 */
         .subtitle-translation {
           color: #ffffff;
           font-size: 12px;
@@ -620,6 +616,12 @@
           padding-right: 30px;
           line-height: 1.4;
           opacity: 0.9;
+          white-space: normal; /* 改為normal以允許換行 */
+          word-break: break-word; /* 允許單詞內斷行 */
+          overflow-wrap: break-word; /* 強制換行 */
+          display: block; /* 確保完全顯示 */
+          overflow: visible; /* 不隱藏溢出內容 */
+          max-height: none; /* 移除高度限制 */
         }
         
         /* 編輯圖標 */
@@ -862,16 +864,12 @@
             max-width: 90%;
           }
           
-          .video-subtitle-translation {
-            font-size: 11px;
-            margin-top: 3px;
-          }
-          
-          /* 移動端字幕列表 */
+          /* 移動端字幕列表 - 保持多行顯示 */
           #subList li {
             padding: 10px 15px;
             font-size: 13px;
             gap: 8px;
+            white-space: normal; /* 確保移動端也允許多行顯示 */
           }
           
           .subtitle-time {
@@ -940,6 +938,7 @@
           #subList li {
             font-size: 12px;
             padding: 8px 12px;
+            white-space: normal; /* 確保小屏幕也允許多行顯示 */
           }
           
           .subtitle-time {
@@ -1297,7 +1296,7 @@
             }
         }
         
-        // 在視頻上顯示字幕 - 修改：原文橘色，翻譯白色
+        // 在視頻上顯示字幕
         function displaySubtitleOnVideo(subtitleIndex) {
             if (subtitleIndex < 0 || subtitleIndex >= subtitles.length) {
                 // 清除視頻上的字幕
@@ -1314,66 +1313,28 @@
             
             currentVideoSubtitleIndex = subtitleIndex;
             
-            // 分隔語言
-            const separated = separateLanguages(subtitle.text);
-            
-            // 清除視頻上的字幕
+            // 創建字幕顯示元素
             videoSubtitleOverlay.innerHTML = '';
+            const subtitleElement = document.createElement('div');
+            subtitleElement.className = 'video-subtitle-text';
             
-            // 創建字幕容器
-            const subtitleContainer = document.createElement('div');
-            subtitleContainer.className = 'video-subtitle-text';
-            
-            // 處理原文（橘色）
-            let originalContent = separated.original;
+            // 處理字幕文本（保留換行）
+            let textContent = subtitle.text;
             
             // 如果有注音，處理注音
-            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(originalContent)) {
-                originalContent = applyFurigana(originalContent);
-                subtitleContainer.innerHTML = originalContent;
-            } else if (isJapanese(originalContent)) {
+            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(textContent)) {
+                textContent = applyFurigana(textContent);
+                subtitleElement.innerHTML = textContent;
+            } else if (isJapanese(textContent)) {
                 // 日語文本，可能需要添加注音
-                addFurigana(originalContent).then(annotatedText => {
-                    subtitleContainer.innerHTML = annotatedText;
-                    
-                    // 如果有翻譯，添加翻譯（白色）
-                    if (separated.translation) {
-                        addTranslationToVideo(subtitleContainer, separated.translation);
-                    }
+                addFurigana(textContent).then(annotatedText => {
+                    subtitleElement.innerHTML = annotatedText;
                 });
             } else {
-                subtitleContainer.innerHTML = originalContent;
-                
-                // 如果有翻譯，添加翻譯（白色）
-                if (separated.translation) {
-                    addTranslationToVideo(subtitleContainer, separated.translation);
-                }
+                subtitleElement.textContent = textContent;
             }
             
-            videoSubtitleOverlay.appendChild(subtitleContainer);
-        }
-        
-        // 添加翻譯到視頻字幕（白色）
-        function addTranslationToVideo(container, translationText) {
-            const translationElement = document.createElement('div');
-            translationElement.className = 'video-subtitle-translation';
-            
-            let translationContent = translationText;
-            
-            // 處理注音
-            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(translationContent)) {
-                translationContent = applyFurigana(translationContent);
-                translationElement.innerHTML = translationContent;
-            } else if (isJapanese(translationContent)) {
-                // 日語文本，可能需要添加注音
-                addFurigana(translationContent).then(annotatedText => {
-                    translationElement.innerHTML = annotatedText;
-                    container.appendChild(translationElement);
-                });
-            } else {
-                translationElement.textContent = translationContent;
-                container.appendChild(translationElement);
-            }
+            videoSubtitleOverlay.appendChild(subtitleElement);
         }
         
         function initVideoPlayer() {
