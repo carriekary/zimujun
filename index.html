@@ -264,6 +264,7 @@
           border: 1px solid rgba(59, 130, 246, 0.3);
           backdrop-filter: blur(10px);
           min-width: 200px;
+          max-width: 300px;
         }
         
         #editToolbar h4 {
@@ -458,7 +459,7 @@
         
         .video-subtitle-text {
           display: inline-block;
-          background-color: rgba(91, 95, 80, 0.75);
+          background-color: rgba(0, 0, 0, 0.75);
           color: #facc15;
           padding: 12px 20px;
           border-radius: 10px;
@@ -468,11 +469,21 @@
           text-align: center;
           word-wrap: break-word;
           white-space: pre-line;
-          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
           font-weight: 500;
           border: 1px solid rgba(255, 255, 255, 0.3);
           backdrop-filter: blur(5px);
+        }
+        
+        /* 視頻內字幕翻譯樣式 */
+        .video-subtitle-translation {
+          color: #ffffff;
+          font-size: 14px;
+          line-height: 1.4;
+          margin-top: 5px;
+          opacity: 0.9;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
         
         /* 進度條樣式 */
@@ -510,10 +521,10 @@
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
         
-        /* 字幕容器 */
+        /* 字幕容器 - 改回白灰色背景 */
         #subtitleContainer {
           flex: 1;
-          background-color: #1f2937;
+          background-color: white;
           border-radius: 12px;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
           display: flex;
@@ -527,9 +538,9 @@
         #subtitleContainer h3 {
           margin: 0;
           padding: 15px;
-          background: linear-gradient(135deg, #374151 0%, #2d3748 100%);
-          border-bottom: 1px solid #4b5563;
-          color: #e2e8f0;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border-bottom: 1px solid #e2e8f0;
+          color: #1e293b;
           font-size: 16px;
           display: flex;
           align-items: center;
@@ -557,23 +568,23 @@
           margin: 0;
         }
         
-        /* 字幕列表樣式 - 修改以允許多行顯示 */
+        /* 字幕列表樣式 - 改回白灰色背景 */
         #subList li {
           padding: 12px 15px;
           cursor: pointer;
-          border-bottom: 1px solid #374151;
+          border-bottom: 1px solid #f1f5f9;
           line-height: 1.5;
           font-size: 14px;
           transition: all 0.2s ease;
           word-wrap: break-word;
           overflow-wrap: break-word;
           text-align: left;
-          white-space: normal; /* 改為normal以允許換行 */
+          white-space: pre-line;
           display: flex;
           align-items: flex-start;
           gap: 10px;
           position: relative;
-          min-height: 60px; /* 最小高度以適應多行內容 */
+          min-height: 60px; /* 確保最小高度 */
         }
         
         /* 時間標記 */
@@ -583,7 +594,7 @@
           width: 60px;
           font-size: 12px;
           font-weight: 600;
-          color: #93c5fd;
+          color: #3b82f6;
           text-align: left;
           margin-top: 2px;
         }
@@ -597,31 +608,43 @@
           min-width: 0;
         }
         
-        /* 原文樣式 - 允許多行顯示 */
         .subtitle-original {
-          color: #e2e8f0;
+          color: #334155;
           font-weight: 500;
           position: relative;
           padding-right: 30px;
-          white-space: normal; /* 改為normal以允許換行 */
-          word-break: break-word; /* 允許單詞內斷行 */
-          overflow-wrap: break-word; /* 強制換行 */
         }
         
-        /* 翻譯樣式 - 允許多行完全顯示 */
+        /* 修正：翻譯句子最多顯示4行 */
         .subtitle-translation {
-          color: #ffffff;
+          color: #64748b;
           font-size: 12px;
           position: relative;
           padding-right: 30px;
           line-height: 1.4;
           opacity: 0.9;
-          white-space: normal; /* 改為normal以允許換行 */
-          word-break: break-word; /* 允許單詞內斷行 */
-          overflow-wrap: break-word; /* 強制換行 */
-          display: block; /* 確保完全顯示 */
-          overflow: visible; /* 不隱藏溢出內容 */
-          max-height: none; /* 移除高度限制 */
+          /* 移除所有可能限制高度的屬性 */
+          max-height: none !important;
+          /* 使用 flexbox 來處理多行文本 */
+          display: block;
+          /* 確保文本可以換行 */
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          /* 確保最多顯示4行 */
+          max-height: calc(1.4em * 4); /* 4行高度 */
+          overflow: hidden;
+          text-overflow: ellipsis;
+          /* 保留換行 */
+          white-space: pre-line;
+        }
+        
+        /* 編輯狀態下顯示完整翻譯 */
+        .editing .subtitle-translation {
+          max-height: none !important;
+          overflow: visible !important;
+          white-space: pre-line !important;
+          display: block !important;
         }
         
         /* 編輯圖標 */
@@ -637,7 +660,7 @@
           border-radius: 4px;
           padding: 2px 6px;
           font-size: 12px;
-          color: #93c5fd;
+          color: #3b82f6;
           border: 1px solid rgba(59, 130, 246, 0.3);
         }
         
@@ -648,13 +671,13 @@
         
         /* 編輯狀態 */
         .editing {
-          background-color: rgba(59, 130, 246, 0.2) !important;
+          background-color: rgba(219, 234, 254, 0.5) !important;
           box-shadow: inset 0 0 0 2px #3b82f6;
         }
         
         /* 時間超出視頻範圍的警告樣式 */
         .time-warning {
-          color: #fca5a5;
+          color: #ef4444;
           font-weight: bold;
           animation: pulse 2s infinite;
         }
@@ -666,25 +689,25 @@
         }
         
         #subList li:nth-child(odd) {
-          background-color: #2d3748;
+          background-color: #f8fafc;
         }
         
         #subList li:nth-child(even) {
-          background-color: #374151;
+          background-color: #ffffff;
         }
         
         #subList li:hover {
-          background-color: #4a5568;
+          background-color: #f0f9ff;
           transform: translateX(3px);
           box-shadow: inset 3px 0 0 #3b82f6;
         }
         
         #subList li.active {
-          background-color: #3b82f6 !important;
+          background-color: #dbeafe !important;
           font-weight: bold;
-          border-left: 5px solid #2563eb;
+          border-left: 5px solid #3b82f6;
           padding-left: 20px;
-          box-shadow: inset 0 0 10px rgba(37, 99, 235, 0.3);
+          box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1);
         }
         
         /* 輸入框樣式 */
@@ -721,7 +744,7 @@
         .empty-state {
           text-align: center;
           padding: 40px 20px;
-          color: #9ca3af;
+          color: #94a3b8;
           font-size: 16px;
           flex-grow: 1;
           display: flex;
@@ -744,10 +767,10 @@
         
         rt {
           font-size: 70%;
-          color: #93c5fd;
+          color: #3b82f6;
         }
         
-        /* 移動端適配 */
+        /* 移動端適配 - 改善版面穩定性 */
         @media (max-width: 768px) {
           header {
             padding: 8px 10px;
@@ -808,6 +831,7 @@
             flex-direction: column;
             padding: 10px;
             gap: 10px;
+            height: calc(100vh - 60px); /* 固定高度，避免變形 */
           }
           
           #video-container, #subtitleContainer {
@@ -816,14 +840,15 @@
           }
           
           #video-container {
-            height: 40vh;
+            height: 35vh; /* 固定高度比例 */
             min-height: 200px;
-            position: relative;
+            max-height: 40vh;
           }
           
           #subtitleContainer {
-            height: 60vh;
-            min-height: 300px;
+            height: calc(65vh - 20px); /* 固定高度，減去間距 */
+            min-height: 250px;
+            flex: 1;
           }
           
           #subtitleContainer h3 {
@@ -831,7 +856,27 @@
             font-size: 15px;
           }
           
-          /* 編輯工具欄在移動端的樣式 */
+          /* 移動端字幕列表項目最小高度調整 */
+          #subList li {
+            padding: 10px 12px;
+            font-size: 13px;
+            gap: 8px;
+            min-height: 50px; /* 移動端最小高度 */
+          }
+          
+          /* 移動端翻譯句子樣式 - 最多顯示3行 */
+          .subtitle-translation {
+            font-size: 11px;
+            line-height: 1.3;
+            max-height: calc(1.3em * 3); /* 3行高度 */
+          }
+          
+          .subtitle-time {
+            width: 50px;
+            font-size: 11px;
+          }
+          
+          /* 編輯工具欄在移動端的樣式 - 改善版面 */
           #editToolbar {
             position: fixed;
             top: auto;
@@ -842,6 +887,9 @@
             border-radius: 12px 12px 0 0;
             max-height: 70vh;
             overflow-y: auto;
+            max-width: 100%;
+            padding-bottom: env(safe-area-inset-bottom, 15px); /* 考慮安全區域 */
+            z-index: 1002; /* 確保在最上層 */
           }
           
           .toolbar-actions {
@@ -850,6 +898,7 @@
             background: rgba(255, 255, 255, 0.95);
             padding-top: 10px;
             margin-top: 20px;
+            z-index: 1;
           }
           
           /* 移動端視頻內字幕 */
@@ -864,17 +913,9 @@
             max-width: 90%;
           }
           
-          /* 移動端字幕列表 - 保持多行顯示 */
-          #subList li {
-            padding: 10px 15px;
-            font-size: 13px;
-            gap: 8px;
-            white-space: normal; /* 確保移動端也允許多行顯示 */
-          }
-          
-          .subtitle-time {
-            width: 50px;
+          .video-subtitle-translation {
             font-size: 11px;
+            margin-top: 3px;
           }
           
           .edit-icon {
@@ -928,17 +969,18 @@
           }
           
           #video-container {
-            height: 35vh;
+            height: 30vh; /* 更小的屏幕進一步調整 */
+            max-height: 35vh;
           }
           
           #subtitleContainer {
-            height: 65vh;
+            height: calc(70vh - 20px); /* 調整比例 */
           }
           
           #subList li {
             font-size: 12px;
-            padding: 8px 12px;
-            white-space: normal; /* 確保小屏幕也允許多行顯示 */
+            padding: 8px 10px;
+            min-height: 45px;
           }
           
           .subtitle-time {
@@ -948,12 +990,12 @@
           
           /* 更小屏幕的視頻內字幕調整 */
           #video-subtitle-overlay {
-            bottom: 15px;
+            bottom: 10px;
           }
           
           .video-subtitle-text {
-            font-size: 14px;
-            padding: 7px 12px;
+            font-size: 12px;
+            padding: 6px 10px;
           }
           
           .main-controls button {
@@ -993,11 +1035,11 @@
         
         @media (max-width: 360px) {
           #video-container {
-            height: 30vh;
+            height: 28vh;
           }
           
           #subtitleContainer {
-            height: 70vh;
+            height: calc(72vh - 20px);
           }
           
           .video-control-buttons button {
@@ -1011,8 +1053,8 @@
           }
           
           .video-subtitle-text {
-            font-size: 13px;
-            padding: 6px 10px;
+            font-size: 11px;
+            padding: 5px 8px;
           }
         }
         
@@ -1148,7 +1190,7 @@
         </div>
         
         <div id="subtitleContainer">
-            <h3>字幕列表 <span id="editStatus" style="font-size:12px; color:#93c5fd;"></span></h3>
+            <h3>字幕列表 <span id="editStatus" style="font-size:12px; color:#3b82f6;"></span></h3>
             <div id="subListContainer">
                 <ul id="subList"></ul>
                 <div class="empty-state" id="emptySubtitle">
@@ -1296,7 +1338,7 @@
             }
         }
         
-        // 在視頻上顯示字幕
+        // 在視頻上顯示字幕 - 修改：原文橘色，翻譯白色
         function displaySubtitleOnVideo(subtitleIndex) {
             if (subtitleIndex < 0 || subtitleIndex >= subtitles.length) {
                 // 清除視頻上的字幕
@@ -1313,28 +1355,66 @@
             
             currentVideoSubtitleIndex = subtitleIndex;
             
-            // 創建字幕顯示元素
-            videoSubtitleOverlay.innerHTML = '';
-            const subtitleElement = document.createElement('div');
-            subtitleElement.className = 'video-subtitle-text';
+            // 分隔語言
+            const separated = separateLanguages(subtitle.text);
             
-            // 處理字幕文本（保留換行）
-            let textContent = subtitle.text;
+            // 清除視頻上的字幕
+            videoSubtitleOverlay.innerHTML = '';
+            
+            // 創建字幕容器
+            const subtitleContainer = document.createElement('div');
+            subtitleContainer.className = 'video-subtitle-text';
+            
+            // 處理原文（橘色）
+            let originalContent = separated.original;
             
             // 如果有注音，處理注音
-            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(textContent)) {
-                textContent = applyFurigana(textContent);
-                subtitleElement.innerHTML = textContent;
-            } else if (isJapanese(textContent)) {
+            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(originalContent)) {
+                originalContent = applyFurigana(originalContent);
+                subtitleContainer.innerHTML = originalContent;
+            } else if (isJapanese(originalContent)) {
                 // 日語文本，可能需要添加注音
-                addFurigana(textContent).then(annotatedText => {
-                    subtitleElement.innerHTML = annotatedText;
+                addFurigana(originalContent).then(annotatedText => {
+                    subtitleContainer.innerHTML = annotatedText;
+                    
+                    // 如果有翻譯，添加翻譯（白色）
+                    if (separated.translation) {
+                        addTranslationToVideo(subtitleContainer, separated.translation);
+                    }
                 });
             } else {
-                subtitleElement.textContent = textContent;
+                subtitleContainer.innerHTML = originalContent;
+                
+                // 如果有翻譯，添加翻譯（白色）
+                if (separated.translation) {
+                    addTranslationToVideo(subtitleContainer, separated.translation);
+                }
             }
             
-            videoSubtitleOverlay.appendChild(subtitleElement);
+            videoSubtitleOverlay.appendChild(subtitleContainer);
+        }
+        
+        // 添加翻譯到視頻字幕（白色）
+        function addTranslationToVideo(container, translationText) {
+            const translationElement = document.createElement('div');
+            translationElement.className = 'video-subtitle-translation';
+            
+            let translationContent = translationText;
+            
+            // 處理注音
+            if (/([\u4E00-\u9FFF]+)\(([\u3040-\u309F]+)\)/.test(translationContent)) {
+                translationContent = applyFurigana(translationContent);
+                translationElement.innerHTML = translationContent;
+            } else if (isJapanese(translationContent)) {
+                // 日語文本，可能需要添加注音
+                addFurigana(translationContent).then(annotatedText => {
+                    translationElement.innerHTML = annotatedText;
+                    container.appendChild(translationElement);
+                });
+            } else {
+                translationElement.textContent = translationContent;
+                container.appendChild(translationElement);
+            }
         }
         
         function initVideoPlayer() {
@@ -2284,26 +2364,49 @@
               buildSubtitleList();
             }
             
+            // 改善移動端版面穩定性 - 使用固定高度計算
             if (isNowMobile) {
-              const headerHeight = document.querySelector('header').offsetHeight;
+              const header = document.querySelector('header');
+              const headerHeight = header ? header.offsetHeight : 60;
               const windowHeight = window.innerHeight;
               const availableHeight = windowHeight - headerHeight - 20;
               
-              const videoHeight = Math.min(availableHeight * 0.4, 400);
-              const subtitleHeight = Math.min(availableHeight * 0.6, 600);
+              // 使用固定比例，避免變形
+              const videoHeight = Math.min(availableHeight * 0.35, 400);
+              const subtitleHeight = Math.min(availableHeight * 0.65, 600);
               
               document.getElementById('video-container').style.height = videoHeight + 'px';
               document.getElementById('subtitleContainer').style.height = subtitleHeight + 'px';
+              
+              // 確保主容器有固定高度
+              document.getElementById('main-container').style.height = (availableHeight) + 'px';
             } else {
+              // 桌面端恢復自動高度
               document.getElementById('video-container').style.height = '';
               document.getElementById('subtitleContainer').style.height = '';
+              document.getElementById('main-container').style.height = '';
             }
           }, 250);
         });
         
+        // 初始化時觸發一次resize
         setTimeout(() => {
           window.dispatchEvent(new Event('resize'));
         }, 100);
+        
+        // 監聽編輯工具欄顯示/隱藏時的版面變化
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'style' && mutation.target === editToolbar) {
+              // 編輯工具欄顯示或隱藏時，重新計算版面
+              setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+              }, 50);
+            }
+          });
+        });
+        
+        observer.observe(editToolbar, { attributes: true });
     </script>
 </body>
 
