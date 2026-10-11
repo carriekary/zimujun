@@ -60,11 +60,11 @@
           display: flex; align-items: center; gap: 6px; padding: 6px 14px;
           background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3);
           border-radius: 20px; cursor: pointer; font-size: 13px; color: #fff;
-          transition: all 0.2s ease; max-width: none; flex: 1; user-select: none;
+          transition: all 0.2s ease; max-width: none; flex: 1; min-width: 0; overflow: hidden; user-select: none;
         }
         .custom-file-upload:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-1px); }
         .custom-file-upload input[type="file"] { display: none; }
-        .file-name-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-name-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 0; }
         .file-icon { font-size: 14px; }
         .custom-file-upload.has-file { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; color: #e8f8f5; }
 
