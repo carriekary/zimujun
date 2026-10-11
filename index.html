@@ -42,14 +42,14 @@
         .header-left p { margin: 0; font-size: 12px; opacity: 0.9; }
         
         .file-search-container { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .file-buttons-wrapper { display: flex; gap: 12px; }
-        .file-item { display: flex; align-items: center; gap: 6px; }
+        .file-buttons-wrapper { display: flex; gap: 12px; width: 500px; flex: none; }
+        .file-item { display: flex; align-items: stretch; gap: 6px; flex: 0 0 calc((100% - 24px) * 0.4); min-width: 0; }
 
         .custom-file-upload {
           display: flex; align-items: center; gap: 6px; padding: 6px 14px;
           background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3);
           border-radius: 20px; cursor: pointer; font-size: 13px; color: #fff;
-          transition: all 0.2s ease; max-width: 160px; user-select: none;
+          transition: all 0.2s ease; max-width: none; flex: 1; user-select: none;
         }
         .custom-file-upload:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-1px); }
         .custom-file-upload input[type="file"] { display: none; }
@@ -231,7 +231,7 @@
           .header-left h1 { font-size: 18px; line-height: 1.2; }
           .header-left p { font-size: 11px; line-height: 1.3; }
           .file-search-container { width: 100%; justify-content: flex-start; gap: 6px; }
-          .custom-file-upload { padding: 4px 10px; max-width: 130px; font-size: 12px; }
+          .custom-file-upload { padding: 4px 10px; max-width: none; flex: 1; font-size: 11px; }
           .search-box { flex: 1; min-width: 120px; width: auto; font-size: 12px; }
           .bilingual-btn, .toggle-notes-btn { font-size: 11px; padding: 6px 10px; }
           main { padding-top: calc(var(--header-height) + 16px); padding-bottom: 180px; }
@@ -246,17 +246,18 @@
         }
         
         @media (max-width: 600px) {
-          :root { --header-height: 174px; }
+          :root { --header-height: 188px; }
           #subtitles { max-height: calc(100vh - 220px); }
           .file-search-container { flex-direction: row; gap: 6px; }
-          .file-buttons-wrapper { width: 100%; flex: none; gap: 6px; }
-          .file-item { width: calc(50% - 3px); justify-content: space-between; }
-          .custom-file-upload { flex: 1; max-width: none; justify-content: center; padding: 6px; }
-          .file-name-text { font-size: 11px; max-width: 70px; }
+          .file-buttons-wrapper { width: 100%; flex: none; gap: 6px; flex-wrap: wrap; }
+          .file-item { width: auto; flex: 0 0 calc((100% - 12px) * 0.4); min-width: 0; justify-content: space-between; }
+          .custom-file-upload { flex: 1; max-width: none; min-width: 0; justify-content: center; padding: 6px; }
+          .file-name-text { font-size: 11px; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .clear-btn { font-size: 18px; }
           .action-group { width: 100%; display: flex; gap: 5px; }
           .search-box { width: 100%; flex: 1; min-width: 0; }
           .action-group .bilingual-btn, .action-group .toggle-notes-btn { flex: none; width: 100%; min-width: 0; padding: 7px 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .file-buttons-wrapper > #mediaLinkBtn { flex: 0 0 calc((100% - 12px) * 0.2); min-width: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; padding: 6px 4px; }
           main { padding-top: calc(var(--header-height) + 12px); }
         }
         @media (max-width: 430px) {
@@ -666,7 +667,7 @@
         .media-panel.closed .media-card { display: none; }
         .media-card { position: relative; width: min(580px, 92vw); max-height: 88vh; overflow-y: auto; background: #fffdf8; border: 2px solid #e2cfa8; border-radius: 14px; padding: 18px 20px; box-shadow: 0 18px 50px rgba(0,0,0,.28); }
         /* 头部 🎵 音钮：声音还在播（播放器收起／面具关掉时）就亮红点，点它叫回音讯面板 */
-        #mediaLinkBtn { position: relative; }
+        #mediaLinkBtn { position: relative; flex: 0 0 calc((100% - 24px) * 0.2); min-width: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 6px 14px; }
         #mediaLinkBtn.media-sound-on { border-color: var(--vermillion) !important; color: var(--vermillion); }
         #mediaLinkBtn.media-sound-on::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #c0392b; animation: mpDotPulse 1.6s ease-out infinite; }
         @keyframes mpDotPulse { 0% { box-shadow: 0 0 0 0 rgba(192,57,43,.55); } 70% { box-shadow: 0 0 0 7px rgba(192,57,43,0); } 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); } }
@@ -876,6 +877,7 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                   </label>
                   <span class="clear-btn" id="clearBtn2" title="移除档案2" data-page-node-id="OWfWYshhUY6hWntbHoHqpv">×</span>
               </div>
+              <button id="mediaLinkBtn" class="bilingual-btn" title="贴上音讯连结，对著字幕播放">🎵 音讯</button>
             </div>
 
             <div class="offset-control" id="offsetControl" title="日文檔與中文檔時間碼有整體偏差時，拖動此滑桿把中文整體前／後移 N 秒來對齊">
@@ -892,7 +894,6 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                 <button id="toggleNotesBtn" class="toggle-notes-btn" data-page-node-id="Bue79v2SKhcXGCvm4BKH71">隐藏笔记</button>
                 <button id="bilingualBtn" class="bilingual-btn" data-page-node-id="4Bknm7rNDPRogzOnMVlPHh">单语显示</button>
                 <button id="furiganaBtn" class="bilingual-btn" data-page-node-id="QvV7DzEHEYuQQhDCGlwGxO">隐藏注音</button>
-                <button id="mediaLinkBtn" class="bilingual-btn" title="贴上音讯连结，对著字幕播放">🎵 音讯</button>
                 </div>
             </div>
         </div>
@@ -925,10 +926,6 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
         <div class="settings-row">
           <span class="settings-label">阅读模式</span>
           <label class="settings-switch"><input type="checkbox" id="swReading"><span class="settings-slider"></span></label>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">🎵 音讯面板</span>
-          <button id="settingsAudioBtn" class="settings-open-btn" type="button">开启</button>
         </div>
       </div>
     </aside>
@@ -1913,7 +1910,6 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
             var v = medEl(), on = false;
             try { on = !!(v && v.currentSrc || (v && v.src)) && !v.paused && !v.ended; } catch (e) { on = false; }
             b.classList.toggle('media-sound-on', on);
-            var gear = document.getElementById('settingsBtn'); if (gear) gear.classList.toggle('media-sound-on', on);
             b.title = on ? '🎵 音讯：声音正在播（播放器收起中）— 点这里打开音讯面板' : '🎵 音讯：点这里打开音讯面板';
         }
         function setStage() { openStage(); }
@@ -3085,8 +3081,6 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                 this.checked = AppState.readingMode;
                 syncSwitches();
               });
-              var sa = document.getElementById('settingsAudioBtn');
-              if (sa) sa.addEventListener('click', function () { closeSettings(); var b = document.getElementById('mediaLinkBtn'); if (b) b.click(); });
             })();
             var cb = document.getElementById('mpCloseBtn');
             if (cb) cb.addEventListener('click', closeMediaPanel);
