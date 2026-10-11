@@ -1134,7 +1134,7 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
         <button type="button" data-playrate="1.5">1.5×</button>
         <button type="button" data-playrate="2">2×</button>
         </div>
-        <div class="mp-delay" id="mpDelayBox" title="音讯与字幕对齐用：向左拉＝字幕提前（声音比字幕快，字幕会早 N 秒亮）；向右拉＝字幕延后（声音比字幕慢，字幕会晚 N 秒亮）。可拖曳、按方向键，或用右边◀▶每次 1 秒微调，范围 ±1 秒 ～ ±1 分钟。"><span class="mp-delay-cap">🎵 音讯偏移</span><input type="range" class="mp-delay-range" id="mpDelaySel" min="-60" max="60" step="1" value="0" aria-label="音讯偏移（秒）：向左字幕提前，向右字幕延后" /><span class="mp-delay-val" id="mpDelayVal">不偏移</span><button type="button" class="mp-delay-nudge" id="mpDelayNudgeA" title="字幕提前 1 秒">◀</button><button type="button" class="mp-delay-nudge" id="mpDelayNudgeB" title="字幕延后 1 秒">▶</button><button type="button" class="mp-delay-reset" id="mpDelayReset" title="归零（不偏移）">↺</button></div>
+        <div class="mp-delay" id="mpDelayBox" title="音讯与字幕对齐用：向左拉＝字幕延后（声音比字幕慢，字幕会晚 N 秒亮）；向右拉＝字幕提前（声音比字幕快，字幕会早 N 秒亮）。可拖曳、按方向键，或用右边◀▶每次 1 秒微调，范围 ±1 秒 ～ ±1 分钟。"><span class="mp-delay-cap">🎵 音讯偏移</span><input type="range" class="mp-delay-range" id="mpDelaySel" min="-60" max="60" step="1" value="0" aria-label="音讯偏移（秒）：向左字幕延后，向右字幕提前" /><span class="mp-delay-val" id="mpDelayVal">不偏移</span><button type="button" class="mp-delay-nudge" id="mpDelayNudgeA" title="字幕延后 1 秒">◀</button><button type="button" class="mp-delay-nudge" id="mpDelayNudgeB" title="字幕提前 1 秒">▶</button><button type="button" class="mp-delay-reset" id="mpDelayReset" title="归零（不偏移）">↺</button></div>
         </div>
         <div class="mp-status" id="mpStatus"></div>
         </div>
@@ -3023,7 +3023,7 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
         function mpDelaySync(quiet) {
             var v = MP.audioDelaySec;
             var dsel2 = document.getElementById('mpDelaySel');
-            if (dsel2) { dsel2.value = String(v); dsel2.style.setProperty('--mpv', (Math.abs(v) / 60 * 50) + '%'); }
+            if (dsel2) { dsel2.value = String(-v); dsel2.style.setProperty('--mpv', (Math.abs(v) / 60 * 50) + '%'); }
             var dlab = document.getElementById('mpDelayVal');
             if (dlab) {
                 var narrow = !!(window.matchMedia && window.matchMedia('(max-width: 430px)').matches);
@@ -3035,8 +3035,8 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
             _mpDelayShown = v;
             try { localStorage.setItem('xiaoye_media_delay_v1', String(v)); } catch (e) { }
             medStatus(v < 0
-                ? ('✅ 字幕提前 ' + (-v) + ' 秒：字幕会早 ' + (-v) + ' 秒亮（声音比字幕快就拖向左）。')
-                : (v > 0 ? ('✅ 字幕延后 ' + v + ' 秒：字幕会晚 ' + v + ' 秒亮（声音比字幕慢就拖向右）。') : '✅ 不偏移（字幕直接用原时间码）。'), '');
+                ? ('✅ 字幕提前 ' + (-v) + ' 秒：字幕会早 ' + (-v) + ' 秒亮（声音比字幕快就拖向右）。')
+                : (v > 0 ? ('✅ 字幕延后 ' + v + ' 秒：字幕会晚 ' + v + ' 秒亮（声音比字幕慢就拖向左）。') : '✅ 不偏移（字幕直接用原时间码）。'), '');
         }
 
         (function initMediaUI() {
@@ -3102,11 +3102,11 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
             // 「🎵 音讯偏移」bar（滑杆）：向左＝字幕提前、向右＝字幕延后，范围 ±1 秒 ～ ±1 分钟
             var dsel = document.getElementById('mpDelaySel');
             function mpDelaySet(v) { MP.audioDelaySec = Math.max(-60, Math.min(60, Math.round(v))); mpDelaySync(false); }
-            if (dsel) dsel.addEventListener('input', function () { mpDelaySet(parseFloat(this.value) || 0); });
+            if (dsel) dsel.addEventListener('input', function () { mpDelaySet(-(parseFloat(this.value) || 0)); });
             var dnA = document.getElementById('mpDelayNudgeA');
-            if (dnA) dnA.addEventListener('click', function () { mpDelaySet(MP.audioDelaySec - 1); });
+            if (dnA) dnA.addEventListener('click', function () { mpDelaySet(MP.audioDelaySec + 1); });
             var dnB = document.getElementById('mpDelayNudgeB');
-            if (dnB) dnB.addEventListener('click', function () { mpDelaySet(MP.audioDelaySec + 1); });
+            if (dnB) dnB.addEventListener('click', function () { mpDelaySet(MP.audioDelaySec - 1); });
             var dnR = document.getElementById('mpDelayReset');
             if (dnR) dnR.addEventListener('click', function () { mpDelaySet(0); });
                         var bp = document.getElementById('mediaLinkBtn');
