@@ -12,7 +12,8 @@
 
     <style>
         :root {
-          --header-height: 100px;
+          --header-h-base: 100px;
+          --header-height: var(--header-h-base);
           --accent: #2c3e50;
           --subtitle-min-height: 30px;
           --gutter: 12px;
@@ -39,15 +40,32 @@
         
         /* 头部底边：音讯进度条（有音讯才出现，点／拖可跳转，不必开面板） */
         .mp-header-progress {
-          position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
-          background: rgba(176, 36, 48, 0.20); cursor: pointer; z-index: 6;
-          touch-action: none; transition: height 0.12s ease;
+          position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
+          display: flex; align-items: center; gap: 8px; padding: 0 10px;
+          background: rgba(255,253,249,0.96); border-top: 1px solid transparent;
+          cursor: pointer; z-index: 6;
+          touch-action: none;
         }
-        .mp-header-progress::before { content: ""; position: absolute; left: 0; right: 0; top: -7px; bottom: -7px; }
-        .mp-header-progress-fill { height: 100%; width: 0%; background: var(--vermillion, #b02430); pointer-events: none; }
-        .mp-header-progress:focus-visible { outline: 2px solid #b02430; outline-offset: -2px; }
-        @media (hover: hover) { .mp-header-progress:hover { height: 6px; } }
-        .mp-header-progress:active { height: 7px; }
+        .mp-header-progress::before { content: ""; position: absolute; left: 0; right: 0; top: -7px; bottom: 0; }
+        .mp-hp-play {
+          flex: 0 0 auto; width: 20px; height: 20px; border: none; border-radius: 50%;
+          background: rgba(0,0,0,0.06); color: #333; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; padding: 0 0 0 2px;
+          box-shadow: 0 0 0 1px transparent;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+        .mp-hp-play:hover { background: rgba(0,0,0,0.12); color: #222; }
+        .mp-hp-time { flex: 0 0 auto; font-size: 11px; line-height: 1; color: rgba(51,51,51,0.92); font-variant-numeric: tabular-nums; letter-spacing: 0.2px; user-select: none; transition: color 0.15s ease; }
+        /* ::before 延伸點擊區會畫在非定位子元素之上攔截點擊 → 子元素抬高到偽元素之上 */
+        .mp-hp-play, .mp-hp-time, .mp-hp-track { position: relative; z-index: 1; }
+        .mp-hp-track { flex: 1 1 0; min-width: 40px; height: 5px; box-sizing: border-box; border-radius: 4px; background: rgba(0,0,0,0.12); border: 1px solid transparent; overflow: hidden; transition: height 0.12s ease, background 0.15s ease, border-color 0.15s ease; }
+        .mp-header-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, rgba(239,68,68,0.95), rgba(220,38,38,0.95)); border-radius: 3px; pointer-events: none; }
+        .mp-header-progress:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+        @media (hover: hover) { .mp-header-progress:hover .mp-hp-track { height: 8px; background: rgba(0,0,0,0.18); border-color: transparent; } .mp-header-progress:hover .mp-hp-time { color: rgba(40,40,40,0.98); } .mp-header-progress:hover .mp-hp-play { background: rgba(0,0,0,0.12); color: #222; } }
+        .mp-header-progress:active .mp-hp-track { height: 9px; }
+        /* 不論屏幕：時間文字/軌道邊線/按鈕描邊 統一深灰色；條本身改淺底確保深灰在深色 header 上也看得見（≤900px 不再另設） */
+        /* 播放時 header 加高 26px 容納進度條（所有依 --header-height 的排版自動讓位） */
+        body.mp-hp-on { --header-height: calc(var(--header-h-base, 100px) + 26px); }
                 .header-left { display: flex; flex-direction: row; align-items: center; gap: 12px; }
         .header-left h1 { margin: 0; font-size: 24px; }
         .header-left p { margin: 0; font-size: 12px; opacity: 0.9; }
@@ -236,7 +254,7 @@
         .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
 
         @media (max-width: 900px) {
-          :root { --header-height: 130px; }
+          :root { --header-h-base: 130px; --header-height: var(--header-h-base); }
           .header { flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 16px; }
           .header-left { width: 100%; margin-bottom: 6px; }
           .header-left h1 { font-size: 18px; line-height: 1.2; }
@@ -245,7 +263,7 @@
           .custom-file-upload { padding: 4px 10px; max-width: none; flex: 1; font-size: 11px; }
           .search-box { flex: 1; min-width: 120px; width: auto; font-size: 12px; }
           .bilingual-btn, .toggle-notes-btn { font-size: 11px; padding: 6px 10px; }
-          main { padding-top: calc(var(--header-height) + 16px); padding-bottom: 180px; }
+          main { padding-top: calc(var(--header-height) + 16px); padding-bottom: 12px; }
           .subtitle { display: grid; grid-template-columns: auto 1fr; gap: 6px; align-items: start; padding: 8px 10px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); border: 1px solid rgba(0, 0, 0, 0.08); }
           .text-box { width: auto; flex: 1; min-width: 0; padding: 6px 10px; padding-right: 10px; height: auto; min-height: 34px; font-size: 16px; }
           .row-actions { position: static; transform: none; right: auto; top: auto; width: auto; flex: 0 0 auto; justify-content: flex-end; margin: 0 0 0 6px; opacity: 1; }
@@ -257,8 +275,8 @@
         }
         
         @media (max-width: 600px) {
-          :root { --header-height: 188px; }
-          #subtitles { max-height: calc(100vh - 220px); }
+          :root { --header-h-base: 168px; --header-height: var(--header-h-base); }
+          #subtitles { max-height: calc(100vh - 220px); overflow-y: auto; scrollbar-gutter: stable; }
           .file-search-container { flex-direction: row; gap: 6px; }
           .file-buttons-wrapper { width: 100%; flex: none; gap: 6px; flex-wrap: wrap; }
           .file-item { width: auto; flex: 0 0 calc((100% - 12px) * 0.4); min-width: 0; justify-content: space-between; }
@@ -274,6 +292,14 @@
         @media (max-width: 430px) {
           .action-group { gap: 4px; }
           .action-group .bilingual-btn, .action-group .toggle-notes-btn { font-size: 10.5px; padding: 6px 1px; letter-spacing: -0.2px; }
+        }
+        /* ≤900px（手機/平板/窄窗）：頁面剛好填滿可視範圍，不再多出頁面長卷軸
+           （原本 main padding-bottom:180px 令頁面恒高 ~190px，拉頁面卷軸時
+             字幕框被推上標頭底下、底部留白升起來擋內容；改為跟桌面一樣只捲字幕框內部。
+             max-height 用 var(--header-height) 自適應標頭高度，確保各寬度頁面都不溢出） */
+        @media (max-width: 900px) {
+          main { padding-bottom: 12px; }
+          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 64px; }
         }
 
         /* ==================== 和风纸白主题（白纸 × 朱红 × 金） ==================== */
@@ -593,6 +619,29 @@
         .vocab-manage-btn { border: 1px solid #e3d8c2; background: #fff; color: #7c6f56; border-radius: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
         .vocab-manage-btn:hover { background: #f7efe0; }
         .vocab-manage-btn.active { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+        /* 生词本匯出 PDF 弹窗 */
+        .vocab-pdf-btn { border: 1px solid var(--vermillion); background: #fff; color: var(--vermillion); border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .vocab-pdf-btn:hover { background: var(--vermillion); color: #fff; }
+        .vocab-pdf-modal { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; }
+        .vocab-pdf-modal[hidden] { display: none; }
+        .vocab-pdf-backdrop { position: absolute; inset: 0; background: rgba(40,30,20,.45); }
+        .vocab-pdf-card { position: relative; background: #fffdf9; border: 1px solid #e3d8c2; border-radius: 14px; padding: 20px 22px 18px; width: min(440px, 92vw); max-height: 86vh; overflow: auto; box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+        .vocab-pdf-card h3 { margin: 0 0 14px; font-size: 17px; color: #7c6f56; }
+        .vpdf-scope { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .vpdf-radio { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #5a5142; cursor: pointer; }
+        .vpdf-radio input { accent-color: var(--vermillion); }
+        .vpdf-pick { margin: 4px 0 10px; padding: 10px 12px; background: #fbf6ec; border: 1px solid #ece3d2; border-radius: 10px; }
+        .vpdf-pick-hint { font-size: 12.5px; color: #a89e8e; margin-bottom: 8px; }
+        .vpdf-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow: auto; }
+        .vpdf-opt { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5a5142; cursor: pointer; padding: 3px 2px; }
+        .vpdf-opt input { accent-color: var(--vermillion); }
+        .vpdf-empty { font-size: 12.5px; color: #a89e8e; }
+        .vpdf-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+        .vpdf-cancel { border: 1px solid #e3d8c2; background: #fff; color: #7c6f56; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+        .vpdf-cancel:hover { background: #f3ede1; }
+        .vpdf-go { border: 1px solid var(--vermillion); background: var(--vermillion); color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .vpdf-go:hover { filter: brightness(1.05); }
+
         .vocab-cat-manager { padding: 10px 22px 14px; border-bottom: 1px solid #ece3d2; background: #fbf6ec; }
         .vocab-cat-manager-head { font-size: 13px; color: #7c6f56; font-weight: 700; margin-bottom: 8px; }
         .vocab-cat-manager-hint { font-weight: 400; color: #a89e8e; font-size: 12px; }
@@ -737,13 +786,25 @@
         }
         .vocab-item .vocab-sentence { font-family: var(--vb-font); font-size: calc(18px * var(--vb-scale)); color: #232c38; line-height: 1.6; margin-bottom: 5px; word-break: break-word; }
         .vocab-item .vocab-zh { font-family: var(--vb-font-zh); font-size: calc(16px * var(--vb-scale)); line-height: 1.55; color: #5a544b; margin-bottom: 5px; word-break: break-word; }
+        @media (max-width: 640px) {
+          .vocab-item { flex-direction: column; gap: 10px; padding: 13px 14px; align-items: stretch; }
+          .vocab-left { flex-basis: auto; flex: 0 0 auto; }
+          .vocab-item .vocab-word { font-size: calc(15px * var(--vb-scale)); }
+          .vocab-item .vocab-gloss { font-size: calc(14px * var(--vb-scale)); }
+          .vocab-item .vocab-sentence { font-size: calc(15px * var(--vb-scale)); }
+          .vocab-item .vocab-zh { font-size: calc(13px * var(--vb-scale)); }
+          .vocab-item .vocab-meta { font-size: 12.5px; }
+        }
         .vocab-item .vocab-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13.5px; color: #7a7266; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+        .vocab-item .vocab-meta > span:last-child { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; max-width: 100%; }
+        .vocab-cat { max-width: 100%; min-width: 0; flex: 1 1 auto; }
         .vocab-item .vocab-file { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .vocab-cat { border: 1px solid #e3d8c2; background: #fff; color: #7c6f56; border-radius: 6px; padding: 3px 6px; font-size: 12px; cursor: pointer; margin-right: 4px; }
         .vocab-del { border: none; background: #f3ede1; color: #a8866f; border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
         .vocab-del:hover { background: #f0d9d0; color: #b02430; }
         /* 記憶曲線（間隔重複）四舍五入的進度條 */
-        .vocab-srs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7a7266; }
+        .vocab-srs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7a7266; flex-wrap: wrap; }
+        .vocab-srs-due { min-width: 0; flex: 1 1 120px; }
         .vocab-dots { display: inline-flex; gap: 4px; }
         .vocab-dot { width: 8px; height: 8px; border-radius: 50%; background: #e6dcc8; display: inline-block; }
         .vocab-dot.on { background: var(--vermillion); }
@@ -909,7 +970,13 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
             </div>
         </div>
         <div id="mpHeaderProgress" class="mp-header-progress" role="slider" aria-label="音讯进度（点一下或拖动可跳到该处，并弹到对应台词）" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0" style="display:none">
-            <div id="mpHeaderFill" class="mp-header-progress-fill"></div>
+            <button id="mpHeaderPlayBtn" class="mp-hp-play" type="button" title="播放／暂停" aria-label="播放">
+                <svg id="mpHpIcoPlay" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="currentColor"/></svg>
+                <svg id="mpHpIcoPause" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" style="display:none"><rect x="6" y="4.5" width="4.4" height="15" rx="1.2" fill="currentColor"/><rect x="13.6" y="4.5" width="4.4" height="15" rx="1.2" fill="currentColor"/></svg>
+            </button>
+            <span id="mpHeaderCur" class="mp-hp-time">00:00:00</span>
+            <div id="mpHeaderTrack" class="mp-hp-track"><div id="mpHeaderFill" class="mp-header-progress-fill"></div></div>
+            <span id="mpHeaderDur" class="mp-hp-time">00:00:00</span>
         </div>
     </header>
 
@@ -1036,6 +1103,7 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
             </span>
             <button type="button" id="vocabReviewBtn" class="vocab-review-btn">▶ 開始複習</button>
             <button type="button" id="vocabManageBtn" class="vocab-manage-btn">🏷 管理分类</button>
+            <button type="button" id="vocabPdfBtn" class="vocab-pdf-btn">📄 匯出PDF</button>
         </div>
         <div class="vocab-chips" id="vocabChips"></div>
         <div class="vocab-cat-manager" id="vocabCatManager" hidden>
@@ -1048,6 +1116,32 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
         </div>
         <div class="vocab-list" id="vocabBookList"></div>
     </div>
+    <!-- 生词本匯出 PDF 弹窗 -->
+    <div id="vocabPdfModal" class="vocab-pdf-modal" hidden>
+        <div class="vocab-pdf-backdrop" data-vpdf-close></div>
+        <div class="vocab-pdf-card">
+            <button class="dict-card-close" type="button" data-vpdf-close title="關閉">×</button>
+            <h3>📄 匯出生詞本 PDF</h3>
+            <div class="vpdf-scope">
+                <label class="vpdf-radio"><input type="radio" name="vpdfScope" value="all" checked /> 全部生詞（<span id="vpdfAllN">0</span> 條）</label>
+                <label class="vpdf-radio"><input type="radio" name="vpdfScope" value="group" /> 自選分組（來源檔）</label>
+                <label class="vpdf-radio"><input type="radio" name="vpdfScope" value="cat" /> 自選分類</label>
+            </div>
+            <div class="vpdf-pick" id="vpdfPickGroup" hidden>
+                <div class="vpdf-pick-hint">勾選要匯出的來源檔：</div>
+                <div class="vpdf-list" id="vpdfGroupList"></div>
+            </div>
+            <div class="vpdf-pick" id="vpdfPickCat" hidden>
+                <div class="vpdf-pick-hint">勾選要匯出的分類：</div>
+                <div class="vpdf-list" id="vpdfCatList2"></div>
+            </div>
+            <div class="vpdf-actions">
+                <button type="button" class="vpdf-cancel" data-vpdf-close>取消</button>
+                <button type="button" class="vpdf-go" id="vpdfGo">匯出 PDF</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- 点击字幝詞 → 修正讀音 / 外來語原詞 -->
     <div id="readingEditor">
@@ -1768,6 +1862,9 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
 
             // 移除了字幕档案：同步停止音讯（旧音讯已对不上当前字幕），且按数字不会再出声，要重新选/播才恢复
             try { stopPlayback(); } catch (e) { }
+            // 移除了字幕档案：头部播放条也一并隐藏（音频已停，条留着没有意义）
+            try { var _hp = document.getElementById('mpHeaderProgress'); if (_hp) _hp.style.display = 'none'; } catch (e) {}
+            try { document.body.classList.remove('mp-hp-on'); } catch (e) {}
             MP.started = false; MP.singleSentence = false; MP.singleStopAt = 0; MP.singleIdx = -1; MP.audioDelaySec = 0; try { mpDelaySync(true); } catch (e) {};
             try { soundDotOn(); } catch (e) { }
 
@@ -2747,6 +2844,132 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                 { label: "线路3／第08集", url: "https://v10.qqqrst.com/yyv10/202409/26/9bFtqX0wFr15/video/index.m3u8" },
                 { label: "线路3／第09集", url: "https://v9.qqqrst.com/yyv9/202409/26/C6TRWUDGmk18/video/index.m3u8" },
                 { label: "线路3／第10集", url: "https://v10.qqqrst.com/yyv10/202409/26/hYa28VCipZ15/video/index.m3u8" }
+            ] },
+
+            "114643": { name: "机动搜查队404", list: [
+                { label: "线路1／第01集", url: "https://cdn8.ryplay8.com/20240918/2585_a144b2bd/index.m3u8" },
+                { label: "线路1／第02集", url: "https://cdn8.ryplay8.com/20240918/2586_56b6bffb/index.m3u8" },
+                { label: "线路1／第03集", url: "https://cdn8.ryplay8.com/20240918/2590_6aa7e581/index.m3u8" },
+                { label: "线路1／第04集", url: "https://cdn8.ryplay8.com/20240918/2595_30530e12/index.m3u8" },
+                { label: "线路1／第05集", url: "https://cdn8.ryplay8.com/20240918/2600_a04ca6fc/index.m3u8" },
+                { label: "线路1／第06集", url: "https://cdn8.ryplay8.com/20240918/2601_41af2460/index.m3u8" },
+                { label: "线路1／第07集", url: "https://cdn8.ryplay8.com/20240918/2604_a09cab72/index.m3u8" },
+                { label: "线路1／第08集", url: "https://cdn8.ryplay8.com/20240918/2610_9b90313a/index.m3u8" },
+                { label: "线路1／第09集", url: "https://cdn8.ryplay8.com/20240918/2618_c5ca8a14/index.m3u8" },
+                { label: "线路1／第10集", url: "https://cdn8.ryplay8.com/20240918/2625_a130e43f/index.m3u8" },
+                { label: "线路1／第11集", url: "https://cdn8.ryplay8.com/20240918/2631_67751665/index.m3u8" }
+            ] },
+
+            "112357": { name: "短剧开始啦", list: [
+                { label: "线路1／第01集", url: "https://cdn8.ryplay8.com/20240925/7168_4fd7ea3e/index.m3u8" },
+                { label: "线路1／第02集", url: "https://cdn8.ryplay8.com/20240925/7173_7d94450b/index.m3u8" },
+                { label: "线路1／第03集", url: "https://cdn8.ryplay8.com/20240925/7181_363754a3/index.m3u8" },
+                { label: "线路1／第04集", url: "https://cdn8.ryplay8.com/20240925/7185_02099d7c/index.m3u8" },
+                { label: "线路1／第05集", url: "https://cdn8.ryplay8.com/20240925/7198_20665e2d/index.m3u8" },
+                { label: "线路1／第06集", url: "https://cdn8.ryplay8.com/20240925/7204_8201a52a/index.m3u8" },
+                { label: "线路1／第07集", url: "https://cdn8.ryplay8.com/20240925/7209_967f8ac8/index.m3u8" },
+                { label: "线路1／第08集", url: "https://cdn8.ryplay8.com/20240925/7220_c731408f/index.m3u8" },
+                { label: "线路1／第09集", url: "https://cdn8.ryplay8.com/20240925/7227_db067c1f/index.m3u8" },
+                { label: "线路1／第10集", url: "https://cdn8.ryplay8.com/20240925/7238_e7871238/index.m3u8" }
+            ] },
+
+            "121260": { name: "这个不可以报销！", list: [
+                { label: "线路1／第01集", url: "https://cdn6.ryplay6.com/20240910/13521_63eeec96/index.m3u8" },
+                { label: "线路1／第02集", url: "https://cdn6.ryplay6.com/20240910/13522_a742fd0c/index.m3u8" },
+                { label: "线路1／第03集", url: "https://cdn6.ryplay6.com/20240910/13528_848dcbb7/index.m3u8" },
+                { label: "线路1／第04集", url: "https://cdn6.ryplay6.com/20240910/13536_62ee113b/index.m3u8" },
+                { label: "线路1／第05集", url: "https://cdn6.ryplay6.com/20240910/13544_ce1d9456/index.m3u8" },
+                { label: "线路1／第06集", url: "https://cdn6.ryplay6.com/20240910/13552_a8439554/index.m3u8" },
+                { label: "线路1／第07集", url: "https://cdn6.ryplay6.com/20240910/13553_20852696/index.m3u8" },
+                { label: "线路1／第08集", url: "https://cdn6.ryplay6.com/20240910/13559_153f0441/index.m3u8" },
+                { label: "线路1／第09集", url: "https://cdn6.ryplay6.com/20240910/13566_67a24bda/index.m3u8" },
+                { label: "线路1／第10集", url: "https://cdn6.ryplay6.com/20240910/13567_b3019d39/index.m3u8" }
+            ] },
+
+            "138413": { name: "一吻定情2013日版", list: [
+                { label: "线路1／第01集", url: "https://v3.wsyzym3u8.com/202308/24/b68MRYQhJR2/video/index.m3u8" },
+                { label: "线路1／第02集", url: "https://v3.wsyzym3u8.com/202308/24/0L7ipPNkvk2/video/index.m3u8" },
+                { label: "线路1／第03集", url: "https://v3.wsyzym3u8.com/202308/24/sn21RqRVRY2/video/index.m3u8" },
+                { label: "线路1／第04集", url: "https://v3.wsyzym3u8.com/202308/24/tXKfdkqtbT2/video/index.m3u8" },
+                { label: "线路1／第05集", url: "https://v3.wsyzym3u8.com/202308/24/0SsvqWBLKL2/video/index.m3u8" },
+                { label: "线路1／第06集", url: "https://v3.wsyzym3u8.com/202308/24/44zLsBaj2Q2/video/index.m3u8" },
+                { label: "线路1／第07集", url: "https://v3.wsyzym3u8.com/202308/24/zpJ3y2XfB32/video/index.m3u8" },
+                { label: "线路1／第08集", url: "https://v3.wsyzym3u8.com/202308/24/UsdeV5nnN02/video/index.m3u8" },
+                { label: "线路1／第09集", url: "https://v3.wsyzym3u8.com/202308/24/M9L5AmzJ8Y2/video/index.m3u8" },
+                { label: "线路1／第10集", url: "https://v3.wsyzym3u8.com/202308/24/7m5EYHAMDi2/video/index.m3u8" },
+                { label: "线路1／第11集", url: "https://v3.wsyzym3u8.com/202308/24/HgYjUdALCP2/video/index.m3u8" },
+                { label: "线路1／第12集", url: "https://v3.wsyzym3u8.com/202308/24/k0Cp1rmgCP2/video/index.m3u8" },
+                { label: "线路1／第13集", url: "https://v3.wsyzym3u8.com/202308/24/in1Fue77g72/video/index.m3u8" },
+                { label: "线路1／第14集", url: "https://v3.wsyzym3u8.com/202308/24/MAmiReAKy22/video/index.m3u8" },
+                { label: "线路1／第15集", url: "https://v3.wsyzym3u8.com/202308/24/L6dPpHac712/video/index.m3u8" },
+                { label: "线路1／第16集", url: "https://v3.wsyzym3u8.com/202308/24/4j7Y8N1Zin2/video/index.m3u8" },
+                { label: "线路2／第01集", url: "https://v3.ppqrrs.com/wjv3/202308/24/b68MRYQhJR2/video/index.m3u8" },
+                { label: "线路2／第02集", url: "https://v3.ppqrrs.com/wjv3/202308/24/0L7ipPNkvk2/video/index.m3u8" },
+                { label: "线路2／第03集", url: "https://v3.ppqrrs.com/wjv3/202308/24/sn21RqRVRY2/video/index.m3u8" },
+                { label: "线路2／第04集", url: "https://v3.ppqrrs.com/wjv3/202308/24/tXKfdkqtbT2/video/index.m3u8" },
+                { label: "线路2／第05集", url: "https://v3.ppqrrs.com/wjv3/202308/24/0SsvqWBLKL2/video/index.m3u8" },
+                { label: "线路2／第06集", url: "https://v3.ppqrrs.com/wjv3/202308/24/44zLsBaj2Q2/video/index.m3u8" },
+                { label: "线路2／第07集", url: "https://v3.ppqrrs.com/wjv3/202308/24/zpJ3y2XfB32/video/index.m3u8" },
+                { label: "线路2／第08集", url: "https://v3.ppqrrs.com/wjv3/202308/24/UsdeV5nnN02/video/index.m3u8" },
+                { label: "线路2／第09集", url: "https://v3.ppqrrs.com/wjv3/202308/24/M9L5AmzJ8Y2/video/index.m3u8" },
+                { label: "线路2／第10集", url: "https://v3.ppqrrs.com/wjv3/202308/24/7m5EYHAMDi2/video/index.m3u8" },
+                { label: "线路2／第11集", url: "https://v3.ppqrrs.com/wjv3/202308/24/HgYjUdALCP2/video/index.m3u8" },
+                { label: "线路2／第12集", url: "https://v3.ppqrrs.com/wjv3/202308/24/k0Cp1rmgCP2/video/index.m3u8" },
+                { label: "线路2／第13集", url: "https://v3.ppqrrs.com/wjv3/202308/24/in1Fue77g72/video/index.m3u8" },
+                { label: "线路2／第14集", url: "https://v3.ppqrrs.com/wjv3/202308/24/MAmiReAKy22/video/index.m3u8" },
+                { label: "线路2／第15集", url: "https://v3.ppqrrs.com/wjv3/202308/24/L6dPpHac712/video/index.m3u8" },
+                { label: "线路2／第16集", url: "https://v3.ppqrrs.com/wjv3/202308/24/4j7Y8N1Zin2/video/index.m3u8" },
+                { label: "线路3／第01集", url: "https://v3.qqqrst.com/yyv3/202308/24/b68MRYQhJR2/video/index.m3u8" },
+                { label: "线路3／第02集", url: "https://v3.qqqrst.com/yyv3/202308/24/0L7ipPNkvk2/video/index.m3u8" },
+                { label: "线路3／第03集", url: "https://v3.qqqrst.com/yyv3/202308/24/sn21RqRVRY2/video/index.m3u8" },
+                { label: "线路3／第04集", url: "https://v3.qqqrst.com/yyv3/202308/24/tXKfdkqtbT2/video/index.m3u8" },
+                { label: "线路3／第05集", url: "https://v3.qqqrst.com/yyv3/202308/24/0SsvqWBLKL2/video/index.m3u8" },
+                { label: "线路3／第06集", url: "https://v3.qqqrst.com/yyv3/202308/24/44zLsBaj2Q2/video/index.m3u8" },
+                { label: "线路3／第07集", url: "https://v3.qqqrst.com/yyv3/202308/24/zpJ3y2XfB32/video/index.m3u8" },
+                { label: "线路3／第08集", url: "https://v3.qqqrst.com/yyv3/202308/24/UyyeV5nnN02/video/index.m3u8" },
+                { label: "线路3／第09集", url: "https://v3.qqqrst.com/yyv3/202308/24/M9L5AmzJ8Y2/video/index.m3u8" },
+                { label: "线路3／第10集", url: "https://v3.qqqrst.com/yyv3/202308/24/7m5EYHAMDi2/video/index.m3u8" },
+                { label: "线路3／第11集", url: "https://v3.qqqrst.com/yyv3/202308/24/HgYjUdALCP2/video/index.m3u8" },
+                { label: "线路3／第12集", url: "https://v3.qqqrst.com/yyv3/202308/24/k0Cp1rmgCP2/video/index.m3u8" },
+                { label: "线路3／第13集", url: "https://v3.qqqrst.com/yyv3/202308/24/in1Fue77g72/video/index.m3u8" },
+                { label: "线路3／第14集", url: "https://v3.qqqrst.com/yyv3/202308/24/MAmiReAKy22/video/index.m3u8" },
+                { label: "线路3／第15集", url: "https://v3.qqqrst.com/yyv3/202308/24/L6dPpHac712/video/index.m3u8" },
+                { label: "线路3／第16集", url: "https://v3.qqqrst.com/yyv3/202308/24/4j7Y8N1Zin2/video/index.m3u8" }
+            ] },
+
+            "70253": {
+                name: "卖房子的女人",
+                list: [
+                { label: "线路1／第01集", url: "https://v3.wsyzym3u8.com/202410/20/fDH42stFC424/video/index.m3u8" },
+                { label: "线路1／第02集", url: "https://v2.wsyzym3u8.com/202410/20/ubxqsybsME23/video/index.m3u8" },
+                { label: "线路1／第03集", url: "https://v4.wsyzym3u8.com/202410/20/CRdUH7C0iZ23/video/index.m3u8" },
+                { label: "线路1／第04集", url: "https://v3.wsyzym3u8.com/202410/20/Zx5MvN4Fa124/video/index.m3u8" },
+                { label: "线路1／第05集", url: "https://v6.wsyzym3u8.com/202410/20/YT4xFsbenh23/video/index.m3u8" },
+                { label: "线路1／第06集", url: "https://v3.wsyzym3u8.com/202410/20/4USLp4BMwK19/video/index.m3u8" },
+                { label: "线路1／第07集", url: "https://v3.wsyzym3u8.com/202410/20/hTY3qMczVq23/video/index.m3u8" },
+                { label: "线路1／第08集", url: "https://v5.wsyzym3u8.com/202410/20/eJLk1Z9BG724/video/index.m3u8" },
+                { label: "线路1／第09集", url: "https://v2.wsyzym3u8.com/202410/20/tPaBD19vXA22/video/index.m3u8" },
+                { label: "线路1／第10集", url: "https://v5.wsyzym3u8.com/202410/20/0L8Y7Mkfrw24/video/index.m3u8" },
+                { label: "线路2／第01集", url: "https://cdn6.ryplay6.com/20240903/7321_0e4f39a0/index.m3u8" },
+                { label: "线路2／第02集", url: "https://cdn6.ryplay6.com/20240903/7324_d46c4fed/index.m3u8" },
+                { label: "线路2／第03集", url: "https://cdn6.ryplay6.com/20240903/7323_3937ec4b/index.m3u8" },
+                { label: "线路2／第04集", url: "https://cdn6.ryplay6.com/20240903/7327_6c6df37c/index.m3u8" },
+                { label: "线路2／第05集", url: "https://cdn6.ryplay6.com/20240903/7330_10878a06/index.m3u8" },
+                { label: "线路2／第06集", url: "https://cdn6.ryplay6.com/20240903/7329_7ad7a132/index.m3u8" },
+                { label: "线路2／第07集", url: "https://cdn6.ryplay6.com/20240903/7332_55edfb25/index.m3u8" },
+                { label: "线路2／第08集", url: "https://cdn6.ryplay6.com/20240903/7334_3c99b946/index.m3u8" },
+                { label: "线路2／第09集", url: "https://cdn6.ryplay6.com/20240903/7336_35a59818/index.m3u8" },
+                { label: "线路2／第10集", url: "https://cdn6.ryplay6.com/20240903/7337_12770b46/index.m3u8" },
+                { label: "线路3／第01集", url: "https://v3.qqqrst.com/yyv3/202410/20/fDH42stFC424/video/index.m3u8" },
+                { label: "线路3／第02集", url: "https://v2.qqqrst.com/yyv2/202410/20/ubxqsybsME23/video/index.m3u8" },
+                { label: "线路3／第03集", url: "https://v4.qqqrst.com/yyv4/202410/20/CRdUH7C0iZ23/video/index.m3u8" },
+                { label: "线路3／第04集", url: "https://v3.qqqrst.com/yyv3/202410/20/Zx5MvN4Fa124/video/index.m3u8" },
+                { label: "线路3／第05集", url: "https://v6.qqqrst.com/yyv6/202410/20/YT4xFsbenh23/video/index.m3u8" },
+                { label: "线路3／第06集", url: "https://v3.qqqrst.com/yyv3/202410/20/4USLp4BMwK19/video/index.m3u8" },
+                { label: "线路3／第07集", url: "https://v3.qqqrst.com/yyv3/202410/20/hTY3qMczVq23/video/index.m3u8" },
+                { label: "线路3／第08集", url: "https://v5.qqqrst.com/yyv5/202410/20/eJLk1Z9BG724/video/index.m3u8" },
+                { label: "线路3／第09集", url: "https://v2.qqqrst.com/yyv2/202410/20/tPaBD19vXA22/video/index.m3u8" },
+                { label: "线路3／第10集", url: "https://v5.qqqrst.com/yyv5/202410/20/0L8Y7Mkfrw24/video/index.m3u8" },
             ] }
         };
         // 内建剧集做成两个选单：选好线路＋集数，按「▶ 播放剧集」就播（m3u8 自己有 CORS，不用开任何东西）
@@ -2877,22 +3100,16 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
         window.seekToSubtitle = function (idx) {
             var sub = AppState.processedSubtitles[idx];
             if (!sub) return;
+            ensureRowRendered(idx);
             var st0 = subSec(sub.startTime);
             if (st0 < 0) return;
             markPlaying(idx, true);
             var v = medEl();
             // 还没在音讯面板点过播放（或没载入音讯）：按数字只高亮+滚动，绝不误触音讯播放。
             if (!v || !v.src || !MP.started) return;
-            // 同一句（或第一次点）→ 只读这一句，跳到句首，播到句尾自动停
-            // 点了别的句（例如下一句）→ 取消单句停止，一路往下播（不卡在句尾）
-            if (MP.singleIdx === -1 || MP.singleIdx === idx) {
-                MP.singleSentence = true;
-            } else {
-                MP.singleSentence = false;
-            }
-            MP.singleStopAt = MP.singleSentence
-                ? ((subSec(sub.endTime) > st0) ? (subSec(sub.endTime) + MP.audioDelaySec) : (v.duration || (st0 + 8)))
-                : 0;
+            // 点任何数字：跳到该句首，只播该句（播到句尾自动停），不往下连播
+            MP.singleSentence = true;
+            MP.singleStopAt = (subSec(sub.endTime) > st0) ? (subSec(sub.endTime) + MP.audioDelaySec) : (v.duration || (st0 + 8));
             MP.singleIdx = idx;
             try {
                 v.currentTime = Math.max(0, st0 + MP.audioDelaySec);
@@ -2937,33 +3154,72 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                 try {
                     var box = document.getElementById('subtitles');
                     if (box) {
-                        var rt = row.getBoundingClientRect(), bt = box.getBoundingClientRect();
-                        var delta = (rt.top - bt.top) - (box.clientHeight - rt.height) / 2;
-                        var top = box.scrollTop + delta;
-                        window.smoothScrollBox(box, top);
+                        if (box.scrollHeight > box.clientHeight + 4) {
+                            // 字幕框本身可滚，框內滚到該句（头部/控制列留在原位；小屏已隐藏框的滚动条）
+                            var rt = row.getBoundingClientRect(), bt = box.getBoundingClientRect();
+                            var delta = (rt.top - bt.top) - (box.clientHeight - rt.height) / 2;
+                            window.smoothScrollBox(box, box.scrollTop + delta);
+                        }
                     }
                 } catch (e) { }
             }
         }
-        var _mpHp = null, _mpHf = null;
+        // 字幕是分批懶加載（初始 50 句，滑到底才續載）：從播放條跳到後段句、或點後段數字時，
+        // 目標 row 可能還沒進 DOM，markPlaying 會找不到 row 而「跳不到該句」。先補渲染直到該 row 出現（或全載完）。
+        function ensureRowRendered(idx) {
+            try {
+                var _box = document.getElementById('subtitles');
+                if (!_box) return;
+                var _g = 0;
+                while (_g < 600) {
+                    if (_box.querySelector('.row[data-index="' + idx + '"]')) return;
+                    if (AppState.renderedCount >= AppState.filteredData.length) return;
+                    renderNextBatch(); _g++;
+                }
+            } catch (e) { }
+        }
+        var _mpHp = null, _mpHf = null, _mpHt = null, _mpHc = null, _mpHd = null;
+        function mpHpFmt(t) {
+            if (typeof t !== 'number' || isNaN(t) || t < 0) t = 0;
+            var p = function (n) { return (n < 10 ? '0' : '') + n; };
+            return p(Math.floor(t / 3600)) + ':' + p(Math.floor(t / 60) % 60) + ':' + p(Math.floor(t % 60));
+        }
         function mpHeaderProgEl() {
             if (!_mpHp) _mpHp = document.getElementById('mpHeaderProgress');
             if (!_mpHf) _mpHf = document.getElementById('mpHeaderFill');
+            if (!_mpHt) _mpHt = document.getElementById('mpHeaderTrack');
+            if (!_mpHc) _mpHc = document.getElementById('mpHeaderCur');
+            if (!_mpHd) _mpHd = document.getElementById('mpHeaderDur');
             return _mpHp;
         }
-        function mpHeaderProgShow(on) { var el = mpHeaderProgEl(); if (el) el.style.display = on ? 'block' : 'none'; }
+        function mpHeaderPlayIcon(playing) {
+            var a = document.getElementById('mpHpIcoPlay'), b = document.getElementById('mpHpIcoPause');
+            if (a) a.style.display = playing ? 'none' : '';
+            if (b) b.style.display = playing ? '' : 'none';
+            var pb = document.getElementById('mpHeaderPlayBtn');
+            if (pb) pb.setAttribute('aria-label', playing ? '暂停' : '播放');
+        }
+        function mpHeaderProgShow(on) {
+            var el = mpHeaderProgEl(); if (el) el.style.display = on ? 'flex' : 'none';
+            try { document.body.classList.toggle('mp-hp-on', !!on); } catch (e) { }
+        }
         function mpHeaderProgUpdate() {
             var el = mpHeaderProgEl(); if (!el || el.style.display === 'none') return;
-            var v = medEl(); if (!v || !v.duration || isNaN(v.duration) || v.duration <= 0) { if (_mpHf) _mpHf.style.width = '0%'; return; }
+            var v = medEl(); if (!v || !v.duration || isNaN(v.duration) || v.duration <= 0) { if (_mpHf) _mpHf.style.width = '0%'; if (_mpHc) _mpHc.textContent = mpHpFmt(0); if (_mpHd) _mpHd.textContent = mpHpFmt(0); return; }
             var pct = Math.max(0, Math.min(100, (v.currentTime / v.duration) * 100));
             if (_mpHf) _mpHf.style.width = pct + '%';
+            if (_mpHc) _mpHc.textContent = mpHpFmt(v.currentTime);
+            if (_mpHd) _mpHd.textContent = mpHpFmt(v.duration);
             el.setAttribute('aria-valuenow', Math.round(pct));
+            try { el.setAttribute('aria-valuetext', mpHpFmt(v.currentTime) + ' / ' + mpHpFmt(v.duration)); } catch (e) { }
+            mpHeaderPlayIcon(!!(v && !v.paused));
         }
         function mpHeaderProgSync() {
             var el = mpHeaderProgEl(); if (!el) return;
             var v = medEl();
             var has = !!(v && v.src && v.src.length > 0 && v.duration && !isNaN(v.duration) && v.duration > 0);
-            el.style.display = has ? 'block' : 'none';
+            el.style.display = has ? 'flex' : 'none';
+            try { document.body.classList.toggle('mp-hp-on', !!has); } catch (e) { }
             if (has) mpHeaderProgUpdate();
         }
         function mpHeaderJumpToTime(t) {
@@ -2974,6 +3230,7 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                 if (t >= s0 - 0.05) found = i; else break;
             }
             if (found < 0) return;
+            ensureRowRendered(found);
             markPlaying(found, true);
             var v = medEl();
             if (v && v.src && MP.started) {
@@ -2984,7 +3241,7 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
         function mpHeaderProgSeek(clientX, alsoJump) {
             var el = mpHeaderProgEl(); if (!el) return;
             var v = medEl(); if (!v || !v.duration || isNaN(v.duration)) return;
-            var rect = el.getBoundingClientRect(); if (!rect.width) return;
+            var rect = (_mpHt || el).getBoundingClientRect(); if (!rect.width) return;
             var ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
             try { v.currentTime = ratio * v.duration; } catch (e) { }
             mpHeaderProgUpdate();
@@ -3061,7 +3318,18 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
                         var vv = medEl(); if (!vv || !vv.duration) return;
                         var step = e.key === 'ArrowRight' ? 5 : (e.key === 'ArrowLeft' ? -5 : 0);
                         if (step) { e.preventDefault(); try { vv.currentTime = Math.max(0, Math.min(vv.duration, vv.currentTime + step)); } catch (_) {} mpHeaderProgUpdate(); }
+                        if (e.key === ' ') { e.preventDefault(); if (vv.paused) { var _p = vv.play(); if (_p && _p.catch) _p.catch(function () { }); } else { vv.pause(); } }
                     });
+                    var _hpb = document.getElementById('mpHeaderPlayBtn');
+                    if (_hpb) {
+                        _hpb.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+                        _hpb.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            var vv = medEl(); if (!vv || !vv.src) return;
+                            if (vv.paused) { var _p2 = vv.play(); if (_p2 && _p2.catch) _p2.catch(function () { }); }
+                            else { vv.pause(); }
+                        });
+                    }
                 }
 
                 v.addEventListener('play', function () { MP.started = true; medStatus('▶ 播放中…（句前的数字可以对到任何一句）', ''); });
@@ -4290,6 +4558,113 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
               }
             });
           }
+          // ============ 生词本匯出 PDF ============
+          var pdfBtn = document.getElementById('vocabPdfBtn');
+          var pdfModal = document.getElementById('vocabPdfModal');
+          var pdfGo = document.getElementById('vpdfGo');
+          var pickGroup = document.getElementById('vpdfPickGroup');
+          var pickCat = document.getElementById('vpdfPickCat');
+          var groupListEl = document.getElementById('vpdfGroupList');
+          var catListEl = document.getElementById('vpdfCatList2');
+          var allNEl = document.getElementById('vpdfAllN');
+          function vpdfClose() { if (pdfModal) pdfModal.hidden = true; }
+          function vpdfOpen() {
+            if (!pdfModal) return;
+            if (allNEl) allNEl.textContent = String(Object.keys(vocabMap).length);
+            var files = {};
+            Object.keys(vocabMap).forEach(function (k) { var f = vocabMap[k].sourceFile || '未知文件'; files[f] = (files[f] || 0) + 1; });
+            var fileNames = Object.keys(files).sort(function (a, b) { return a.localeCompare(b); });
+            groupListEl.innerHTML = fileNames.length
+              ? fileNames.map(function (f) { return '<label class="vpdf-opt"><input type="checkbox" value="' + escapeHtml(f) + '" /> ' + escapeHtml(f) + ' <span style="color:#a89e8e;margin-left:4px;">(' + files[f] + ')</span></label>'; }).join('')
+              : '<div class="vpdf-empty">还没有按來源檔分組的生詞</div>';
+            var catsAll = getAllCategories();
+            catListEl.innerHTML = catsAll.length
+              ? catsAll.map(function (c) { return '<label class="vpdf-opt"><input type="checkbox" value="' + escapeHtml(c) + '" /> ' + escapeHtml(c) + '</label>'; }).join('')
+              : '<div class="vpdf-empty">还没有分類</div>';
+            var rb = pdfModal.querySelector('input[name="vpdfScope"][value="all"]'); if (rb) rb.checked = true;
+            pickGroup.hidden = true; pickCat.hidden = true;
+            pdfModal.hidden = false;
+          }
+          function vpdfScopeChange() {
+            var sc = (pdfModal.querySelector('input[name="vpdfScope"]:checked') || {}).value;
+            pickGroup.hidden = sc !== 'group';
+            pickCat.hidden = sc !== 'cat';
+          }
+          if (pdfBtn) pdfBtn.addEventListener('click', vpdfOpen);
+          if (pdfModal) {
+            Array.prototype.forEach.call(pdfModal.querySelectorAll('[data-vpdf-close]'), function (el) { el.addEventListener('click', vpdfClose); });
+            Array.prototype.forEach.call(pdfModal.querySelectorAll('input[name="vpdfScope"]'), function (el) { el.addEventListener('change', vpdfScopeChange); });
+          }
+          function vpdfEntryHtml(en) {
+            var lines = String(en.note == null ? '' : en.note).split('\n').filter(function (l) { return l.trim() !== ''; });
+            var word = lines.length ? lines[0].trim() : '（未填筆記）';
+            var gloss = lines.slice(1).join('<br>');
+            var meta = [];
+            if (en.sourceFile) meta.push(escapeHtml(en.sourceFile));
+            if (en.time) meta.push(escapeHtml(en.time));
+            var cat = en.category ? ' · 🏷 ' + escapeHtml(en.category) : '';
+            return '<div class="vpdf-card">'
+              + '<div class="vpdf-word">' + escapeHtml(word) + '</div>'
+              + (gloss ? '<div class="vpdf-gloss">' + gloss + '</div>' : '')
+              + (en.sentence ? '<div class="vpdf-jp">' + escapeHtml(en.sentence) + '</div>' : '')
+              + (en.sentenceZh ? '<div class="vpdf-zh">' + escapeHtml(en.sentenceZh) + '</div>' : '')
+              + (meta.length ? '<div class="vpdf-meta">📁 ' + meta.join(' · ') + cat + '</div>' : '')
+              + '</div>';
+          }
+          function vpdfGoExport() {
+            var sc = (pdfModal.querySelector('input[name="vpdfScope"]:checked') || {}).value || 'all';
+            var entries, groupBy;
+            if (sc === 'group') {
+              var files = Array.prototype.slice.call(groupListEl.querySelectorAll('input:checked')).map(function (c) { return c.value; });
+              if (!files.length) { alert('請勾選至少一個來源檔'); return; }
+              entries = Object.keys(vocabMap).map(function (k) { return vocabMap[k]; }).filter(function (en) { return files.indexOf(en.sourceFile || '未知文件') >= 0; });
+              groupBy = 'file';
+            } else if (sc === 'cat') {
+              var cats = Array.prototype.slice.call(catListEl.querySelectorAll('input:checked')).map(function (c) { return c.value; });
+              if (!cats.length) { alert('請勾選至少一個分類'); return; }
+              entries = Object.keys(vocabMap).map(function (k) { return vocabMap[k]; }).filter(function (en) { return cats.indexOf(en.category || '') >= 0; });
+              groupBy = 'cat';
+            } else {
+              entries = Object.keys(vocabMap).map(function (k) { return vocabMap[k]; });
+              groupBy = 'file';
+            }
+            if (!entries.length) { alert('没有可匯出的生詞'); return; }
+            entries.sort(function (a, b) { return (b.updatedAt || '').localeCompare(a.updatedAt || ''); });
+            var groups = {};
+            entries.forEach(function (en) {
+              var g = groupBy === 'cat' ? (en.category || '未分類') : (en.sourceFile || '未知文件');
+              (groups[g] = groups[g] || []).push(en);
+            });
+            var gkeys = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b); });
+            var body = gkeys.map(function (g) {
+              var head = groupBy === 'cat' ? '🏷 ' + escapeHtml(g) : '📁 ' + escapeHtml(g);
+              return '<div class="vpdf-grouphead">' + head + ' <span class="vpdf-gn">(' + groups[g].length + ')</span></div>' + groups[g].map(vpdfEntryHtml).join('');
+            }).join('');
+            var scopeLabel = sc === 'all' ? '全部生詞' : (sc === 'group' ? '自選分組' : '自選分類');
+            var total = entries.length;
+            var html = '<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>生詞本筆記 - ' + escapeHtml(scopeLabel) + '</title>'
+              + '<style>@page{margin:18mm 14mm;}'
+              + 'body{font-family:"Hiragino Sans","Microsoft YaHei",sans-serif; color:#3a342b; line-height:1.6; margin:0; padding:14px;}'
+              + '.doc-title{text-align:center; font-size:22px; color:#9a2a20; margin:0 0 6px;}'
+              + '.doc-sub{text-align:center; color:#888; font-size:12px; margin:0 0 18px;}'
+              + '.doc-rule{border:0; border-top:2px solid #c9a15f; margin:0 0 18px;}'
+              + '.vpdf-grouphead{font-size:15px; font-weight:700; color:#7c6f56; border-bottom:1px solid #e3d8c2; padding:8px 0 4px; margin-top:14px;}'
+              + '.vpdf-gn{font-weight:400; color:#a89e8e; font-size:12px;}'
+              + '.vpdf-card{background:#fffdf9; border:1px solid #f0e8d8; border-left:4px solid #c9a15f; border-radius:8px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact;}'
+              + '.vpdf-word{font-size:17px; font-weight:700; color:#2c3e50;}'
+              + '.vpdf-gloss{font-size:14px; color:#b02430; margin-top:2px; white-space:pre-wrap;}'
+              + '.vpdf-jp{font-size:14px; color:#3a342b; margin-top:6px; white-space:pre-wrap;}'
+              + '.vpdf-zh{font-size:13.5px; color:#6b6156; margin-top:2px; white-space:pre-wrap;}'
+              + '.vpdf-meta{font-size:12px; color:#a89e8e; margin-top:6px;}'
+              + '</style></head><body>'
+              + '<h1 class="doc-title">生詞本筆記</h1>'
+              + '<p class="doc-sub">' + escapeHtml(scopeLabel) + ' · 共 ' + total + ' 條 · 匯出時間 ' + new Date().toLocaleString('zh-Hant') + '</p>'
+              + '<hr class="doc-rule"/>' + body + '</body></html>';
+            vpdfClose();
+            triggerPrint(html);
+          }
+          if (pdfGo) pdfGo.addEventListener('click', vpdfGoExport);
+
 
           function jumpToSource(key) {
             var en = vocabMap[key];
