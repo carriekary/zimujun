@@ -1860,9 +1860,17 @@ var e,t,r="function"==typeof Symbol?Symbol:{},i=r.iterator||"@@iterator",n=r.toS
             // 中止所有还在进行中的渲染（注音生成、双档合并），确保移除后画面不残留旧字幕
             AppState.renderEpoch = (AppState.renderEpoch || 0) + 1;
 
-            // 移除了字幕档案：同步停止音讯（旧音讯已对不上当前字幕），且按数字不会再出声，要重新选/播才恢复
+            // 移除了字幕档案：同步停止音讯并清空音讯来源（旧音讯已对不上当前字幕）。
+            // 关键：只 stopPlayback() 不会清掉 audio.src，音讯仍带有效 src+duration；
+            // 之后任何 loadedmetadata 事件都会触发 mpHeaderProgSync() 把已隐藏的头部播放条又显示出来（残留旧内容）。
+            // 所以这里要连 src 一起清掉，播放条才会真正「清空」、不会复活。
             try { stopPlayback(); } catch (e) { }
-            // 移除了字幕档案：头部播放条也一并隐藏（音频已停，条留着没有意义）
+            try {
+              if (MP.hls) { MP.hls.destroy(); MP.hls = null; }
+              var _v0 = medEl();
+              if (_v0) { try { _v0.pause(); } catch (e) {} MP.token = (MP.token || 0) + 1; _v0.removeAttribute('src'); try { _v0.load(); } catch (e) {} }
+            } catch (e) { }
+            // 头部播放条一并隐藏：音讯来源已清，mpHeaderProgSync() 会自然判定 has=false；这里手动再关一次双保险
             try { var _hp = document.getElementById('mpHeaderProgress'); if (_hp) _hp.style.display = 'none'; } catch (e) {}
             try { document.body.classList.remove('mp-hp-on'); } catch (e) {}
             MP.started = false; MP.singleSentence = false; MP.singleStopAt = 0; MP.singleIdx = -1; MP.audioDelaySec = 0; try { mpDelaySync(true); } catch (e) {};
