@@ -177,7 +177,7 @@
         }
 
         main { padding: calc(var(--header-height) + 12px) var(--container-padding) 12px; max-width: var(--max-width); margin: 0 auto; }
-        #subtitles { display: block; position: relative; max-height: calc(100vh - 150px); overflow-y: auto; scrollbar-gutter: stable; }
+        #subtitles { display: block; position: relative; max-height: calc(100vh - 150px); overflow-y: auto; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; /* iOS 內框慣性滾動 */ }
         
         .row { display: block; margin: 3px 0; transition: opacity 0.2s ease; }
         .subtitle {
@@ -2594,6 +2594,19 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 fail(c === 2 ? 'network' : (c === 4 ? 'format' : 'other'));
             };
             if (/\.m3u8(\?|#|$)/i.test(url)) {
+                // iOS Safari 沒有 MSE（hls.js 的 isSupported() 永遠 false），但系統播放器原生能播 HLS：
+                // 直接掛 src 給系統播，timeupdate 照樣觸發 → 字幕自動跟滾、跳句都不受影響
+                var _iosNativeHls = false;
+                try { _iosNativeHls = !!(v.canPlayType('application/vnd.apple.mpegurl') || v.canPlayType('application/x-mpegURL')); } catch (e) { }
+                if (_iosNativeHls && !(window.Hls && window.Hls.isSupported && window.Hls.isSupported())) {
+                    v.hidden = false;
+                    v.src = url;
+                    setStage();
+                    try { var pn = v.play(); if (pn && pn.catch) pn.catch(function () { }); } catch (e) { }
+                    clearTimeout(watch);
+                    watch = setTimeout(function () { if (!settled && tk === MP.token) fail('slow'); }, 20000);
+                    return;
+                }
                 loadHlsScript(tk, function () {
                     if (tk !== MP.token) return;
                     if (!(window.Hls && window.Hls.isSupported && window.Hls.isSupported())) { medErr('这个浏览器不支援 .m3u8（HLS）。'); return; }
