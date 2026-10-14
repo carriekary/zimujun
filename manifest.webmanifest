@@ -1,0 +1,17 @@
+{
+  "name": "小野字幕君",
+  "short_name": "小野字幕君",
+  "description": "日文雙語字幕學習工具：離線也能讀字幕、記生詞、匯出 Anki 牌組",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#b02430",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
