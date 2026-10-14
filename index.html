@@ -3634,6 +3634,39 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             }
             requestAnimationFrame(step);
         };
+        window.smoothScrollWindow = function (top) {
+            top = Math.max(0, top);
+            // 整页滚动也用 rAF 手动缓动，避开 iOS/移动端 WebKit 静默忽略 scrollTo smooth 的问题
+            var start = window.scrollY || window.pageYOffset || 0, dist = top - start, dur = 340, t0 = null;
+            if (Math.abs(dist) < 2) { window.scrollTo(0, top); return; }
+            function step(ts) {
+                if (t0 === null) t0 = ts;
+                var p = Math.min(1, (ts - t0) / dur);
+                var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+                window.scrollTo(0, start + dist * e);
+                if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        };
+        // 把某行滚进可视区：优先字幕框内滚；框不可滚（手机某些布局是整页滚）时退回整页滚。
+        // 解决手机上「框内 scrollTop 没动、整页却在滚」导致自动跟句 / 点数字不滚的问题。
+        window.scrollRowToCenter = function (row, box) {
+            if (!row) return;
+            if (box && box.scrollHeight > box.clientHeight + 4) {
+                // 字幕框本身可滚：框内滚到该句（头部/控制列留在原位）
+                var rt = row.getBoundingClientRect(), bt = box.getBoundingClientRect();
+                var delta = (rt.top - bt.top) - (box.clientHeight - rt.height) / 2;
+                window.smoothScrollBox(box, box.scrollTop + delta);
+            } else {
+                // 框不可滚（手机整页滚）：改为整页滚到该行居中
+                var r = row.getBoundingClientRect();
+                var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+                if (r.top < 8 || r.bottom > vh - 8) {
+                    var target = (window.scrollY || window.pageYOffset || 0) + r.top - vh / 2 + r.height / 2;
+                    window.smoothScrollWindow(Math.max(0, target));
+                }
+            }
+        };
 
         function markPlaying(idx, forceScroll) {
             if (idx === lastPlayIdx && !forceScroll) return;
@@ -3651,17 +3684,10 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
-                // 只把字幕框（#subtitles）内部滚到该句，不动整页——头部、引导区、🎵 音钮都留在原位
                 try {
                     var box = document.getElementById('subtitles');
-                    if (box) {
-                        if (box.scrollHeight > box.clientHeight + 4) {
-                            // 字幕框本身可滚，框內滚到該句（头部/控制列留在原位；小屏已隐藏框的滚动条）
-                            var rt = row.getBoundingClientRect(), bt = box.getBoundingClientRect();
-                            var delta = (rt.top - bt.top) - (box.clientHeight - rt.height) / 2;
-                            window.smoothScrollBox(box, box.scrollTop + delta);
-                        }
-                    }
+                    // 优先框内滚；框不可滚（手机整页滚）时自动退回整页滚，保证自动跟句在手机也生效
+                    window.scrollRowToCenter(row, box);
                 } catch (e) { }
             }
         }
@@ -4466,6 +4492,12 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                                 { reading: rtEl ? rtEl.textContent : '', sentence: wSent, index: wIdx });
                         }
                     }
+                    // 点字幕正文（非单词/注音/数字徽标/按钮/笔记框）→ 跳到该句并居中，手机也生效
+                    var _rEl = e.target.closest('.row');
+                    if (_rEl && !e.target.closest('.wf-word') && !e.target.closest('rt') && !e.target.closest('.row-badge') && !e.target.closest('button') && !e.target.closest('textarea')) {
+                        var _di = parseInt(_rEl.getAttribute('data-index'), 10);
+                        if (!isNaN(_di)) { e.stopPropagation(); window.seekToSubtitle(_di); }
+                    }
                     return;
                 }
                 if (document.body.classList.contains('hide-furigana')) return;   // 隐藏注音时不可修改读
@@ -5226,11 +5258,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               var row = subtitlesContainer.querySelector('.row[data-index="' + idx + '"]');
               if (row) {
                 var _sb = document.getElementById('subtitles');
-                if (_sb) {
-                  var _rt = row.getBoundingClientRect(), _bt = _sb.getBoundingClientRect();
-                  var _delta = (_rt.top - _bt.top) - (_sb.clientHeight - _rt.height) / 2;
-                  window.smoothScrollBox(_sb, _sb.scrollTop + _delta);
-                } else { try { row.scrollIntoView(); } catch (e3) { } }
+                window.scrollRowToCenter(row, _sb);
                 row.classList.add('note-open');
               }
             } else {
