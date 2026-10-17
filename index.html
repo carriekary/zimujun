@@ -263,6 +263,7 @@
           position: relative;
         }
         .subtitle:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12); }
+        .japanese-text, .chinese-text { cursor: pointer; -webkit-tap-highlight-color: rgba(201, 161, 95, .22); }
         .subtitle.has-written-note { border-left: 4px solid #ff9800; }
         
         .text-box {
@@ -4034,7 +4035,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             markPlaying(idx, true);
             var v = medEl();
             // 未載入音訊時只高亮字幕；只要已有音訊來源，點字幕正文或數字就跳到該句並播放，不要求先按過播放。
-            if (!v || !v.src) return;
+            if (!v || !v.src) { if (typeof medStatus === 'function') medStatus('尚未載入音訊，請先選擇音檔或載入音訊來源。', 'bad'); return; }
             // 點字幕：跳到該句首，只播該句（播到句尾自動停），不往下連播
             MP.singleSentence = true;
             MP.singleStopAt = (subSec(sub.endTime) > st0) ? (subSec(sub.endTime) + MP.audioDelaySec) : (v.duration || (st0 + 8));
@@ -4546,10 +4547,10 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 <span class="row-badge" title="点这里把音频跳到这句" onclick="seekToSubtitle(${originalIndex})">${originalIndex + 1}</span>
                 <div class="text-box">
                   <div class="jp-row">
-                    <div class="japanese-text">${jp}</div>
+                    <div class="japanese-text" role="button" tabindex="0" title="點擊跳到這句音訊" onclick="seekToSubtitle(${originalIndex})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();seekToSubtitle(${originalIndex})}">${jp}</div>
 <div class="row-actions"><button class="action-btn" data-text="${escapeHtml(sub.japanese || sub.originalText)}" onclick="speakText(this)" title="朗读这句">🔊</button></div>
                   </div>
-                  ${sub.chinese ? `<div class="chinese-text">${highlightZh}</div>` : ''}
+                  ${sub.chinese ? `<div class="chinese-text" role="button" tabindex="0" title="點擊跳到這句音訊" onclick="seekToSubtitle(${originalIndex})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();seekToSubtitle(${originalIndex})}">${highlightZh}</div>` : ''}
                 </div>
                 <div class="note-area"><div class="note-container">
                   <textarea class="note-box ${noteClasses}" data-index="${originalIndex}" placeholder="✏️ 写点笔记…（自动帮你存好）">${escapeHtml(noteContent)}</textarea>
