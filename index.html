@@ -386,18 +386,17 @@
         @media (max-width: 900px) {
           /* 解除 body 高度鎖定，讓整頁可作為字幕無法內滾時的捲動後備（避免小屏完全滑不動） */
           html, body { height: auto; min-height: 100%; }
-          main { padding-bottom: 12px; }
+          /* 底部播放欄在小屏固定顯示，預留空間避免最後一句被蓋住 */
+          main { padding-bottom: 150px; }
           /* 明確啟用內框觸控滾動（含 iOS 慣性），確保字幕框在小屏可滑 */
-          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 64px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
-          /* 底部播放欄顯示時，留出空間避免最後一句被蓋住 */
-          body.mpb-show #subtitles { padding-bottom: 150px; }
-          body.mpb-show main { padding-bottom: 150px; }
+          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 150px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
         }
 
         /* ==================== 小屏底部播放栏（上一句／播放／下一句 + 进度条） ==================== */
+        /* 小屏直接由媒體查詢顯示，不依賴 JS；JS 只在開啟內嵌視圖時加 body.mpb-hide 隱藏它 */
         #mPlayerBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: none; flex-direction: column; gap: 4px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: #fffdf8; border-top: 1px solid #f0e4d8; box-shadow: 0 -4px 16px rgba(60, 53, 48, 0.08); }
-        body.mpb-show #mPlayerBar { display: flex; }
         @media (min-width: 901px) { #mPlayerBar { display: none !important; } }
+        @media (max-width: 900px) { #mPlayerBar { display: flex; } body.mpb-hide #mPlayerBar { display: none !important; } }
         .mpb-prog { display: flex; align-items: center; gap: 10px; }
         .mpb-time { flex: 0 0 auto; font-size: 11px; color: #8a7a6a; font-variant-numeric: tabular-nums; letter-spacing: 0.2px; }
         .mpb-track { flex: 1 1 0; min-width: 40px; height: 5px; border-radius: 4px; background: #eee3d3; overflow: hidden; cursor: pointer; touch-action: none; }
@@ -4511,10 +4510,9 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     function fmt(t) { t = Math.max(0, t || 0); var m = Math.floor(t / 60), s = Math.floor(t % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
                     function subsVisible() { var sub = document.getElementById('subtitles'); return !!(sub && sub.style.display !== 'none' && !sub.hidden); }
                     function syncShow() {
-                        // 小屏且正在看字幕就顯示（不強求先載音訊；沒音訊時播放鍵會提示先載入）
-                        var ok = window.matchMedia('(max-width: 900px)').matches && subsVisible();
-                        document.body.classList.toggle('mpb-show', !!ok);
-                        try { bar.hidden = !ok; } catch (e) { }
+                        // 底部欄在 ≤900px 由 CSS 媒體查詢直接顯示；這裡只在「開啟內嵌視圖（字幕被隱藏）或無字幕資料」時隱藏它
+                        var hide = !subsVisible() || !AppState.processedSubtitles.length;
+                        document.body.classList.toggle('mpb-hide', !!hide);
                     }
                     function update() {
                         if (!v.duration || isNaN(v.duration) || v.duration <= 0) { fill.style.width = '0%'; curEl.textContent = fmt(0); durEl.textContent = fmt(0); }
@@ -4555,7 +4553,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     ['timeupdate', 'play', 'pause', 'ended', 'seeked', 'loadedmetadata', 'emptied'].forEach(function (ev) { v.addEventListener(ev, update); });
                     window.addEventListener('resize', syncShow);
                     var subEl = document.getElementById('subtitles');
-                    if (subEl && window.MutationObserver) { try { new MutationObserver(syncShow).observe(subEl, { attributes: true, attributeFilter: ['style', 'hidden'] }); } catch (e) { } }
+                    if (subEl && window.MutationObserver) { try { new MutationObserver(syncShow).observe(subEl, { attributes: true, attributeFilter: ['style', 'hidden'], childList: true }); } catch (e) { } }
                     document.getElementById('mpbPlay').addEventListener('click', function () {
                         if (!v.src) { if (typeof showGlobalStatus === 'function') showGlobalStatus('先載入音訊，才能播放喔 ♪', 1800); return; }
                         if (v.paused) { MP.singleSentence = false; MP.singleStopAt = 0; var p = v.play(); if (p && p.catch) p.catch(function () { }); }
@@ -6859,7 +6857,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
       })();
    </script>
   <!-- 小屏底部播放栏（≤900px 且已载入音讯时显示；浅色和风样式） -->
-  <div id="mPlayerBar" hidden>
+  <div id="mPlayerBar">
     <div class="mpb-prog">
       <span id="mpbCur" class="mpb-time">00:00</span>
       <div id="mpbTrack" class="mpb-track" role="slider" aria-label="音讯进度（点一下或拖动可跳到该处）" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="mpbFill" class="mpb-fill"></div></div>
