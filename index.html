@@ -2113,7 +2113,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 </select>
                 <button type="button" class="mp-btn ghost" id="mpDzGo">▶ 播放剧集</button>
                 <button type="button" class="mp-btn ghost" id="mpPickBtn">📁 本机音档</button>
-                <label style="font-size:12.5px;color:#6b6156;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="mpFollow" checked /> 跟著播放自动卷</label>
+                <label style="font-size:12.5px;color:#6b6156;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="mpFollow" /> 跟著播放自动卷</label>
             </div>
             <input id="mpFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.mp4,.webm,.mkv,.m4v" style="display: none;" />
 
@@ -4033,9 +4033,9 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             if (st0 < 0) return;
             markPlaying(idx, true);
             var v = medEl();
-            // 还没在音讯面板点过播放（或没载入音讯）：按数字只高亮+滚动，绝不误触音讯播放。
-            if (!v || !v.src || !MP.started) return;
-            // 点任何数字：跳到该句首，只播该句（播到句尾自动停），不往下连播
+            // 未載入音訊時只高亮字幕；只要已有音訊來源，點字幕正文或數字就跳到該句並播放，不要求先按過播放。
+            if (!v || !v.src) return;
+            // 點字幕：跳到該句首，只播該句（播到句尾自動停），不往下連播
             MP.singleSentence = true;
             MP.singleStopAt = (subSec(sub.endTime) > st0) ? (subSec(sub.endTime) + MP.audioDelaySec) : (v.duration || (st0 + 8));
             MP.singleIdx = idx;
