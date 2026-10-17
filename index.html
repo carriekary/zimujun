@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="coYPC5zsd5h0anG6PCSr8H" />
     <title>小野字幕君</title>
 
+    <!-- 字體設計：設計圖同款現代黑體。線上時載入 Noto Sans SC／JP（思源黑體），離線自動退回系統字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Sans+JP:wght@500;700&display=swap" />
+
     <!-- 自包含：首屏零外部依赖，全用系统字体；.docx/.pdf/.epub 才按需动态载入对应库（见下方 lazyLoadLib） -->
 
     <!-- 日语注音引擎（kuromoji）改为动态载入，本机词典优先 + 多 CDN 镜像回退，详见下方 initKuromoji() -->
@@ -27,7 +32,7 @@
         
         html, body {
           height: 100%; margin: 0; padding: 0;
-          font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", sans-serif;
+          font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
           background: #f5f5f5; color: #333;
         }
         
@@ -123,14 +128,15 @@
         .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
           padding: 17px 18px; border-bottom: 1px solid #f0e6d4; }
         .settings-label { font-size: 13px; font-weight: 600; color: var(--ink, #3c3530); }
-        .settings-switch { position: relative; display: inline-block; width: 48px; height: 27px; flex: none; }
+        .settings-switch { position: relative; display: inline-block; width: 34px; height: 20px; flex: none; }
         .settings-switch input { opacity: 0; width: 0; height: 0; }
-        .settings-slider { position: absolute; inset: 0; border-radius: 27px; background: #d8cfbf;
-          transition: background .2s ease; cursor: pointer; }
-        .settings-slider::before { content: ''; position: absolute; left: 3px; top: 3px; width: 21px; height: 21px;
-          border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s ease; }
-        .settings-switch input:checked + .settings-slider { background: var(--vermillion, #b02430); }
-        .settings-switch input:checked + .settings-slider::before { transform: translateX(21px); }
+        .settings-slider { position: absolute; inset: 0; border-radius: 999px; background: #b9b0a0;
+          cursor: pointer; box-sizing: border-box; user-select: none; transition: background .2s ease; }
+        .settings-slider::before { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+          border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s ease; z-index: 1; }
+        .settings-slider .ss-on, .settings-slider .ss-off { display: none; }
+        .settings-switch input:checked + .settings-slider { background: #4e9d6b; }
+        .settings-switch input:checked + .settings-slider::before { transform: translateX(14px); }
         .settings-open-btn { border: 1px solid var(--gold, #c9a15f); background: #fff; color: var(--vermillion, #b02430);
           border-radius: 8px; padding: 6px 16px; cursor: pointer; font-size: 13px; font-weight: 700; transition: background .18s ease; }
         .settings-open-btn:hover { background: #f7efe0; }
@@ -145,18 +151,45 @@
 
         /* ===== 大屏：主頁左側導航欄（像參考圖的「首頁」選單）；設置回歸左滑抽屜，由導航欄打開 ===== */
         #mainSideNav { display: none; }
-        .msn-item { display: flex; align-items: center; gap: 10px; border: 1px solid transparent; background: transparent;
+        .msn-item, .msn-row { display: flex; align-items: center; gap: 10px; border: 1px solid transparent; background: transparent;
           color: #6b6357; font-size: 13.5px; font-weight: 600; padding: 10px 12px; border-radius: 10px;
           cursor: pointer; text-align: left; width: 100%; box-sizing: border-box; font-family: inherit;
           transition: background .15s ease, color .15s ease; }
-        .msn-item .ico { font-size: 16px; flex: none; }
-        .msn-item:hover { background: #f7efe0; color: var(--vermillion, #b02430); }
-        .msn-item.on { background: #f7efe0; color: var(--vermillion, #b02430); border-color: var(--gold, #c9a15f); }
-        .msn-foot { margin-top: auto; padding-top: 10px; border-top: 1px dashed #e6ddc8; display: flex; flex-direction: column; gap: 4px; }
-        .msn-cat { padding: 10px 6px 2px; font-size: 11px; color: #b3aa9a; line-height: 1.7; text-align: center; }
-        /* 大屏：把設定抽屜的 5 個開關搬進左欄「顯示選項」；小屏隱藏（開關留在抽屜） */
-        #msnSettings { display: none; }
+        .msn-item .ico, .msn-row .ico { font-size: 16px; flex: none; }
+        .msn-item:hover, .msn-row:hover { background: #f7efe0; color: var(--vermillion, #b02430); }
+        .msn-item.on { background: #faeae4; color: var(--vermillion, #b02430); border-color: transparent; }
+        /* 左欄分區標題（阅读设置 / 其他）與徽章 */
+        .msn-sec-h { font-size: 11px; color: #b3aa9a; letter-spacing: 1px; padding: 14px 6px 4px; font-weight: 700; }
+        .msn-badge { margin-left: auto; background: #b02430; color: #fff; font-size: 10.5px; font-weight: 700;
+          min-width: 20px; height: 18px; padding: 0 6px; border-radius: 999px;
+          display: flex; align-items: center; justify-content: center; flex: none; }
+        .msn-arrow { margin-left: auto; color: #b3aa9a; font-size: 18px; line-height: 1; transition: transform .15s ease; flex: none; }
+        .msn-row.open .msn-arrow { transform: rotate(90deg); }
+        /* 大屏左欄：複習計劃下的匯出按鈕組（小屏左欄隱藏，不會出現） */
+        .msn-export { display: flex; flex-direction: column; gap: 4px; margin: 2px 0 2px 30px; }
+        .msn-export:not(.open) { display: none; }
+        .msn-export-btn {
+          display: flex; align-items: center; justify-content: flex-start; gap: 6px;
+          border: 1px solid #e6ddc8; background: #fff; color: #5a5246;
+          font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px;
+          cursor: pointer; text-align: left; width: 100%; box-sizing: border-box; font-family: inherit;
+          transition: background .15s ease, color .15s ease, border-color .15s ease; }
+        .msn-export-btn:hover { background: #f7efe0; color: var(--vermillion, #b02430); border-color: var(--gold, #c9a15f); }
+        /* 左欄：帮助与反馈 展開內容 */
+        .msn-help { display: flex; flex-direction: column; gap: 6px; margin: 2px 0 2px 30px; }
+        .msn-help:not(.open) { display: none; }
+        .msn-help-b { font-size: 11.5px; color: #8a8073; background: #fff; border: 1px dashed #e6ddc8;
+          border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
+        /* 左欄底部：支持作者 */
+        .msn-support { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 8px;
+          background: #fff; border: 1px solid #e6ddc8; border-radius: 999px; padding: 10px 12px;
+          font-size: 13px; font-weight: 700; color: #5a5246; cursor: pointer; width: 100%; box-sizing: border-box; font-family: inherit;
+          box-shadow: 0 2px 8px rgba(0,0,0,.05); transition: color .15s ease, border-color .15s ease; }
+        .msn-support:hover { color: var(--vermillion, #b02430); border-color: var(--gold, #c9a15f); }
+        /* 大屏：把設定抽屜的 5 個開關搬進左欄「阅读设置」；小屏隱藏（開關留在抽屜） */
+        #msnSettings { display: none; margin-top: 2px; }
         .msn-settings { margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e6ddc8; }
+        /* 左欄「複習計劃」卡片已移至右欄 #reviewInline 的 .ri-side */
         .msn-settings-h { font-size: 11px; color: #b3aa9a; letter-spacing: 1px; padding: 0 4px 4px; font-weight: 700; }
         .msn-settings .settings-row { padding: 9px 4px; border-bottom: 1px solid #f0e6d4; }
         .msn-settings .settings-label { font-size: 12.5px; }
@@ -173,6 +206,16 @@
           #vocabBookBtn { display: none !important; }
           /* 生詞本等全屏覆層開啟時蓋住左欄，避免穿幫 */
           #vocabBookPage:not([hidden]) { z-index: 3000 !important; }
+          /* 大屏：匯出按鈕已移至左欄「複習計劃」下，隱藏首頁頂部下拉；小屏保留 */
+          #exportDropdownContainer { display: none !important; }
+          /* 大屏左欄開關：依設計圖改為紅色（小屏抽屜維持原色） */
+          #mainSideNav .settings-switch input:checked + .settings-slider { background: #b02430; }
+        }
+
+        /* 小屏：強制隱藏右欄內嵌視圖（全部詞彙 / 今日複習），確保首頁不會出現這些版面；
+           小屏仍由右下角「生詞本」鈕開啟全屏頁，任何小屏設置不受影響 */
+        @media (max-width: 900px) {
+          #vocabInline, #reviewInline { display: none !important; }
         }
 
         .search-box {
@@ -230,9 +273,9 @@
           padding-right: 40px; 
           justify-content: center; text-align: center;
         }
-        .japanese-text { font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Noto Sans JP", "Meiryo", "Hiragino Sans", sans-serif; font-weight: 600; font-size: 16px; color: #b02430; margin-bottom: 2px; line-height: 1.9; text-align: left; flex: 1; min-width: 0; }
+        .japanese-text { font-family: "Hiragino Maru Gothic ProN", "Noto Sans JP", "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Meiryo", "Hiragino Sans", sans-serif; font-weight: 600; font-size: 16px; color: #b02430; margin-bottom: 2px; line-height: 1.9; text-align: left; flex: 1; min-width: 0; }
         .jp-row { display: flex; align-items: center; gap: 6px; width: 100%; }
-        .chinese-text { font-family: "Microsoft YaHei", "PingFang SC", "Source Han Sans SC", "Noto Sans SC", sans-serif; font-size: 14px; color: #666; border-top: 1px dashed #eee; padding-top: 2px; margin-top: 2px; line-height: 1.4; text-align: right; }
+        .chinese-text { font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif; font-size: 14px; color: #666; border-top: 1px dashed #eee; padding-top: 2px; margin-top: 2px; line-height: 1.4; text-align: right; }
         .single-language .chinese-text { display: none; }
         .single-language .japanese-text { margin-bottom: 0; border: none; }
 
@@ -367,7 +410,7 @@
         html, body {
           background: var(--soft-bg1);
           color: var(--ink);
-          font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+          font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
           min-height: 100%;
         }
         .header {
@@ -379,9 +422,9 @@
           box-shadow: 0 2px 10px rgba(60, 53, 48, 0.07);
         }
         .header-left h1 {
-          font-weight: 900; letter-spacing: 3px; text-shadow: none;
+          font-weight: 900; letter-spacing: 2px; text-shadow: none;
           color: var(--vermillion);
-          font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+          font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
         }
         .header-left p { opacity: 0.85; letter-spacing: 1px; }
         .custom-file-upload {
@@ -483,7 +526,8 @@
         .empty-state .es-mascot { width: 148px; height: 148px; margin: 0 auto 4px; }
         .empty-state h2 { margin: 6px 0 8px; font-size: 22px; color: var(--vermillion); letter-spacing: 2px; }
         .empty-state .es-sub { margin: 0 0 16px; color: #8d8477; font-size: 14px; line-height: 1.8; }
-        .es-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 18px; }
+        .es-chips { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-bottom: 18px; }
+        .es-chip-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
         .es-chips .chip {
           padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; color: #7c6f56;
           background: #fff; border: 1px solid #e6ddc8; box-shadow: none;
@@ -578,13 +622,12 @@
         /* ==================== 支持作者（低调入口 + 弹窗） ==================== */
         .site-footer { text-align: center; padding: 22px 12px 30px; }
         .support-author-link {
-          display: inline-block; margin-top: 14px;
-          background: #fff7f3; border: 1.5px solid var(--vermillion); border-radius: 999px; cursor: pointer;
-          padding: 8px 18px; font-size: 13px; color: var(--vermillion); letter-spacing: .5px; opacity: 1; font-weight: 700;
-          transition: background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease; font-family: inherit;
-          box-shadow: 0 1px 5px rgba(176, 36, 48, .18);
+          display: inline-block; margin-top: 14px; cursor: pointer;
+          padding: 0; font-size: 13px; color: var(--vermillion); letter-spacing: .5px; opacity: 1; font-weight: 700;
+          background: none; border: none; border-radius: 0; box-shadow: none;
+          transition: color .2s ease, opacity .2s ease; font-family: inherit;
         }
-        .support-author-link:hover { background: var(--vermillion); color: #fff; box-shadow: 0 3px 10px rgba(176, 36, 48, .32); transform: translateY(-1px); }
+        .support-author-link:hover { color: #8a1b25; opacity: .8; text-decoration: underline; }
         .support-author-link::before { content: "☕ "; }
 
         .author-modal { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -616,12 +659,36 @@
         /* --- 生词本（独立整页） --- */
         .vocab-page {
             /* 生詞本專用字型：Windows 上避免落到 SimSun（宋體太細太糊），改用清晰無襯線中文字型 */
-            --vb-font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-            --vb-font-zh: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", sans-serif;
+            --vb-font: "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "Source Han Sans SC", "Microsoft YaHei", "Hiragino Maru Gothic ProN", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+            --vb-font-zh: "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
             --vb-scale: 1;
             position: fixed; inset: 0; z-index: 2200; background: #fffdf9; display: flex; flex-direction: column;
         }
         .vocab-page[hidden] { display: none; }
+        /* ============ 主頁右欄「全部詞彙」內嵌視圖 ============ */
+        .vocab-inline { display: block; padding: 2px 2px 40px; }
+        .vocab-inline[hidden] { display: none; }
+        .vi-head { display: flex; align-items: center; gap: 12px; padding: 4px 2px 14px; border-bottom: 1px solid var(--gold); margin-bottom: 14px; }
+        .vi-head h2 { margin: 0; font-size: 20px; color: var(--vermillion); letter-spacing: 1px; }
+        .vi-open-btn { margin-left: auto; border: 1px solid var(--gold); background: #fff; color: #7c6f56; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 13.5px; font-weight: 700; transition: background .15s ease, color .15s ease, border-color .15s ease; }
+        .vi-open-btn:hover { background: #f7efe0; color: var(--vermillion); border-color: var(--vermillion); }
+        .vocab-inline .vocab-toolbar { padding: 0 0 10px; border-bottom: none; }
+        .vocab-inline .vocab-chips { padding: 0 0 12px; border-bottom: none; }
+        /* ==================== 主頁右欄內嵌：今日複習 ==================== */
+        .review-inline { display: block; padding: 2px 2px 40px; }
+        .review-inline[hidden] { display: none; }
+        .review-inline .rv2-flash { flex: 1; min-height: 300px; }
+        .review-inline .rv2-actions { justify-content: center; gap: 14px; margin-top: 14px; }
+        .review-inline .ri-stats { margin-top: 18px; }
+        .review-inline .rv2-ring-row { justify-content: center; }
+        .review-inline .ri-body { display: flex; gap: 22px; align-items: flex-start; }
+        .review-inline .ri-main { flex: 1; min-width: 0; }
+        .review-inline .ri-side { flex: none; width: 280px; display: flex; flex-direction: column; gap: 14px; }
+        .review-inline .ri-side .rv2-card-h { color: var(--vermillion, #b02430); }
+        @media (max-width: 900px) {
+          .review-inline .ri-body { flex-direction: column; }
+          .review-inline .ri-side { width: 100%; }
+        }
         .vocab-page-head { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--gold); background: #fffdf9; }
         .vocab-page-head h2 { margin: 0; margin-left: auto; font-size: 20px; color: var(--vermillion); letter-spacing: 1px; }
         .vocab-page-head .vocab-count { font-size: 13px; color: #8a8175; }
@@ -986,7 +1053,7 @@
         .vocab-page-head .vb3-setbtn { margin-left: auto; border: 1px solid #e0d4bd; background: #fff; color: #7c756a; border-radius: 999px; padding: 6px 14px; font-size: 12.5px; cursor: pointer; font-family: inherit; }
         .vocab-page-head .vb3-setbtn:hover { color: var(--vermillion); border-color: var(--vermillion); }
         .vb3-wrap { flex: 1; overflow-y: auto; }
-        .vb3-body { display: grid; grid-template-columns: 178px minmax(0, 1fr) 252px; gap: 14px; align-items: stretch; min-height: 100%; width: 100%; padding: 16px 18px 46px; box-sizing: border-box; }
+        .vb3-body { display: grid; grid-template-columns: 178px minmax(0, 1fr); gap: 14px; align-items: stretch; min-height: 100%; width: 100%; padding: 16px 18px 46px; box-sizing: border-box; }
         .vb3-nav { position: sticky; top: 0; display: flex; flex-direction: column; gap: 4px; background: #fff; border: 1px solid #e6ddc8; border-radius: 14px; padding: 10px 8px; }
         .vb3-nav button { display: flex; align-items: center; gap: 8px; border: none; background: transparent; padding: 10px 10px; border-radius: 9px; font-size: 13.5px; color: #6b6355; cursor: pointer; font-family: inherit; text-align: left; transition: background .12s ease, color .12s ease; }
         .vb3-nav button:hover { background: #fdf6ec; color: var(--vermillion); }
@@ -1012,7 +1079,7 @@
         .rv2-next { flex: 0 0 auto; align-self: center; border: none; background: var(--vermillion); color: #fff; border-radius: 10px; padding: 9px 20px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 4px 12px rgba(176,36,48,.25); }
         .rv2-next:hover { background: #97202b; }
         @media (max-width: 1100px) {
-          .vb3-body { grid-template-columns: 150px minmax(0, 1fr) 232px; gap: 10px; }
+          .vb3-body { grid-template-columns: 150px minmax(0, 1fr); gap: 10px; }
         }
         @media (max-width: 900px) {
           .vb3-body { grid-template-columns: 1fr; padding: 12px 12px 40px; }
@@ -1598,16 +1665,16 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               <div class="file-item" data-page-node-id="ZukpmidJxGYQgAC5BrKxFG">
                   <label class="custom-file-upload" id="labelFile1" data-page-node-id="Cqimz3vaXYKI1IyKBwkVmk">
                       <input id="fileInput1" type="file" accept=".ass,.srt,.docx,.txt,.pdf,.epub" data-page-node-id="BZcxGAdVwgGY5fZoqBYMuc" />
-                      <span class="file-icon" data-page-node-id="Hws3cvzKgLAttw1U4laape">📁</span>
-                      <span class="file-name-text" id="textFile1" data-page-node-id="Ctwdw8zx4Faj0AyUeHefbc">选择档案 1</span>
+                      <span class="file-icon" data-page-node-id="Hws3cvzKgLAttw1U4laape">🗂️</span>
+                      <span class="file-name-text" id="textFile1" data-page-node-id="Ctwdw8zx4Faj0AyUeHefbc">导入字幕文件</span>
                   </label>
                   <span class="clear-btn" id="clearBtn1" title="移除档案1" data-page-node-id="KbRZVpbvZFRG5CGSDnjrsC">×</span>
               </div>
               <div class="file-item" data-page-node-id="r40lgiiJR8O1GcBXM1Qd4U">
                   <label class="custom-file-upload" id="labelFile2" data-page-node-id="MUpPhZeUNzGN7C2p5sPny7">
                       <input id="fileInput2" type="file" accept=".ass,.srt,.docx,.txt,.pdf,.epub" data-page-node-id="I9hDfq6ockraEDyB4MRMzu" />
-                      <span class="file-icon" data-page-node-id="OThcCCRGMaGQKMIXyUXcCB">📁</span>
-                      <span class="file-name-text" id="textFile2" data-page-node-id="WKj33KYZjWcrDFUFOdHzym">选择档案 2</span>
+                      <span class="file-icon" data-page-node-id="OThcCCRGMaGQKMIXyUXcCB">🗂️</span>
+                      <span class="file-name-text" id="textFile2" data-page-node-id="WKj33KYZjWcrDFUFOdHzym">导入翻译文件</span>
                   </label>
                   <span class="clear-btn" id="clearBtn2" title="移除档案2" data-page-node-id="OWfWYshhUY6hWntbHoHqpv">×</span>
               </div>
@@ -1651,39 +1718,52 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
       </div>
       <div class="settings-body">
         <div class="settings-row">
-          <span class="settings-label">笔记</span>
-          <label class="settings-switch"><input type="checkbox" id="swNotes"><span class="settings-slider"></span></label>
+          <span class="settings-label">📝 笔记内容</span>
+          <label class="settings-switch"><input type="checkbox" id="swNotes"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
-          <span class="settings-label">双语显示</span>
-          <label class="settings-switch"><input type="checkbox" id="swBilingual"><span class="settings-slider"></span></label>
+          <span class="settings-label">🌐 双语阅读</span>
+          <label class="settings-switch"><input type="checkbox" id="swBilingual"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
-          <span class="settings-label">注音（振假名）</span>
-          <label class="settings-switch"><input type="checkbox" id="swFurigana"><span class="settings-slider"></span></label>
+          <span class="settings-label">🔤 假名注音</span>
+          <label class="settings-switch"><input type="checkbox" id="swFurigana"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
-          <span class="settings-label">词典</span>
-          <label class="settings-switch"><input type="checkbox" id="swDict"><span class="settings-slider"></span></label>
+          <span class="settings-label">📖 wiki词典</span>
+          <label class="settings-switch"><input type="checkbox" id="swDict"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
-          <span class="settings-label">阅读模式</span>
-          <label class="settings-switch"><input type="checkbox" id="swReading"><span class="settings-slider"></span></label>
+          <span class="settings-label">👓 阅读模式</span>
+          <label class="settings-switch"><input type="checkbox" id="swReading"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
       </div>
     </aside>
 
     <!-- 大屏左側導航欄（像參考圖首頁選單）：首頁／生詞本／複習計劃／設置 -->
     <nav id="mainSideNav" aria-label="主導航">
-        <button type="button" class="msn-item on" data-msn="home"><span class="ico">🏠</span>首頁</button>
-        <button type="button" class="msn-item" data-msn="vocab"><span class="ico">📒</span>生詞本</button>
-        <button type="button" class="msn-item" data-msn="review"><span class="ico">📅</span>複習計劃</button>
-        <div class="msn-settings" id="msnSettings">
-            <div class="msn-settings-h">顯示選項</div>
+        <button type="button" class="msn-item on" data-msn="home"><span class="ico">🏠</span>首页</button>
+        <button type="button" class="msn-item" data-msn="vocab"><span class="ico">📖</span>全部词汇</button>
+        <button type="button" class="msn-item" data-msn="vocabbook"><span class="ico">📒</span>生词本<span class="msn-badge" id="msnVocabBadge">0</span></button>
+        <button type="button" class="msn-item" data-msn="review"><span class="ico">📅</span>复习计划<span class="msn-badge" id="msnReviewBadge">0</span></button>
+
+        <div class="msn-sec-h">阅读设置</div>
+        <div class="msn-settings" id="msnSettings"></div>
+
+        <div class="msn-sec-h">其他</div>
+        <button type="button" class="msn-row msn-fold" id="msnExportToggle"><span class="ico">📤</span>导出<span class="msn-arrow">›</span></button>
+        <div class="msn-export" id="msnExport" hidden>
+            <button type="button" class="msn-export-btn" id="navExportPdfBtn">📕 导出全文pdf</button>
+            <button type="button" class="msn-export-btn" id="navExportPdfNotesBtn">📝 导出笔记pdf</button>
         </div>
-        <div class="msn-foot">
-            <div class="msn-cat">每天一點點，<br />日語更進一步～🐱</div>
+        <button type="button" class="msn-row msn-fold" id="msnHelpToggle"><span class="ico">💬</span>帮助与反馈<span class="msn-arrow">›</span></button>
+        <div class="msn-help" id="msnHelp" hidden>
+            <div class="msn-help-b">💡 一次放两个档案（日文＋中文）会自动对齐合并喔</div>
+            <div class="msn-help-b">💡 多次回想比一次长时间学习更有效，别急着看答案～</div>
+            <div class="msn-help-b">💡 想支持作者，可点左下角的「☕ 支持作者」</div>
         </div>
+
+        <button type="button" class="msn-support" id="msnSupportBtn"><span class="ico">☕</span>支持作者</button>
     </nav>
 
     <div class="progress-container" id="progressContainer" data-page-node-id="MPrsdSvD8MwJC2Q4M4HEI2">
@@ -1727,18 +1807,111 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             <h2>今天也想边看日剧边学日文吗？</h2>
             <p class="es-sub">按上方的 📁 选档案，小野马上帮你排好双语对照 ♪</p>
             <div class="es-chips">
-                <span class="chip">🎧 中日双语对照</span>
-                <span class="chip">🌸 自动假名注音</span>
-                <span class="chip">🔍 片假名外来语提示</span>
-                <span class="chip">📝 随手写笔记</span>
-                <span class="chip">🔊 点一下就朗读</span>
-                <span class="chip">📕 汇出讲义 PDF</span>
+                <div class="es-chip-row">
+                    <span class="chip">🎧 中日双语对照</span>
+                    <span class="chip">🌸 自动假名注音</span>
+                    <span class="chip">🔍 片假名外来语提示</span>
+                </div>
+                <div class="es-chip-row">
+                    <span class="chip">📝 随手写笔记</span>
+                    <span class="chip">🔊 点一下就朗读</span>
+                    <span class="chip">📕 汇出讲义 PDF</span>
+                </div>
             </div>
             <div class="es-tips">💡 小提示：一次放两个档案（日文＋中文）会自动对齐合并喔</div>
             <button id="supportAuthorBtn" class="support-author-link" type="button">支持作者</button>
         </div>
         <div id="subtitles" aria-live="polite" data-page-node-id="eKUYvcbYFa3Of3QCO9lkcs"></div>
         <div id="scrollSentinel" style="height: 20px; width: 100%;" data-page-node-id="KWEcCVEiK1XPaIb0ZFnhHT"></div>
+        <div id="vocabInline" class="vocab-inline" hidden>
+            <div class="vi-head">
+                <h2>📚 全部詞彙</h2>
+                <button type="button" id="vocabInlineExportBtn" class="vi-open-btn">📤 匯出生詞本</button>
+            </div>
+            <div class="vocab-toolbar">
+                <input type="search" class="vocab-search" id="vocabInlineSearch" placeholder="搜索笔记 / 单字 / 来源句…" />
+                <select class="vocab-sort" id="vocabInlineSort">
+                    <option value="new">最新更新</option>
+                    <option value="old">最早更新</option>
+                    <option value="file">按来源文件</option>
+                    <option value="due">按複習日期（快到期在前）</option>
+                </select>
+                <label class="vocab-group-toggle"><input type="checkbox" id="vocabInlineGroup" /> 📁 按文件分组</label>
+            </div>
+            <div class="vocab-chips" id="vocabInlineChips"></div>
+            <div id="vocabInlineList" class="vocab-list"></div>
+        </div>
+        <div id="reviewInline" class="review-inline" hidden>
+            <div class="vi-head">
+                <h2>📅 今日複習</h2>
+            </div>
+            <div class="ri-body">
+                <div class="ri-main">
+            <div class="rv2-prog-row"><span id="irProgress">第 1 / 1 詞</span><span id="irDoneLbl">今日已複習 0 詞</span></div>
+            <div class="rv2-track"><div class="rv2-fill" id="irFill"></div></div>
+            <div class="rv2-flash" id="irFlash">
+                <span class="rv2-badge">日語 → 中文</span>
+                <button type="button" class="rv2-speak" id="irSpeak" title="朗讀">🔊</button>
+                <div class="rv-word" id="irWord"></div>
+                <div class="rv2-reading" id="irReading"></div>
+                <div class="rv2-taphint" id="irTaphint">👀 點擊查看答案</div>
+            </div>
+            <div class="rv2-actions" id="irPreBtns">
+                <button type="button" class="rv2-btn ghost" id="irThink">🔄 再想想<br /><span>（排到最後再來一次）</span></button>
+                <button type="button" class="rv2-btn solid" id="irHint">👁 查看答案<br /><span>（顯示釋義）</span></button>
+            </div>
+            <div class="rv2-answer" id="irAnswer" hidden>
+                <div class="rv2-ans-head"><span class="rv2-ans-ok">✅ 答案已揭示</span><span class="rv2-ans-rec" id="irAnsRec">評分後加入複習記錄</span></div>
+                <div class="rv2-ans-grid">
+                    <div class="rv2-ans-col">
+                        <div class="rv2-sec"><div class="rv-ans-h">釋義 / 筆記</div><div class="rv2-ans-b" id="irAnswerText"></div></div>
+                        <div class="rv2-sec"><div class="rv-ans-h">記憶強度</div><div class="rv2-stars-row"><span id="irStars"></span><span class="rv2-lvbadge" id="irLv"></span></div></div>
+                    </div>
+                    <div class="rv2-ans-col">
+                        <div class="rv2-sec"><div class="rv-ans-h">例句</div><div class="rv2-ans-b jp" id="irSentence"></div><div class="rv2-ans-zh" id="irZh"></div></div>
+                        <div class="rv2-sec"><div class="rv-ans-h">來源 / 分類</div><div class="rv2-src" id="irSource"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="rv2-moods" id="irGrades" hidden>
+                <div class="rv2-mood-q">本次記憶效果如何？</div>
+                <div class="rv2-mood-row">
+                    <button type="button" class="rv2-mood m1" data-g="1" title="退回第一階，10 分鐘後再練"><span class="face">😣</span>完全沒記住</button>
+                    <button type="button" class="rv2-mood m2" data-g="2" title="維持階級，明天再見"><span class="face">🙁</span>有點模糊</button>
+                    <button type="button" class="rv2-mood m3" data-g="3" title="間隔拉一階"><span class="face">😐</span>一般</button>
+                    <button type="button" class="rv2-mood m4" data-g="4" title="間隔拉兩階"><span class="face">🙂</span>比較清楚</button>
+                    <button type="button" class="rv2-mood m5" data-g="5" title="間隔拉三階"><span class="face">😄</span>非常清楚</button>
+                    <button type="button" class="rv2-next" id="irNext" hidden>下一詞 ›</button>
+                </div>
+                <div class="rv2-mood-hint">評分後自動排下次見面：完全沒記住 → 10 分鐘；有點模糊 → 明天；其他 → 間隔 1→3→7→15→30→60→120 天逐步拉長。快捷鍵 1～5 評分，Enter 下一詞。</div>
+            </div>
+                </div><!-- /.ri-main -->
+                <aside class="ri-side">
+                    <div class="rv2-card">
+                        <div class="rv2-card-h">今日複習進度</div>
+                        <div class="rv2-ring-row">
+                            <div class="rv2-ring"><svg viewBox="0 0 84 84" width="84" height="84"><circle class="ring-bg" cx="42" cy="42" r="36" /><circle class="ring-fg" id="irRing" cx="42" cy="42" r="36" /><text x="42" y="40" text-anchor="middle" class="ring-num" id="irRingNum">0/0</text><text x="42" y="56" text-anchor="middle" class="ring-lbl">已完成</text></svg></div>
+                            <div class="rv2-ring-stats">
+                                <div><i class="dot new"></i>新學詞彙 <b id="irStatNew">0</b></div>
+                                <div><i class="dot rev"></i>複習詞彙 <b id="irStatRev">0</b></div>
+                                <div><i class="dot left"></i>剩餘詞彙 <b id="irStatLeft">0</b></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rv2-card">
+                        <div class="rv2-card-h">記憶曲線</div>
+                        <svg id="riCurve" viewBox="0 0 220 100" width="100%" height="78" preserveAspectRatio="none"></svg>
+                        <div class="rv2-curve-cap">各間隔階段記住的詞數，記得越牢曲線越平緩 ♪</div>
+                    </div>
+                    <div class="rv2-card">
+                        <div class="rv2-card-h">複習模式</div>
+                        <label class="rv2-radio"><input type="radio" name="rvMode" value="smart" checked /><span>智能複習<i class="rv2-rec">推薦</i></span><small>根據遺忘曲線自動安排</small></label>
+                        <label class="rv2-radio"><input type="radio" name="rvMode" value="seq" /><span>順序複習</span><small>按加入時間排序</small></label>
+                        <label class="rv2-radio"><input type="radio" name="rvMode" value="cat" /><span>按分類複習</span><small>選擇特定分類來練</small></label>
+                    </div>
+                </aside>
+            </div><!-- /.ri-body -->
+        </div>
     </main>
 
     <div id="authorModal" class="author-modal" hidden>
@@ -1758,7 +1931,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
         <div id="vocabBookPage" class="vocab-page" hidden>
         <div class="vocab-page-head">
             <button class="vocab-back" type="button" id="vocabBackBtn">← 返回字幕</button>
-            <h2>📒 生詞本・複習</h2>
+            <h2>📒 生詞本</h2>
             <span class="vocab-count" id="vocabCount"></span>
             <button type="button" class="vb3-setbtn" id="vbSettingBtn" title="調整複習模式">⚙ 複習設置</button>
         </div>
@@ -1856,35 +2029,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     <div class="vocab-list" id="vocabBookList"></div>
                 </div>
             </main>
-            <!-- 右：統計欄 -->
-            <aside class="vb3-side" id="vbSide">
-                <div class="rv2-card">
-                    <div class="rv2-card-h">今日複習進度</div>
-                    <div class="rv2-ring-row">
-                        <div class="rv2-ring"><svg viewBox="0 0 84 84" width="84" height="84"><circle class="ring-bg" cx="42" cy="42" r="36" /><circle class="ring-fg" id="rvRing" cx="42" cy="42" r="36" /><text x="42" y="40" text-anchor="middle" class="ring-num" id="rvRingNum">0/0</text><text x="42" y="56" text-anchor="middle" class="ring-lbl">已完成</text></svg></div>
-                        <div class="rv2-ring-stats">
-                            <div><i class="dot new"></i>新學詞彙 <b id="rvStatNew">0</b></div>
-                            <div><i class="dot rev"></i>複習詞彙 <b id="rvStatRev">0</b></div>
-                            <div><i class="dot left"></i>剩餘詞彙 <b id="rvStatLeft">0</b></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="rv2-card">
-                    <div class="rv2-card-h">記憶曲線</div>
-                    <svg id="rvCurve" viewBox="0 0 220 100" width="100%" height="100" preserveAspectRatio="none"></svg>
-                    <div class="rv2-curve-cap">各間隔階段記住的詞數，記得越牢曲線越平緩 ♪</div>
-                </div>
-                <div class="rv2-card">
-                    <div class="rv2-card-h">複習模式</div>
-                    <label class="rv2-radio"><input type="radio" name="rvMode" value="smart" id="rvModeSmart" checked /><span>智能複習<i class="rv2-rec">推薦</i></span><small>根據遺忘曲線自動安排</small></label>
-                    <label class="rv2-radio"><input type="radio" name="rvMode" value="seq" /><span>順序複習</span><small>按加入時間排序</small></label>
-                    <label class="rv2-radio"><input type="radio" name="rvMode" value="cat" /><span>按分類複習</span><small>選擇特定分類來練</small></label>
-                </div>
-                <div class="rv2-card tip">
-                    <div class="rv2-card-h">💡 小提示</div>
-                    <div class="rv2-tip-b">多次回想比一次長時間學習更有效，別急著看答案喔～</div>
-                </div>
-            </aside>
         </div>
         </div>
     </div>
@@ -2241,6 +2385,13 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           const hasNotes = noteCount > 0;
           document.getElementById('exportPdfNotesBtn').style.display = hasNotes ? 'block' : 'none';
           if (hasNotes) showGlobalStatus(`目前共有 ${noteCount} 条笔记`);
+          // 大屏左欄「複習計劃」下的匯出按鈕組：有字幕或筆記時才顯示（小屏左欄隱藏，自動不見）
+          const msnExport = document.getElementById('msnExport');
+          if (msnExport) msnExport.hidden = !(processedSubtitles.length > 0 || hasNotes);
+          const navPdf = document.getElementById('navExportPdfBtn');
+          const navPdfNotes = document.getElementById('navExportPdfNotesBtn');
+          if (navPdf) navPdf.style.display = processedSubtitles.length > 0 ? 'flex' : 'none';
+          if (navPdfNotes) navPdfNotes.style.display = hasNotes ? 'flex' : 'none';
         }
         
         // ==================== UI 互动逻辑 ====================
@@ -2609,7 +2760,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             if (num === 1) file1Data = { name: "", subtitles: [] };
             if (num === 2) file2Data = { name: "", subtitles: [] };
             document.getElementById(`fileInput${num}`).value = '';
-            document.getElementById(`textFile${num}`).textContent = `选择档案 ${num}`;
+            document.getElementById(`textFile${num}`).textContent = (num === 1 ? '导入字幕文件' : '导入翻译文件');
             document.getElementById(`labelFile${num}`).classList.remove('has-file');
             document.getElementById(`clearBtn${num}`).style.display = 'none';
 
@@ -3945,7 +4096,26 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
         };
 
         function markPlaying(idx, forceScroll) {
-            if (idx === lastPlayIdx && !forceScroll) return;
+            var isSmallScreen = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
+            var follow = document.getElementById('mpFollow');
+
+            // 同一句字幕期間，若使用者手動滑離目前字幕，小螢幕仍可重新跟隨；
+            // 若字幕已在合理的置中範圍內則不重啟動畫，避免每次播放更新都造成抖動。
+            if (idx === lastPlayIdx && !forceScroll) {
+                if (isSmallScreen && idx >= 0 && (!follow || follow.checked)) {
+                    var sameRow = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
+                    var sameBox = document.getElementById('subtitles');
+                    if (sameRow && sameBox) {
+                        var rr = sameRow.getBoundingClientRect();
+                        var br = sameBox.getBoundingClientRect();
+                        var centerDelta = Math.abs((rr.top + rr.height / 2) - (br.top + br.height / 2));
+                        if (centerDelta > Math.max(32, sameBox.clientHeight * 0.22)) {
+                            window.scrollRowToCenter(sameRow, sameBox);
+                        }
+                    }
+                }
+                return;
+            }
             var mk = medEl();
             // 播放器暂停又刚好落在句与句的中间缝隙：不要清掉亮框又不补上，否则整片字幕会熄掉
             var keep = (idx < 0 && mk && mk.paused);
@@ -3958,12 +4128,21 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             var row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
             if (!row) return;
             row.classList.add('is-playing');
-            var follow = document.getElementById('mpFollow');
+            follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
                 try {
                     var box = document.getElementById('subtitles');
-                    // 优先框内滚；框不可滚（手机整页滚）时自动退回整页滚，保证自动跟句在手机也生效
-                    window.scrollRowToCenter(row, box);
+                    if (isSmallScreen) {
+                        // 手機上等本次版面更新完成再讀取位置，避免使用舊的 layout 座標。
+                        requestAnimationFrame(function () {
+                            var currentRow = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
+                            var currentBox = document.getElementById('subtitles');
+                            if (currentRow && currentBox) window.scrollRowToCenter(currentRow, currentBox);
+                        });
+                    } else {
+                        // 大螢幕保留原本的平滑置中行為。
+                        window.scrollRowToCenter(row, box);
+                    }
                 } catch (e) { }
             }
         }
@@ -4245,16 +4424,38 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               nav.addEventListener('click', function (e) {
                 var b = e.target.closest('.msn-item'); if (!b) return;
                 var act = b.getAttribute('data-msn');
-                if (act === 'home') {
-                  setOn('home');
-                  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e2) { window.scrollTo(0, 0); }
-                } else if (act === 'vocab') {
-                  var vb = document.getElementById('vocabBookBtn'); if (vb) vb.click();
+                setOn(act);
+                if (act === 'vocab') {
+                  // 大屏：左欄「全部词汇」→ 主頁右欄直接顯示「全部詞彙」內嵌視圖（不開全屏獨立頁）
+                  if (window.__vocabInline) window.__vocabInline.show();
+                } else if (act === 'vocabbook') {
+                  // 大屏：左欄「生词本」→ 開全屏生詞本頁（分類／SRS／匯出管理）
+                  if (window.__vocabBookOpen) window.__vocabBookOpen();
                 } else if (act === 'review') {
-                  var vb2 = document.getElementById('vocabBookBtn');
-                  if (vb2) { vb2.click(); setTimeout(function () { var d = document.querySelector('#vbNav [data-vnav="due"]'); if (d) d.click(); }, 80); }
+                  // 大屏：左欄複習計劃 → 主頁右欄直接顯示「今日複習」內嵌視圖（不開全屏生詞本頁）
+                  if (window.__reviewInline) window.__reviewInline.show();
+                  if (window.__msnReviewRender) window.__msnReviewRender();
+                } else {
+                  // 切到其它分頁時，還原字幕視圖並收起內嵌視圖
+                  if (window.__vocabInline) window.__vocabInline.hide();
+                  if (window.__reviewInline) window.__reviewInline.hide();
+                  if (act === 'home') {
+                    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e2) { window.scrollTo(0, 0); }
+                  }
                 }
               });
+              // 「其他」區：导出 / 帮助与反馈 展開收合
+              var exT = document.getElementById('msnExportToggle'), ex = document.getElementById('msnExport');
+              if (exT && ex) exT.addEventListener('click', function () {
+                ex.classList.toggle('open'); exT.classList.toggle('open', ex.classList.contains('open'));
+              });
+              var hpT = document.getElementById('msnHelpToggle'), hp = document.getElementById('msnHelp');
+              if (hpT && hp) hpT.addEventListener('click', function () {
+                hp.classList.toggle('open'); hpT.classList.toggle('open', hp.classList.contains('open'));
+              });
+              // 左欄底部「支持作者」→ 開讚助彈窗（與首頁入口共用）
+              var sp = document.getElementById('msnSupportBtn');
+              if (sp) sp.addEventListener('click', function () { if (window.__openAuthorModal) window.__openAuthorModal(); });
             })();
             // ==================== 大屏：設定開關搬進左欄；小屏留在抽屜 ====================
             (function () {
@@ -4266,7 +4467,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               function layout() {
                 var rows = body.querySelectorAll('.settings-row');
                 if (mq.matches) {
-                  // 大屏：5 個開關移入左欄「顯示選項」；隱藏設定抽屜（頭部齒輪本就隱藏）
+                  // 大屏：5 個開關移入左欄「显示选项」；隱藏設定抽屜（頭部齒輪本就隱藏）
                   Array.prototype.forEach.call(rows, function (r) { msn.appendChild(r); });
                   msn.style.display = 'block';
                   if (drawer) drawer.style.display = 'none';
@@ -4573,6 +4774,15 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           arr.forEach(ensureSrs);
           return arr.filter(function (en) { return srsGet(en).due <= now; });
         }
+        // 大屏左欄徽章：生词本＝總詞彙數、复习计划＝今日待複習數（0 時隱藏）
+        function updateMsnBadges() {
+          var vb = document.getElementById('msnVocabBadge');
+          if (vb) { var n = Object.keys(vocabMap).length; vb.textContent = n; vb.style.display = n > 0 ? 'flex' : 'none'; }
+          var rv = document.getElementById('msnReviewBadge');
+          if (rv) { var d = srsTodayList().length; rv.textContent = d; rv.style.display = d > 0 ? 'flex' : 'none'; }
+        }
+        setInterval(updateMsnBadges, 2000);
+        setTimeout(updateMsnBadges, 600);
         function srsDueText(en) {
           var s = srsGet(en);
           var d = Math.ceil((s.due - Date.now()) / (24 * 3600 * 1000));
@@ -5102,6 +5312,14 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           triggerPrint(`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>${escapeHtml(AppState.currentFileName)} - 全文讲义</title><style>@page{margin:20mm 15mm;}body{font-family:sans-serif; background:#fdfdfd; padding:20px;}.row-item{background:#fff; padding:16px 20px; margin-bottom:12px; border-radius:8px; page-break-inside:avoid; border:1px solid #f0f0f0;}.biling{display:flex; gap:24px; align-items:flex-start;}.jp{font-size:16px; font-weight:600; color:#2c3e50; line-height:1.9;}.zh{flex:1; width:50%; font-size:15px; color:#555; line-height:1.7;}.divi{flex:1; width:50%; border-right:1px solid #eaeaea; padding-right:24px;}.full{width:100%;}.note-box{background:#fffaf0; border-left:4px solid #f39c12; padding:12px 16px; margin-top:12px;}.note-label{font-size:12px; font-weight:bold; color:#d35400; margin-bottom:6px;}.note-content{font-size:14px; white-space:pre-wrap;} rt{color:#7f8c8d; font-size:0.55em; padding-bottom:2px;} ruby{ruby-position:over; ruby-align:center;} body.hide-furigana rt{display:none !important;} @media print{body{background:#fff; padding:0;}.row-item{border:none; border-bottom:1px solid #eee; margin-bottom:15px; padding:15px 0; border-radius:0;}.note-box{-webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fffaf0 !important; border-color:#f39c12 !important; padding:10px 14px;}}</style></head><body class="${AppState.furiganaEnabled ? '' : 'hide-furigana'}"><div style="text-align:center; margin-bottom:40px; padding-bottom:20px; border-bottom:1px solid #e0e0e0;"><h1 style="margin:0; font-size:26px;">${escapeHtml(getSafeFileName())}</h1></div>${items}</body></html>`);
         });
 
+        // 大屏左欄「複習計劃」下的匯出按鈕：直接觸發既有的匯出邏輯（不重複實作）
+        (function wireNavExport() {
+          const navPdf = document.getElementById('navExportPdfBtn');
+          if (navPdf) navPdf.addEventListener('click', () => { const b = document.getElementById('exportPdfBtn'); if (b) b.click(); });
+          const navNotes = document.getElementById('navExportPdfNotesBtn');
+          if (navNotes) navNotes.addEventListener('click', () => { const b = document.getElementById('exportPdfNotesBtn'); if (b) b.click(); });
+        })();
+
         // ==================== 生词本弹窗（查看 / 删除 / 跳转来源） ====================
         (function setupVocabBook() {
           var page = document.getElementById('vocabBookPage');
@@ -5124,8 +5342,9 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           var activeCat = '';   // '' = 全部, '__uncat' = 未分类, 否则 = 分类名称
           var srsOnly = false;  // 只顯示今天到期要複習的
 
-          function open() { renderVocabBook(); page.hidden = false; document.body.style.overflow = 'hidden'; try { search.focus(); } catch (e) {} }
+          function open() { renderVocabBook(); vbTab('all'); page.hidden = false; document.body.style.overflow = 'hidden'; try { search.focus(); } catch (e) {} }
           function close() { page.hidden = true; document.body.style.overflow = ''; }
+          window.__vocabBookOpen = open;  // 大屏左欄「生词本」入口
 
           btn.addEventListener('click', open);
           backBtn.addEventListener('click', close);
@@ -5263,7 +5482,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             // 分类 chips（显示用户自定分类，空分类也显示，方便直接筛选/指派）
             var cats = userCategories;
             var dueN = srsTodayList().length;
-            renderVocabHome();
             var parts = ['<button type="button" class="vocab-chip' + (activeCat === '' ? ' active' : '') + '" data-cat="">全部</button>',
                          '<button type="button" class="vocab-chip' + (srsOnly ? ' active' : '') + '" data-srs="1">⏰ 待複習 (' + dueN + ')</button>'];
             parts.push('<button type="button" class="vocab-chip' + (activeCat === '__uncat' ? ' active' : '') + '" data-cat="__uncat">未分类</button>');
@@ -5288,23 +5506,306 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             }
           };
 
-          // ============ 生詞本首頁：今日複習 dashboard 渲染 ============
-          function renderVocabHome() {
-            var due = srsTodayList(), dueN = due.length;
-            var dn = rvE('vbDueN'); if (dn) dn.textContent = dueN;
-            var doneToday = rvTodayDone();
-            var total = dueN + doneToday;
-            var C = 2 * Math.PI * 36, fg = rvE('rvRing');
-            if (fg) { fg.style.strokeDasharray = C; fg.style.strokeDashoffset = C * (total ? (1 - doneToday / total) : 1); }
-            var num = rvE('rvRingNum'); if (num) num.textContent = doneToday + '/' + total;
-            var nw = 0, rev = 0; rvAllArr().forEach(function (en) { if (srsGet(en).reps > 0) rev++; else nw++; });
-            var e1 = rvE('rvStatNew'), e2 = rvE('rvStatRev'), e3 = rvE('rvStatLeft');
-            if (e1) e1.textContent = nw; if (e2) e2.textContent = rev; if (e3) e3.textContent = dueN;
-            var an = rvE('vbAllN'); if (an) an.textContent = '（' + rvAllArr().length + ' 條）';
-            rvDrawCurve();
+          // ============ 主頁右欄「全部詞彙」內嵌視圖（點左欄生詞本時顯示，不開全屏頁） ============
+          var vi = document.getElementById('vocabInline');
+          var viSearch = document.getElementById('vocabInlineSearch');
+          var viSort = document.getElementById('vocabInlineSort');
+          var viGroup = document.getElementById('vocabInlineGroup');
+          var viChips = document.getElementById('vocabInlineChips');
+          var viList = document.getElementById('vocabInlineList');
+          var viOpen = document.getElementById('vocabInlineExportBtn');
+          var viActiveCat = '';
+          var viSrsOnly = false;
+
+          function getInlineFiltered() {
+            var q = (viSearch.value || '').trim().toLowerCase();
+            var arr = Object.keys(vocabMap).map(function (k) { return vocabMap[k]; });
+            if (q) {
+              arr = arr.filter(function (en) {
+                return ((en.note || '') + ' ' + (en.sentence || '') + ' ' + (en.sentenceZh || '') + ' ' + (en.sourceFile || '') + ' ' + (en.category || '')).toLowerCase().indexOf(q) >= 0;
+              });
+            }
+            if (viSrsOnly) arr = arr.filter(function (en) { return srsGet(en).due <= Date.now(); });
+            if (viActiveCat === '__uncat') arr = arr.filter(function (en) { return !en.category; });
+            else if (viActiveCat) arr = arr.filter(function (en) { return en.category === viActiveCat; });
+            var mode = viSort.value;
+            arr.sort(function (a, b) {
+              if (mode === 'old') return (a.updatedAt || '').localeCompare(b.updatedAt || '');
+              if (mode === 'file') return (a.sourceFile || '').localeCompare(b.sourceFile || '') || (b.updatedAt || '').localeCompare(a.updatedAt || '');
+              if (mode === 'due') return srsGet(a).due - srsGet(b).due;
+              return (b.updatedAt || '').localeCompare(a.updatedAt || '');
+            });
+            return arr;
           }
 
-          // ============ 記憶曲線複習模式 2.0：分頁＋閃卡＋五級自評＋側欄統計 ============
+          function renderInlineVocab() {
+            if (!vi || !viList) return;
+            var entries = getInlineFiltered();
+            var dueN = (typeof srsTodayList === 'function') ? srsTodayList().length : 0;
+            var parts = ['<button type="button" class="vocab-chip' + (viActiveCat === '' ? ' active' : '') + '" data-cat="">全部</button>',
+                         '<button type="button" class="vocab-chip' + (viSrsOnly ? ' active' : '') + '" data-srs="1">⏰ 待複習 (' + dueN + ')</button>'];
+            parts.push('<button type="button" class="vocab-chip' + (viActiveCat === '__uncat' ? ' active' : '') + '" data-cat="__uncat">未分类</button>');
+            userCategories.forEach(function (c) { parts.push('<button type="button" class="vocab-chip' + (viActiveCat === c ? ' active' : '') + '" data-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + '</button>'); });
+            if (viChips) viChips.innerHTML = parts.join('');
+            if (!entries.length) {
+              viList.innerHTML = '<div class="vocab-empty">没有符合条件的生词本内容。<br>在字幕的笔记框里写点东西就会自动加入；也可用上方「分类 / 搜索」来整理 ♡</div>';
+              return;
+            }
+            if (viGroup.checked) {
+              var groups = {};
+              entries.forEach(function (en) { var f = en.sourceFile || '未知文件'; (groups[f] = groups[f] || []).push(en); });
+              var html = [];
+              Object.keys(groups).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (f) {
+                html.push('<div class="vocab-group-head">📁 ' + escapeHtml(f) + ' <span style="font-weight:400;color:#a89e8e;">(' + groups[f].length + ')</span></div>');
+                groups[f].forEach(function (en) { html.push(cardHtml(en)); });
+              });
+              viList.innerHTML = html.join('');
+            } else {
+              viList.innerHTML = entries.map(cardHtml).join('');
+            }
+          }
+
+          if (viList) {
+            viList.addEventListener('click', function (e) {
+              var srsOk = e.target.getAttribute('data-srsok');
+              var srsNo = e.target.getAttribute('data-srsno');
+              if (srsOk) { srsGrade(srsOk, 2); renderInlineVocab(); renderVocabBook(); return; }
+              if (srsNo) { srsGrade(srsNo, 0); renderInlineVocab(); renderVocabBook(); return; }
+              var delKey = e.target.getAttribute('data-del');
+              if (delKey) { deleteVocabEntry(delKey); renderInlineVocab(); renderVocabBook(); return; }
+              var item = e.target.closest('.vocab-item');
+              if (!item) return;
+              var mood = e.target.closest('.vb-flip-mood');
+              if (mood) { srsGrade(item.getAttribute('data-key'), parseInt(mood.getAttribute('data-g'), 10) - 1); renderInlineVocab(); renderVocabBook(); return; }
+              if (e.target.closest('.vocab-cat, .vocab-srs, .vocab-meta')) return;
+              item.classList.toggle('flipped');
+            });
+            viList.addEventListener('change', function (e) {
+              var sel = e.target.closest('.vocab-cat');
+              if (!sel) return;
+              var key = sel.getAttribute('data-catkey');
+              var val = sel.value;
+              if (val === '__new') {
+                var name = prompt('请输入新分类名称：');
+                if (name && name.trim()) { addUserCategory(name.trim()); setVocabCategory(key, name.trim()); }
+              } else { setVocabCategory(key, val); }
+              renderInlineVocab(); renderVocabBook();
+            });
+          }
+          if (viSearch) viSearch.addEventListener('input', renderInlineVocab);
+          if (viSort) viSort.addEventListener('change', renderInlineVocab);
+          if (viGroup) viGroup.addEventListener('change', renderInlineVocab);
+          if (viChips) viChips.addEventListener('click', function (e) {
+            var srsChip = e.target.getAttribute('data-srs');
+            if (srsChip !== null) { viSrsOnly = !viSrsOnly; renderInlineVocab(); return; }
+            var c = e.target.getAttribute('data-cat');
+            if (c === null) return;
+            viActiveCat = (viActiveCat === c) ? '' : c;
+            renderInlineVocab();
+          });
+          if (viOpen) viOpen.addEventListener('click', function () { if (typeof vpdfOpen === 'function') vpdfOpen(); });
+
+          // 對外開關，供左欄導航呼叫
+          window.__vocabInline = {
+            show: function () {
+              if (!vi) return;
+              close();   // 確保完整生詞本頁已關閉
+              var sub = document.getElementById('subtitles');
+              var es = document.getElementById('emptyState');
+              var ss = document.getElementById('scrollSentinel');
+              if (sub) sub.style.display = 'none';
+              if (es) es.style.display = 'none';
+              if (ss) ss.style.display = 'none';
+              vi.hidden = false;
+              renderInlineVocab();
+              try { viSearch.focus(); } catch (e) {}
+            },
+            hide: function () {
+              if (!vi) return;
+              vi.hidden = true;
+              var sub = document.getElementById('subtitles');
+              var es = document.getElementById('emptyState');
+              var ss = document.getElementById('scrollSentinel');
+              if (sub) sub.style.display = '';
+              if (es) es.style.display = '';
+              if (ss) ss.style.display = '';
+            }
+          };
+
+          // ============ 主頁右欄內嵌：今日複習（不開全屏生詞本頁） ============
+          (function setupInlineReview() {
+            var ri = document.getElementById('reviewInline');
+            if (!ri) return;
+            var queue = [], pos = 0, graded = false;
+            function irE(id) { return document.getElementById(id); }
+            function irTodayDone() { return rvTodayDone(); }
+            function irBuildQueue() { return rvSortArr(srsTodayList()); }
+            function irUpdateRing() {
+              var total = queue.length, done = Math.min(pos, total);
+              var C = 2 * Math.PI * 36, fg = irE('irRing');
+              if (fg) { fg.style.strokeDasharray = C; fg.style.strokeDashoffset = C * (total ? (1 - done / total) : 1); }
+              var num = irE('irRingNum'); if (num) num.textContent = done + '/' + total;
+              var prog = irE('irProgress');
+              if (prog) prog.textContent = total ? ('第 ' + Math.min(pos + 1, total) + ' / ' + total + ' 詞') : '今天沒有要複習的詞';
+              var fill = irE('irFill'); if (fill) fill.style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+              var dl = irE('irDoneLbl'); if (dl) dl.textContent = '今日已複習 ' + irTodayDone() + ' 詞';
+              var nw = 0, rev = 0;
+              queue.forEach(function (en) { if (srsGet(en).reps > 0) rev++; else nw++; });
+              var e1 = irE('irStatNew'), e2 = irE('irStatRev'), e3 = irE('irStatLeft');
+              if (e1) e1.textContent = nw;
+              if (e2) e2.textContent = rev;
+              if (e3) e3.textContent = Math.max(0, total - done);
+            }
+            function irShowCard() {
+              var en = queue[pos];
+              if (!en) { irFinish(); return; }
+              var s = srsGet(en);
+              var noteLines = (en.note || '').split('\n');
+              irE('irWord').textContent = noteLines[0] || en.sentence || '（這條沒有內容）';
+              var rd = noteLines.slice(1).join(' ').trim();
+              irE('irReading').textContent = rd; irE('irReading').hidden = !rd;
+              irE('irSentence').textContent = en.sentence || '（沒有來源句）';
+              irE('irZh').textContent = en.sentenceZh || '';
+              irE('irAnswerText').textContent = en.note || '';
+              var src = [];
+              if (en.sourceFile) src.push(escapeHtml(en.sourceFile));
+              if (en.time) src.push(escapeHtml(en.time));
+              if (en.category) src.push('🏷 ' + escapeHtml(en.category));
+              irE('irSource').innerHTML = src.join(' · ') || '—';
+              var lv = Math.min(s.lv, 5), st = '';
+              for (var i = 0; i < 5; i++) st += '<span class="rv2-star' + (i < lv ? ' on' : '') + '">★</span>';
+              irE('irStars').innerHTML = st;
+              irE('irLv').textContent = '第 ' + (s.lv + 1) + ' 階';
+              irE('irTaphint').textContent = '👀 點擊查看答案';
+              irE('irPreBtns').hidden = false;
+              irE('irHint').hidden = false;
+              irE('irAnswer').hidden = true;
+              irE('irGrades').hidden = true;
+              graded = false;
+              var rec0 = irE('irAnsRec'); if (rec0) rec0.textContent = '評分後加入複習記錄';
+              var nx0 = irE('irNext'); if (nx0) nx0.hidden = true;
+              var mg0 = irE('irGrades');
+              if (mg0) Array.prototype.forEach.call(mg0.querySelectorAll('.rv2-mood'), function (b) { b.classList.remove('picked'); });
+              irUpdateRing();
+            }
+            function irReveal() {
+              if (pos >= queue.length) return;
+              if (!irE('irAnswer').hidden) return;
+              irE('irTaphint').textContent = '☝ 想好了嗎？選一個下面的記憶效果';
+              irE('irAnswer').hidden = false;
+              irE('irGrades').hidden = false;
+              irE('irPreBtns').hidden = true;
+            }
+            function irGrade(g) {
+              var en = queue[pos];
+              if (!en) return;
+              srsGrade(en.key, g);
+              pos++;
+              irShowCard();
+            }
+            function irThink() {
+              if (pos >= queue.length) return;
+              queue.push(queue[pos]);   // 不評分，排到佇列最後再想一次
+              pos++;
+              irShowCard();
+            }
+            function irNext() {
+              var en = queue[pos];
+              if (!en) { irShowCard(); return; }
+              pos++;
+              irShowCard();
+            }
+            function irFinish(empty) {
+              irE('irWord').textContent = empty ? '😌 今天沒有要複習的詞' : '🎉 複習完成！';
+              irE('irReading').hidden = true;
+              irE('irSentence').textContent = '';
+              irE('irZh').textContent = '';
+              irE('irTaphint').textContent = empty ? '去字幕頁的筆記框存幾個詞，或點「全部詞彙」回顧一下吧 ♡' : '休息一下，下次再來見面吧 ♡';
+              irE('irPreBtns').hidden = true;
+              irE('irHint').hidden = true;
+              irE('irAnswer').hidden = true;
+              irE('irGrades').hidden = true;
+              graded = false;
+              var nx1 = irE('irNext'); if (nx1) nx1.hidden = true;
+              var rec1 = irE('irAnsRec'); if (rec1) rec1.textContent = '評分後加入複習記錄';
+              irUpdateRing();
+            }
+            function syncRiMode() {
+              var c = ri.querySelector('input[name="rvMode"][value="' + rvOrder + '"]');
+              if (c) c.checked = true;
+            }
+            function irStart() {
+              if (!rvAllArr().length) { showGlobalStatus('生詞本還是空的，先在字幕的筆記框寫點東西吧 ♡', 2800); return; }
+              syncRiMode();
+              queue = irBuildQueue(); pos = 0; graded = false;
+              if (!queue.length) { irFinish(true); return; }
+              irShowCard();
+            }
+            var irHint = irE('irHint'); if (irHint) irHint.addEventListener('click', irReveal);
+            var irThinkBtn = irE('irThink'); if (irThinkBtn) irThinkBtn.addEventListener('click', irThink);
+            var irNextBtn = irE('irNext'); if (irNextBtn) irNextBtn.addEventListener('click', irNext);
+            var irFl = irE('irFlash');
+            if (irFl) irFl.addEventListener('click', function (e) {
+              if (e.target.closest('#irSpeak')) return;
+              if (irE('irAnswer').hidden) irReveal();
+              else if (graded) irNext();
+            });
+            var irSp = irE('irSpeak');
+            if (irSp) irSp.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var en = queue[pos]; if (!en) return;
+              var t = (en.note || '').split('\n')[0] || en.sentence || '';
+              if (!t) return;
+              var tmp = document.createElement('span'); tmp.setAttribute('data-text', t); window.speakText(tmp);
+            });
+            var mg = irE('irGrades');
+            if (mg) mg.addEventListener('click', function (e) {
+              var b = e.target.closest('.rv2-mood'); if (!b) return;
+              b.classList.add('picked'); graded = true;
+              irGrade(parseInt(b.getAttribute('data-g'), 10) - 1);
+            });
+            document.addEventListener('keydown', function (e) {
+              if (ri.hidden) return;
+              if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+              if (e.key === 'Enter' || e.keyCode === 13) { if (irE('irAnswer').hidden) irReveal(); else irNext(); return; }
+              var gmap = { '1': 0, '2': 1, '3': 2, '4': 3, '5': 4 };
+              if (!irE('irGrades').hidden && Object.prototype.hasOwnProperty.call(gmap, e.key)) irGrade(gmap[e.key]);
+            });
+            // 右欄「複習模式」單選（同名 name="rvMode"，與生詞本同步）：切換時立即重建右欄複習佇列
+            Array.prototype.forEach.call(ri.querySelectorAll('input[name="rvMode"]'), function (r) {
+              r.addEventListener('change', function () {
+                rvOrder = this.value;
+                if (!ri.hidden) { queue = irBuildQueue(); pos = 0; irShowCard(); }
+              });
+            });
+            window.__reviewInline = {
+              show: function () {
+                if (!ri) return;
+                close();   // 確保完整生詞本頁已關閉
+                if (window.__vocabInline) window.__vocabInline.hide();
+                var sub = document.getElementById('subtitles');
+                var es = document.getElementById('emptyState');
+                var ss = document.getElementById('scrollSentinel');
+                if (sub) sub.style.display = 'none';
+                if (es) es.style.display = 'none';
+                if (ss) ss.style.display = 'none';
+                ri.hidden = false;
+                irStart();
+              },
+              hide: function () {
+                if (!ri) return;
+                ri.hidden = true;
+                var sub = document.getElementById('subtitles');
+                var es = document.getElementById('emptyState');
+                var ss = document.getElementById('scrollSentinel');
+                if (sub) sub.style.display = '';
+                if (es) es.style.display = '';
+                if (ss) ss.style.display = '';
+              }
+            };
+          })();
+
+          // ============ 記憶曲線複習模式 2.0：分頁＋閃卡＋五級自評 ============
           var rvPanel = null;   // 舊彈窗已移除：複習會話內嵌於 #vbSession
           var rvQueue = [], rvPos = 0;
           var rvScope = 'due';    // due=今日複習 all=全部詞彙 cat=按分類
@@ -5351,25 +5852,29 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             if (e1) e1.textContent = nw;
             if (e2) e2.textContent = rev;
             if (e3) e3.textContent = Math.max(0, total - done);
+            msnReviewRender();
           }
-          function rvDrawCurve() {
-            var svg = rvE('rvCurve'); if (!svg) return;
-            var all = rvAllArr(), total = all.length || 1;
-            var learned = all.filter(function (en) { return srsGet(en).reps > 0; });
-            var xs = [18, 66, 114, 162, 210], lbls = ['今天', '1天', '3天', '7天', '15天'], lvNeed = [0, 1, 2, 3, 4];
-            var pts = xs.map(function (x, i) {
-              var n = learned.filter(function (en) { return srsGet(en).lv >= lvNeed[i]; }).length;
-              return { x: x, y: 82 - Math.round(n / total * 62), n: n };
-            });
-            var h = '<line x1="6" y1="82" x2="214" y2="82" stroke="#e6ddc8" stroke-width="1" />'
-              + '<polyline points="' + pts.map(function (p) { return p.x + ',' + p.y; }).join(' ') + '" fill="none" stroke="#b02430" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />';
-            pts.forEach(function (p, i) {
-              h += '<circle cx="' + p.x + '" cy="' + p.y + '" r="4" fill="#b02430" />'
-                 + '<text x="' + p.x + '" y="' + (p.y - 8) + '" text-anchor="middle" font-size="10" fill="#8a8073">' + p.n + '</text>'
-                 + '<text x="' + p.x + '" y="95" text-anchor="middle" font-size="9.5" fill="#a09789">' + lbls[i] + '</text>';
-            });
-            svg.innerHTML = h;
+          function msnReviewRender() {
+            // 進度環（irRing）由右欄內嵌複習的 irUpdateRing 負責；此處只刷新右欄「記憶曲線」
+            var svg = document.getElementById('riCurve'); if (svg) {
+              var all = rvAllArr(), tot = all.length || 1;
+              var learned = all.filter(function (en) { return srsGet(en).reps > 0; });
+              var xs = [18, 66, 114, 162, 210], lbls = ['今天', '1天', '3天', '7天', '15天'], lvNeed = [0, 1, 2, 3, 4];
+              var pts = xs.map(function (x, i) {
+                var n = learned.filter(function (en) { return srsGet(en).lv >= lvNeed[i]; }).length;
+                return { x: x, y: 82 - Math.round(n / tot * 62), n: n };
+              });
+              var ch = '<line x1="6" y1="82" x2="214" y2="82" stroke="#e6ddc8" stroke-width="1" />'
+                + '<polyline points="' + pts.map(function (p) { return p.x + ',' + p.y; }).join(' ') + '" fill="none" stroke="#b02430" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />';
+              pts.forEach(function (p, i) {
+                ch += '<circle cx="' + p.x + '" cy="' + p.y + '" r="4" fill="#b02430" />'
+                   + '<text x="' + p.x + '" y="' + (p.y - 8) + '" text-anchor="middle" font-size="10" fill="#8a8073">' + p.n + '</text>'
+                   + '<text x="' + p.x + '" y="95" text-anchor="middle" font-size="9.5" fill="#a09789">' + lbls[i] + '</text>';
+              });
+              svg.innerHTML = ch;
+            }
           }
+          window.__msnReviewRender = msnReviewRender;
           function rvShowCard() {
             var en = rvQueue[rvPos];
             if (!en) { rvFinish(); return; }
@@ -5833,7 +6338,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             var dt = new DataTransfer(); dt.items.add(f);
             input.files = dt.files;
             input.dispatchEvent(new Event('change', { bubbles: true }));
-          } catch (err) { alert('这个浏览器不支援拖放，请改按上方的 📁 选择档案喔'); }
+          } catch (err) { alert('这个浏览器不支援拖放，请改按上方的 🗂️ 导入文件按钮喔'); }
         });
 
 
@@ -5876,6 +6381,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           if (!modal || !btn) return;
           function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
           function close() { modal.hidden = true; document.body.style.overflow = ''; }
+          window.__openAuthorModal = open;  // 大屏左欄「支持作者」入口
           btn.addEventListener('click', open);
           modal.querySelectorAll('[data-author-close]').forEach(function (el) { el.addEventListener('click', close); });
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
