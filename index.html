@@ -151,13 +151,19 @@
 
         /* ===== 大屏：主頁左側導航欄（像參考圖的「首頁」選單）；設置回歸左滑抽屜，由導航欄打開 ===== */
         #mainSideNav { display: none; }
-        .msn-item, .msn-row { display: flex; align-items: center; gap: 10px; border: 1px solid transparent; background: transparent;
-          color: #6b6357; font-size: 13.5px; font-weight: 600; padding: 10px 12px; border-radius: 10px;
+        .msn-item, .msn-row { display: flex; align-items: center; gap: 11px; border: 1px solid transparent; background: transparent;
+          color: #6b6357; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 10px;
           cursor: pointer; text-align: left; width: 100%; box-sizing: border-box; font-family: inherit;
           transition: background .15s ease, color .15s ease; }
-        .msn-item .ico, .msn-row .ico { font-size: 16px; flex: none; }
+        .msn-item .ico, .msn-row .ico { font-size: 16px; flex: none; display: inline-flex; align-items: center; }
+        .msn-item .ico svg, .msn-row .ico svg { width: 18px; height: 18px; display: block; }
         .msn-item:hover, .msn-row:hover { background: #f7efe0; color: var(--vermillion, #b02430); }
-        .msn-item.on { background: #faeae4; color: var(--vermillion, #b02430); border-color: transparent; }
+        .msn-item.on { background: #faeae4; color: var(--vermillion, #b02430); border-color: transparent; font-weight: 700; }
+        /* 左欄開關標籤：大屏用線條 SVG 圖標（隱藏 emoji）；小屏抽屜維持 emoji 原樣 */
+        .sl-svg { display: none; }
+        #mainSideNav .sl-emoji { display: none; }
+        #mainSideNav .sl-svg { display: inline-flex; vertical-align: -3px; margin-right: 7px; }
+        #mainSideNav .sl-svg svg { width: 15px; height: 15px; display: block; }
         /* 左欄分區標題（阅读设置 / 其他）與徽章 */
         .msn-sec-h { font-size: 11px; color: #b3aa9a; letter-spacing: 1px; padding: 14px 6px 4px; font-weight: 700; }
         .msn-badge { margin-left: auto; background: #b02430; color: #fff; font-size: 10.5px; font-weight: 700;
@@ -180,12 +186,14 @@
         .msn-help:not(.open) { display: none; }
         .msn-help-b { font-size: 11.5px; color: #8a8073; background: #fff; border: 1px dashed #e6ddc8;
           border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
-        /* 左欄底部：支持作者 */
-        .msn-support { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 8px;
-          background: #fff; border: 1px solid #e6ddc8; border-radius: 999px; padding: 10px 12px;
-          font-size: 13px; font-weight: 700; color: #5a5246; cursor: pointer; width: 100%; box-sizing: border-box; font-family: inherit;
-          box-shadow: 0 2px 8px rgba(0,0,0,.05); transition: color .15s ease, border-color .15s ease; }
-        .msn-support:hover { color: var(--vermillion, #b02430); border-color: var(--gold, #c9a15f); }
+        /* 左欄底部：支持作者（字體／小圖標與上方「导出」行一致：左對齊、透明底、currentColor 圖標） */
+        .msn-support { margin-top: auto; margin-bottom: 2px; display: flex; align-items: center; gap: 11px;
+          background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px;
+          font-size: 14px; font-weight: 500; color: #6b6357; cursor: pointer; width: 100%; box-sizing: border-box; font-family: inherit;
+          transition: background .15s ease, color .15s ease; }
+        .msn-support .ico { font-size: 16px; flex: none; display: inline-flex; align-items: center; }
+        .msn-support .ico svg { width: 18px; height: 18px; display: block; }
+        .msn-support:hover { background: #f7efe0; color: var(--vermillion, #b02430); }
         /* 大屏：把設定抽屜的 5 個開關搬進左欄「阅读设置」；小屏隱藏（開關留在抽屜） */
         #msnSettings { display: none; margin-top: 2px; }
         .msn-settings { margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e6ddc8; }
@@ -260,10 +268,12 @@
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); word-break: break-word; font-size: 15px;
           min-height: var(--subtitle-min-height); display: flex; flex-direction: row;
           align-items: stretch; gap: var(--gutter); border: 1px solid rgba(0, 0, 0, 0.05);
-          position: relative;
+          position: relative; cursor: pointer;
         }
+        .subtitle:active { transform: scale(0.992); }
+        @keyframes jumpPulse { 0% { box-shadow: 0 0 0 0 rgba(176,36,48,.45); } 100% { box-shadow: 0 0 0 10px rgba(176,36,48,0); } }
+        .subtitle.just-jumped { animation: jumpPulse .55s ease-out; }
         .subtitle:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12); }
-        .japanese-text, .chinese-text { cursor: pointer; -webkit-tap-highlight-color: rgba(201, 161, 95, .22); }
         .subtitle.has-written-note { border-left: 4px solid #ff9800; }
         
         .text-box {
@@ -274,9 +284,9 @@
           padding-right: 40px; 
           justify-content: center; text-align: center;
         }
-        .japanese-text { font-family: "Hiragino Maru Gothic ProN", "Noto Sans JP", "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Meiryo", "Hiragino Sans", sans-serif; font-weight: 600; font-size: 16px; color: #b02430; margin-bottom: 2px; line-height: 1.9; text-align: left; flex: 1; min-width: 0; }
+        .japanese-text { font-family: "Hiragino Maru Gothic ProN", "Noto Sans JP", "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Meiryo", "Hiragino Sans", sans-serif; font-weight: 600; font-size: 16px; color: #3a3a3a; margin-bottom: 2px; line-height: 1.9; text-align: left; flex: 1; min-width: 0; }
         .jp-row { display: flex; align-items: center; gap: 6px; width: 100%; }
-        .chinese-text { font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif; font-size: 14px; color: #666; border-top: 1px dashed #eee; padding-top: 2px; margin-top: 2px; line-height: 1.4; text-align: right; }
+        .chinese-text { font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif; font-size: 14px; color: #666; border-top: 1px dashed #eee; padding-top: 2px; margin-top: 2px; line-height: 1.4; text-align: left; }
         .single-language .chinese-text { display: none; }
         .single-language .japanese-text { margin-bottom: 0; border: none; }
 
@@ -374,8 +384,11 @@
              字幕框被推上標頭底下、底部留白升起來擋內容；改為跟桌面一樣只捲字幕框內部。
              max-height 用 var(--header-height) 自適應標頭高度，確保各寬度頁面都不溢出） */
         @media (max-width: 900px) {
+          /* 解除 body 高度鎖定，讓整頁可作為字幕無法內滾時的捲動後備（避免小屏完全滑不動） */
+          html, body { height: auto; min-height: 100%; }
           main { padding-bottom: 12px; }
-          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 64px; }
+          /* 明確啟用內框觸控滾動（含 iOS 慣性），確保字幕框在小屏可滑 */
+          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 64px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
         }
 
         /* ==================== 和风纸白主题（白纸 × 朱红 × 金） ==================== */
@@ -675,6 +688,57 @@
         .vi-open-btn:hover { background: #f7efe0; color: var(--vermillion); border-color: var(--vermillion); }
         .vocab-inline .vocab-toolbar { padding: 0 0 10px; border-bottom: none; }
         .vocab-inline .vocab-chips { padding: 0 0 12px; border-bottom: none; }
+        /* ===== 大屏右欄「全部词汇」設計圖版面（只影響 #vocabInline；小屏全屏生詞本不受影響） ===== */
+        #vocabInline { position: relative; }
+        #vocabInline .vi-head { align-items: center; gap: 14px; flex-wrap: wrap; padding: 6px 2px 16px; border-bottom: none; }
+        #vocabInline .vi-book-ico { color: var(--vermillion, #b02430); flex: none; }
+        #vocabInline .vi-title-wrap { display: flex; align-items: baseline; gap: 12px; }
+        #vocabInline .vi-head h2 { margin: 0; font-size: 22px; color: var(--ink, #3a342b); letter-spacing: .5px; }
+        #vocabInline .vi-count { font-size: 12.5px; color: #a89e8e; }
+        #vocabInline .vi-search { margin-left: auto; width: min(300px, 42%); border: 1px solid #e6ddc8; background: #fffdf9; border-radius: 10px; padding: 9px 14px; font-size: 13px; color: #4a4458; outline: none; }
+        #vocabInline .vi-search:focus { border-color: var(--gold, #c9a15f); box-shadow: 0 0 0 3px rgba(201,161,95,.12); }
+        #vocabInline .vi-cat-sel { border: 1px solid #e6ddc8; background: #fffdf9; border-radius: 10px; padding: 9px 10px; font-size: 13px; color: #4a4458; cursor: pointer; }
+        #vocabInline .vi-row2 { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 0 0 14px; }
+        #vocabInline .vi-row2 .vocab-chips { flex: 1 1 auto; padding: 0; border-bottom: none; }
+        #vocabInline .vi-row2-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+        #vocabInline .vi-row2-right .vocab-group-toggle { font-size: 12px; color: #8a8073; white-space: nowrap; cursor: pointer; }
+        #vocabInline .vi-row2-right .vocab-sort { padding: 7px 8px; font-size: 12.5px; border: 1px solid #e6ddc8; background: #fffdf9; border-radius: 8px; color: #4a4458; cursor: pointer; }
+        #vocabInline .vi-open-btn { margin-left: 0; padding: 7px 12px; font-size: 12.5px; }
+        #vocabInline .vocab-chip { border: 1px solid #e6ddc8; background: #fffdf9; color: #6b6355; border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s ease; }
+        #vocabInline .vocab-chip:hover { border-color: var(--gold, #c9a15f); color: var(--vermillion, #b02430); }
+        #vocabInline .vocab-chip.active { background: var(--vermillion, #b02430); border-color: var(--vermillion, #b02430); color: #fff; }
+        #vocabInline .vi-list { padding: 4px 0 96px; }
+        #vocabInline .vi-card { position: relative; background: #fffdf9; border: 1px solid #f0e6d4; border-left: 4px solid #e0cfae; border-radius: 14px; padding: 13px 18px 12px 16px; cursor: pointer; transition: box-shadow .15s ease; }
+        #vocabInline .vi-card:hover { box-shadow: 0 4px 14px rgba(60,53,48,.09); }
+        #vocabInline .vi-card.st-due { border-left-color: #e8919c; background: #fff8f6; }
+        #vocabInline .vi-card.st-mastered { border-left-color: #8fbf8f; }
+        #vocabInline .vi-card.flipped { border-left-color: var(--gold, #c9a15f); box-shadow: 0 4px 14px rgba(176,36,48,.08); }
+        #vocabInline .vi-card .vb-flip-ans { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e6ddc8; }
+        #vocabInline .vi-card.flipped .vb-flip-ans { display: block; }
+        #vocabInline .vi-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        #vocabInline .vi-idx { font-size: 11px; color: #b3aa9a; font-weight: 700; }
+        #vocabInline .vi-tag { background: #fdecec; color: var(--vermillion, #b02430); font-size: 10.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+        #vocabInline .vi-status { font-size: 11px; font-weight: 700; white-space: nowrap; }
+        #vocabInline .vi-status.s-due { color: var(--vermillion, #b02430); }
+        #vocabInline .vi-status.s-wait { color: #c08a3e; }
+        #vocabInline .vi-status.s-done { color: #4e9d6b; }
+        #vocabInline .vocab-cat { max-width: 118px; font-size: 11px; padding: 2px 4px; border-radius: 6px; border: 1px solid #e6ddc8; background: #fff; color: #8a8073; cursor: pointer; font-family: inherit; }
+        #vocabInline .vi-del { border: none; background: none; color: #b3aa9a; cursor: pointer; font-size: 13px; padding: 2px 4px; }
+        #vocabInline .vi-del:hover { color: var(--vermillion, #b02430); }
+        #vocabInline .vi-word-row { display: flex; align-items: baseline; gap: 8px; }
+        #vocabInline .vi-word { font-size: 17px; font-weight: 700; color: #3a342b; line-height: 1.5; word-break: break-word; }
+        #vocabInline .vi-speak { border: none; background: none; cursor: pointer; font-size: 14px; color: #c08a3e; padding: 0 2px; flex: none; }
+        #vocabInline .vi-speak:hover { color: var(--vermillion, #b02430); }
+        #vocabInline .vi-gloss { font-size: 12.5px; color: #8a8073; margin-top: 2px; }
+        #vocabInline .vi-zh { font-size: 13px; color: #6b6355; margin-top: 3px; }
+        #vocabInline .vi-card-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 11.5px; color: #a89e8e; }
+        #vocabInline .vi-card-actions { margin-top: 10px; display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; }
+        #vocabInline .vi-srs { border: 1px solid #e0d4bd; background: #fff; color: #6b6355; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        #vocabInline .vi-srs:hover { border-color: var(--gold, #c9a15f); color: var(--vermillion, #b02430); }
+        #vocabInline .vi-ans-btn { border: none; background: var(--vermillion, #b02430); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(176,36,48,.22); }
+        #vocabInline .vi-ans-btn:hover { filter: brightness(1.08); }
+        #vocabInline .vi-review-fab { position: fixed; right: 30px; bottom: 26px; z-index: 65; border: none; background: var(--vermillion, #b02430); color: #fff; border-radius: 999px; padding: 12px 20px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 8px 22px rgba(176,36,48,.35); display: flex; align-items: center; gap: 6px; transition: transform .15s ease, filter .15s ease; }
+        #vocabInline .vi-review-fab:hover { filter: brightness(1.07); transform: translateY(-1px); }
         /* ==================== 主頁右欄內嵌：今日複習 ==================== */
         .review-inline { display: block; padding: 2px 2px 40px; }
         .review-inline[hidden] { display: none; }
@@ -690,6 +754,74 @@
           .review-inline .ri-body { flex-direction: column; }
           .review-inline .ri-side { width: 100%; }
         }
+        /* ==================== 複習計劃頁（大屏，按設計圖版面） ==================== */
+        #reviewInline .ri-body[hidden] { display: none; }
+        .review-inline .rp-plan { min-width: 0; }
+        .rp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+        .rp-title-row { display: flex; align-items: center; gap: 9px; }
+        .rp-title-row h2 { margin: 0; font-size: 21px; color: #3d3833; letter-spacing: 1px; }
+        .rp-ico { width: 36px; height: 36px; border-radius: 10px; background: var(--vermillion, #b02430); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; box-shadow: 0 4px 10px rgba(176,36,48,.25); }
+        .rp-sub { font-size: 12.5px; color: #9a9186; margin-top: 7px; }
+        .rp-head-stats { display: flex; gap: 10px; }
+        .rp-stat { background: #fff; border: 1px solid #f0e2d6; border-radius: 12px; padding: 10px 16px; min-width: 128px; box-shadow: 0 2px 6px rgba(60,53,48,.05); }
+        .rp-stat-l { font-size: 12px; color: #8a8175; font-weight: 700; }
+        .rp-stat-n { margin-top: 4px; font-size: 12px; color: #9a9186; }
+        .rp-stat-n b { font-size: 24px; color: var(--vermillion, #b02430); font-weight: 800; margin-right: 5px; }
+        .rp-week { display: flex; gap: 8px; margin-bottom: 14px; }
+        .rp-day { flex: 1; background: #fff; border: 1px solid #f0e2d6; border-radius: 12px; padding: 9px 4px 8px; text-align: center; min-width: 0; }
+        .rp-day .wd { font-size: 11.5px; color: #8a8175; font-weight: 700; }
+        .rp-day .dt { font-size: 10.5px; color: #b3a99b; margin-top: 2px; }
+        .rp-day .n { margin-top: 5px; font-size: 16px; font-weight: 800; color: #6b6355; }
+        .rp-day.empty .n { color: #cfc6b8; }
+        .rp-day.past { opacity: .55; }
+        .rp-day .dot { display: block; width: 4px; height: 4px; border-radius: 50%; background: transparent; margin: 5px auto 0; }
+        .rp-day.on { background: var(--vermillion, #b02430); border-color: var(--vermillion, #b02430); box-shadow: 0 6px 16px rgba(176,36,48,.28); }
+        .rp-day.on .wd, .rp-day.on .dt, .rp-day.on .n { color: #fff; }
+        .rp-day.on .dot { background: #fff; }
+        .rp-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .rp-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .rp-chips button { border: none; background: #f3ece1; color: #6b6355; border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s ease, color .15s ease; }
+        .rp-chips button:hover { background: #ecdfc9; }
+        .rp-chips button.on { background: var(--vermillion, #b02430); color: #fff; }
+        .rp-sort { border: 1px solid #e0d4bd; background: #fff; border-radius: 8px; padding: 7px 10px; font-size: 12.5px; color: #6b6355; font-family: inherit; cursor: pointer; }
+        .rp-list { display: flex; flex-direction: column; gap: 10px; }
+        .rp-empty { text-align: center; color: #b3a99b; font-size: 13.5px; padding: 40px 0; }
+        .rp-item { background: #fff; border: 1px solid #f0e2d6; border-radius: 14px; padding: 14px 16px; display: flex; gap: 14px; align-items: flex-start; }
+        .rp-item.due { border-color: #f2c7c7; background: #fffafa; }
+        .rp-no { font-size: 13px; color: #c9bfae; font-weight: 800; padding-top: 3px; min-width: 22px; }
+        .rp-item-main { flex: 1; min-width: 0; }
+        .rp-tag { display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--vermillion, #b02430); background: #f9e3e0; border-radius: 4px; padding: 2px 7px; margin-bottom: 6px; }
+        .rp-tag.g { color: #3d7a4e; background: #e3f2e7; }
+        .rp-word { font-size: 16px; font-weight: 700; color: #3a3a3a; line-height: 1.6; }
+        .rp-reading { font-size: 12.5px; color: #a29889; margin-top: 1px; }
+        .rp-zh { font-size: 13px; color: #6b6355; margin-top: 3px; }
+        .rp-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 11.5px; color: #a29889; }
+        .rp-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; flex: none; }
+        .rp-start { border: none; background: var(--vermillion, #b02430); color: #fff; border-radius: 999px; padding: 9px 16px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(176,36,48,.3); transition: filter .15s ease, transform .15s ease; }
+        .rp-start:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .rp-detail-btn { border: 1px solid #e0d4bd; background: #fff; color: #8a8175; border-radius: 999px; padding: 8px 15px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .rp-detail-btn:hover { border-color: #c9a15f; color: #6b6355; }
+        .rp-detail { margin-top: 10px; border-top: 1px dashed #eee7da; padding-top: 10px; display: none; width: 100%; }
+        .rp-item.expanded { flex-wrap: wrap; }
+        .rp-item.expanded .rp-detail { display: block; }
+        .rp-d-sec { margin-bottom: 8px; }
+        .rp-d-h { font-size: 11px; font-weight: 700; color: #b3a99b; margin-bottom: 3px; }
+        .rp-d-b { font-size: 13px; color: #5b544a; white-space: pre-wrap; word-break: break-word; }
+        .rp-d-b.jp { font-family: "Noto Sans JP", "Hiragino Sans", "Meiryo", sans-serif; }
+        .rp-d-zh { font-size: 12px; color: #8a8175; margin-top: 2px; }
+        .rp-d-lv { font-size: 11.5px; color: #8a8175; margin-left: 8px; }
+        .rp-back { border: 1px solid #e0d4bd; background: #fff; color: #7c6f56; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; margin-bottom: 12px; transition: background .15s ease; }
+        .rp-back:hover { background: #f7efe0; }
+        .rp-bars { display: flex; gap: 6px; align-items: flex-end; height: 64px; margin-top: 12px; }
+        .rp-barcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; min-width: 0; }
+        .rp-barcol i { display: block; width: 10px; border-radius: 4px 4px 0 0; background: var(--vermillion, #b02430); min-height: 3px; }
+        .rp-barcol.on i { background: var(--gold, #c9a15f); }
+        .rp-barcol span { font-size: 10px; color: #a29889; }
+        .rp-bars-cap { font-size: 10.5px; color: #b3a99b; text-align: center; margin-top: 6px; }
+        .rp-tip { font-size: 12.5px; color: #6b6355; line-height: 1.7; }
+        .rp-tip-cat { text-align: right; font-size: 22px; margin-top: 4px; }
+        .rp-mode-panel { display: flex; flex-direction: column; gap: 8px; }
+        .rp-mode-panel[hidden] { display: none; }
         .vocab-page-head { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--gold); background: #fffdf9; }
         .vocab-page-head h2 { margin: 0; margin-left: auto; font-size: 20px; color: var(--vermillion); letter-spacing: 1px; }
         .vocab-page-head .vocab-count { font-size: 13px; color: #8a8175; }
@@ -1727,44 +1859,33 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           <label class="settings-switch"><input type="checkbox" id="swBilingual"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
-          <span class="settings-label">🔤 假名注音</span>
+          <span class="settings-label"><span class="sl-emoji">🔤</span><span class="sl-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></svg></span>假名注音</span>
           <label class="settings-switch"><input type="checkbox" id="swFurigana"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
           <span class="settings-label">📖 wiki词典</span>
           <label class="settings-switch"><input type="checkbox" id="swDict"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
-        <div class="settings-row">
-          <span class="settings-label">👓 阅读模式</span>
-          <label class="settings-switch"><input type="checkbox" id="swReading"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
-        </div>
       </div>
     </aside>
 
-    <!-- 大屏左側導航欄（像參考圖首頁選單）：首頁／生詞本／複習計劃／設置 -->
+    <!-- 大屏左側導航欄（依設計圖）：首頁／全部词汇／复习计划（線條 SVG 圖標）＋阅读设置＋其他＋支持作者 -->
     <nav id="mainSideNav" aria-label="主導航">
-        <button type="button" class="msn-item on" data-msn="home"><span class="ico">🏠</span>首页</button>
-        <button type="button" class="msn-item" data-msn="vocab"><span class="ico">📖</span>全部词汇</button>
-        <button type="button" class="msn-item" data-msn="vocabbook"><span class="ico">📒</span>生词本<span class="msn-badge" id="msnVocabBadge">0</span></button>
-        <button type="button" class="msn-item" data-msn="review"><span class="ico">📅</span>复习计划<span class="msn-badge" id="msnReviewBadge">0</span></button>
+        <button type="button" class="msn-item on" data-msn="home"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.6v-5.6H9.6V21H5a1 1 0 0 1-1-1z"/></svg></span>首页</button>
+        <button type="button" class="msn-item" data-msn="vocab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.1 8.5 4.5 6 4.5c-1 0-2 .1-3 .4v14.2c1-.3 2-.4 3-.4 2.5 0 4.5.6 6 2.1 1.5-1.5 3.5-2.1 6-2.1 1 0 2 .1 3 .4V4.9c-1-.3-2-.4-3-.4-2.5 0-4.5.6-6 2.1z"/><path d="M12 6.6v14.2"/></svg></span>全部词汇</button>
+        <button type="button" class="msn-item" data-msn="review"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>复习计划<span class="msn-badge" id="msnReviewBadge">0</span></button>
 
         <div class="msn-sec-h">阅读设置</div>
         <div class="msn-settings" id="msnSettings"></div>
 
         <div class="msn-sec-h">其他</div>
-        <button type="button" class="msn-row msn-fold" id="msnExportToggle"><span class="ico">📤</span>导出<span class="msn-arrow">›</span></button>
+        <button type="button" class="msn-row msn-fold" id="msnExportToggle"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4.5 15v3.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></span>导出<span class="msn-arrow">›</span></button>
         <div class="msn-export" id="msnExport" hidden>
             <button type="button" class="msn-export-btn" id="navExportPdfBtn">📕 导出全文pdf</button>
             <button type="button" class="msn-export-btn" id="navExportPdfNotesBtn">📝 导出笔记pdf</button>
         </div>
-        <button type="button" class="msn-row msn-fold" id="msnHelpToggle"><span class="ico">💬</span>帮助与反馈<span class="msn-arrow">›</span></button>
-        <div class="msn-help" id="msnHelp" hidden>
-            <div class="msn-help-b">💡 一次放两个档案（日文＋中文）会自动对齐合并喔</div>
-            <div class="msn-help-b">💡 多次回想比一次长时间学习更有效，别急着看答案～</div>
-            <div class="msn-help-b">💡 想支持作者，可点左下角的「☕ 支持作者」</div>
-        </div>
 
-        <button type="button" class="msn-support" id="msnSupportBtn"><span class="ico">☕</span>支持作者</button>
+        <button type="button" class="msn-support" id="msnSupportBtn"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h11v6a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 15z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 5.8c.8-.9.8-1.8 0-2.8M12 5.8c.8-.9.8-1.8 0-2.8"/></svg></span>支持作者</button>
     </nav>
 
     <div class="progress-container" id="progressContainer" data-page-node-id="MPrsdSvD8MwJC2Q4M4HEI2">
@@ -1820,34 +1941,96 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 </div>
             </div>
             <div class="es-tips">💡 小提示：一次放两个档案（日文＋中文）会自动对齐合并喔</div>
-            <button id="supportAuthorBtn" class="support-author-link" type="button">支持作者</button>
         </div>
         <div id="subtitles" aria-live="polite" data-page-node-id="eKUYvcbYFa3Of3QCO9lkcs"></div>
         <div id="scrollSentinel" style="height: 20px; width: 100%;" data-page-node-id="KWEcCVEiK1XPaIb0ZFnhHT"></div>
         <div id="vocabInline" class="vocab-inline" hidden>
             <div class="vi-head">
-                <h2>📚 全部詞彙</h2>
-                <button type="button" id="vocabInlineExportBtn" class="vi-open-btn">📤 匯出生詞本</button>
+                <svg class="vi-book-ico" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 5.6C10.6 4.3 8.7 3.6 6.6 3.6c-1.4 0-2.7.3-3.9.9v13.9c1.2-.6 2.5-.9 3.9-.9 2.1 0 4 .7 5.4 2 1.4-1.3 3.3-2 5.4-2 1.4 0 2.7.3 3.9.9V4.5c-1.2-.6-2.5-.9-3.9-.9-2.1 0-4 .7-5.4 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 5.6v13.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="vi-title-wrap">
+                    <h2>全部词汇</h2>
+                    <span class="vi-count" id="vocabInlineCount">共 0 个词条 · 其中 0 个待复习</span>
+                </div>
+                <input type="search" class="vi-search" id="vocabInlineSearch" placeholder="搜索日语、中文或笔记..." />
+                <select class="vi-cat-sel" id="vocabInlineCat"></select>
             </div>
-            <div class="vocab-toolbar">
-                <input type="search" class="vocab-search" id="vocabInlineSearch" placeholder="搜索笔记 / 单字 / 来源句…" />
-                <select class="vocab-sort" id="vocabInlineSort">
-                    <option value="new">最新更新</option>
-                    <option value="old">最早更新</option>
-                    <option value="file">按来源文件</option>
-                    <option value="due">按複習日期（快到期在前）</option>
-                </select>
-                <label class="vocab-group-toggle"><input type="checkbox" id="vocabInlineGroup" /> 📁 按文件分组</label>
+            <div class="vi-row2">
+                <div class="vocab-chips" id="vocabInlineChips"></div>
+                <div class="vi-row2-right">
+                    <label class="vocab-group-toggle"><input type="checkbox" id="vocabInlineGroup" /> 按文件分组</label>
+                    <select class="vocab-sort vi-sort" id="vocabInlineSort">
+                        <option value="new">最近添加</option>
+                        <option value="old">最早添加</option>
+                        <option value="file">按来源文件</option>
+                        <option value="due">按复习日期</option>
+                    </select>
+                    <button type="button" id="vocabInlineExportBtn" class="vi-open-btn">📤 汇出生词本</button>
+                </div>
             </div>
-            <div class="vocab-chips" id="vocabInlineChips"></div>
-            <div id="vocabInlineList" class="vocab-list"></div>
+            <div id="vocabInlineList" class="vocab-list vi-list"></div>
+            <button type="button" class="vi-review-fab" id="viReviewFab">🎯 复习今日 (<span id="viReviewFabN">0</span>)</button>
         </div>
         <div id="reviewInline" class="review-inline" hidden>
-            <div class="vi-head">
-                <h2>📅 今日複習</h2>
-            </div>
-            <div class="ri-body">
+            <!-- 視圖一：複習計劃（列表版面） -->
+            <div class="ri-body" id="riPlanBody">
+                <div class="ri-main rp-plan">
+                    <div class="rp-head">
+                        <div class="rp-head-l">
+                            <div class="rp-title-row"><span class="rp-ico">📅</span><h2>复习计划</h2></div>
+                            <div class="rp-sub">根据艾宾浩斯遗忘曲线，为你智能安排复习时间</div>
+                        </div>
+                        <div class="rp-head-stats">
+                            <div class="rp-stat"><div class="rp-stat-l">📅 今日待复习</div><div class="rp-stat-n"><b id="rpDueN">0</b>词 / 句</div></div>
+                            <div class="rp-stat"><div class="rp-stat-l">✅ 已完成今日</div><div class="rp-stat-n"><b id="rpDoneN">0</b>词 / 句</div></div>
+                        </div>
+                    </div>
+                    <div class="rp-week" id="rpWeek"></div>
+                    <div class="rp-toolbar">
+                        <div class="rp-chips" id="rpChips">
+                            <button type="button" data-f="all" class="on">全部 (0)</button>
+                            <button type="button" data-f="due">今日待复习 (0)</button>
+                            <button type="button" data-f="done">已完成 (0)</button>
+                            <button type="button" data-f="mastered">已掌握 (0)</button>
+                        </div>
+                        <select id="rpSort" class="rp-sort">
+                            <option value="due">按复习时间排序</option>
+                            <option value="seq">按加入时间排序</option>
+                        </select>
+                    </div>
+                    <div class="rp-list" id="rpList"></div>
+                </div>
+                <aside class="ri-side">
+                    <div class="rv2-card">
+                        <div class="rv2-card-h">📅 复习进度</div>
+                        <div class="rv2-ring-row">
+                            <div class="rv2-ring"><svg viewBox="0 0 84 84" width="84" height="84"><circle class="ring-bg" cx="42" cy="42" r="36" /><circle class="ring-fg" id="rpRing" cx="42" cy="42" r="36" /><text x="42" y="40" text-anchor="middle" class="ring-num" id="rpRingNum">0/0</text><text x="42" y="56" text-anchor="middle" class="ring-lbl">今日完成</text></svg></div>
+                            <div class="rv2-ring-stats">
+                                <div><i class="dot new"></i>今日待复习 <b id="rpSideDue">0</b></div>
+                                <div><i class="dot rev"></i>已完成今日 <b id="rpSideDone">0</b></div>
+                                <div><i class="dot left"></i>词汇总数 <b id="rpSideAll">0</b></div>
+                            </div>
+                        </div>
+                        <div class="rp-bars" id="rpBars"></div>
+                        <div class="rp-bars-cap">本周每天待复习量（含已逾期）</div>
+                    </div>
+                    <div class="rv2-card">
+                        <div class="rv2-card-h">💡 复习小贴士</div>
+                        <div class="rp-tip" id="rpTip">建议每天复习 3~5 次，每次 10~15 分钟，效果更佳 ♪</div>
+                        <div class="rp-tip-cat">🐱</div>
+                    </div>
+                    <div class="rv2-card">
+                        <div class="rv2-card-h">複習模式</div>
+                        <div class="rp-mode-panel" id="rpModePanel">
+                            <label class="rv2-radio"><input type="radio" name="rvMode" value="smart" checked /><span>智能复习<i class="rv2-rec">推荐</i></span><small>根据遗忘曲线自动安排</small></label>
+                            <label class="rv2-radio"><input type="radio" name="rvMode" value="seq" /><span>顺序复习</span><small>按加入时间排序</small></label>
+                        </div>
+                    </div>
+                </aside>
+            </div><!-- /#riPlanBody -->
+            <!-- 視圖二：複習會話（閃卡） -->
+            <div class="ri-body" id="riSessionBody" hidden>
                 <div class="ri-main">
+                    <button type="button" class="rp-back" id="rpBackBtn">← 返回复习计划</button>
             <div class="rv2-prog-row"><span id="irProgress">第 1 / 1 詞</span><span id="irDoneLbl">今日已複習 0 詞</span></div>
             <div class="rv2-track"><div class="rv2-fill" id="irFill"></div></div>
             <div class="rv2-flash" id="irFlash">
@@ -1911,7 +2094,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                         <label class="rv2-radio"><input type="radio" name="rvMode" value="cat" /><span>按分類複習</span><small>選擇特定分類來練</small></label>
                     </div>
                 </aside>
-            </div><!-- /.ri-body -->
+            </div><!-- /#riSessionBody -->
         </div>
     </main>
 
@@ -2114,7 +2297,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 </select>
                 <button type="button" class="mp-btn ghost" id="mpDzGo">▶ 播放剧集</button>
                 <button type="button" class="mp-btn ghost" id="mpPickBtn">📁 本机音档</button>
-                <label style="font-size:12.5px;color:#6b6156;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="mpFollow" /> 跟著播放自动卷</label>
+                <label style="font-size:12.5px;color:#6b6156;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="mpFollow" checked /> 跟著播放自动卷</label>
             </div>
             <input id="mpFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.mp4,.webm,.mkv,.m4v" style="display: none;" />
 
@@ -2156,7 +2339,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             notesVisible: true,
             furiganaEnabled: true, // 新增：是否显示平假名注音
             dictEnabled: true,        // 新增：設定抽屜「词典」開關（預設開，關閉後點詞身不彈詞典）
-            readingMode: false,      // 新增：設定抽屜「阅读模式」總開關（開=暫時關閉 笔记/注音/词典）
             renderedCount: 0, // 无限滚动的计数器
             currentUtterance: null,
             currentQuery: ''        // 当前搜寻关键字
@@ -4034,9 +4216,9 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             if (st0 < 0) return;
             markPlaying(idx, true);
             var v = medEl();
-            // 未載入音訊時只高亮字幕；只要已有音訊來源，點字幕正文或數字就跳到該句並播放，不要求先按過播放。
-            if (!v || !v.src) { if (typeof medStatus === 'function') medStatus('尚未載入音訊，請先選擇音檔或載入音訊來源。', 'bad'); return; }
-            // 點字幕：跳到該句首，只播該句（播到句尾自動停），不往下連播
+            // 还没在音讯面板点过播放（或没载入音讯）：按数字只高亮+滚动，绝不误触音讯播放。
+            if (!v || !v.src || !MP.started) return;
+            // 点任何数字：跳到该句首，只播该句（播到句尾自动停），不往下连播
             MP.singleSentence = true;
             MP.singleStopAt = (subSec(sub.endTime) > st0) ? (subSec(sub.endTime) + MP.audioDelaySec) : (v.duration || (st0 + 8));
             MP.singleIdx = idx;
@@ -4080,47 +4262,24 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
         // 解决手机上「框内 scrollTop 没动、整页却在滚」导致自动跟句 / 点数字不滚的问题。
         window.scrollRowToCenter = function (row, box) {
             if (!row) return;
-            var small = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
             if (box && box.scrollHeight > box.clientHeight + 4) {
-                // 手機 WebKit 的慣性捲動可能與自訂 rAF 動畫搶控制權；手機直接修正 scrollTop。
+                // 字幕框本身可滚：框内滚到该句（头部/控制列留在原位）
                 var rt = row.getBoundingClientRect(), bt = box.getBoundingClientRect();
-                var delta = (rt.top + rt.height / 2) - (bt.top + box.clientHeight / 2);
-                if (small) {
-                    box.scrollTop = Math.max(0, Math.min(box.scrollHeight - box.clientHeight, box.scrollTop + delta));
-                } else {
-                    window.smoothScrollBox(box, box.scrollTop + delta);
-                }
+                var delta = (rt.top - bt.top) - (box.clientHeight - rt.height) / 2;
+                window.smoothScrollBox(box, box.scrollTop + delta);
             } else {
-                // 若實際捲動的是整頁，則將整頁定位到目前字幕。
+                // 框不可滚（手机整页滚）：改为整页滚到该行居中
                 var r = row.getBoundingClientRect();
                 var vh = window.innerHeight || document.documentElement.clientHeight || 0;
-                var target = (window.scrollY || window.pageYOffset || 0) + r.top + r.height / 2 - vh / 2;
-                if (small) window.scrollTo(0, Math.max(0, target));
-                else if (r.top < 8 || r.bottom > vh - 8) window.smoothScrollWindow(Math.max(0, target));
+                if (r.top < 8 || r.bottom > vh - 8) {
+                    var target = (window.scrollY || window.pageYOffset || 0) + r.top - vh / 2 + r.height / 2;
+                    window.smoothScrollWindow(Math.max(0, target));
+                }
             }
         };
 
         function markPlaying(idx, forceScroll) {
-            var isSmallScreen = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
-            var follow = document.getElementById('mpFollow');
-
-            // 同一句字幕期間，若使用者手動滑離目前字幕，小螢幕仍可重新跟隨；
-            // 若字幕已在合理的置中範圍內則不重啟動畫，避免每次播放更新都造成抖動。
-            if (idx === lastPlayIdx && !forceScroll) {
-                if (isSmallScreen && idx >= 0 && (!follow || follow.checked)) {
-                    var sameRow = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
-                    var sameBox = document.getElementById('subtitles');
-                    if (sameRow && sameBox) {
-                        var rr = sameRow.getBoundingClientRect();
-                        var br = sameBox.getBoundingClientRect();
-                        var centerDelta = Math.abs((rr.top + rr.height / 2) - (br.top + br.height / 2));
-                        if (centerDelta > Math.max(24, sameBox.clientHeight * 0.12)) {
-                            window.scrollRowToCenter(sameRow, sameBox);
-                        }
-                    }
-                }
-                return;
-            }
+            if (idx === lastPlayIdx && !forceScroll) return;
             var mk = medEl();
             // 播放器暂停又刚好落在句与句的中间缝隙：不要清掉亮框又不补上，否则整片字幕会熄掉
             var keep = (idx < 0 && mk && mk.paused);
@@ -4133,29 +4292,12 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             var row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
             if (!row) return;
             row.classList.add('is-playing');
-            follow = document.getElementById('mpFollow');
+            var follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
                 try {
                     var box = document.getElementById('subtitles');
-                    if (isSmallScreen) {
-                        // 手機上等本次版面更新完成再讀取位置，避免使用舊的 layout 座標。
-                        requestAnimationFrame(function () {
-                            var currentRow = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
-                            var currentBox = document.getElementById('subtitles');
-                            if (currentRow && currentBox) {
-                                window.scrollRowToCenter(currentRow, currentBox);
-                                // iOS Safari 有時在第一個 frame 尚未完成版面更新，再校正一次。
-                                requestAnimationFrame(function () {
-                                    var retryRow = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
-                                    var retryBox = document.getElementById('subtitles');
-                                    if (retryRow && retryBox) window.scrollRowToCenter(retryRow, retryBox);
-                                });
-                            }
-                        });
-                    } else {
-                        // 大螢幕保留原本的平滑置中行為。
-                        window.scrollRowToCenter(row, box);
-                    }
+                    // 优先框内滚；框不可滚（手机整页滚）时自动退回整页滚，保证自动跟句在手机也生效
+                    window.scrollRowToCenter(row, box);
                 } catch (e) { }
             }
         }
@@ -4386,8 +4528,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 if (sf) sf.checked = !!AppState.furiganaEnabled;
                 var sd = document.getElementById('swDict');
                 if (sd) sd.checked = !!AppState.dictEnabled;
-                var sr = document.getElementById('swReading');
-                if (sr) sr.checked = !!AppState.readingMode;
               }
               function openSettings() { syncSwitches(); drawer.classList.add('open'); backdrop.classList.add('show'); }
               function closeSettings() { drawer.classList.remove('open'); backdrop.classList.remove('show'); }
@@ -4403,27 +4543,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               if (sf) sf.addEventListener('change', function () { var b = document.getElementById('furiganaBtn'); if (b) b.click(); this.checked = !!AppState.furiganaEnabled; });
               var sd = document.getElementById('swDict');
               if (sd) sd.addEventListener('change', function () { AppState.dictEnabled = this.checked; this.checked = !!AppState.dictEnabled; });
-              var sr = document.getElementById('swReading');
-              if (sr) sr.addEventListener('change', function () {
-                var notesBtn = document.getElementById('toggleNotesBtn');
-                var furiganaBtn = document.getElementById('furiganaBtn');
-                if (this.checked) {
-                  AppState._savedNotes = AppState.notesVisible;
-                  AppState._savedFurigana = AppState.furiganaEnabled;
-                  AppState._savedDict = AppState.dictEnabled;
-                  if (notesBtn && AppState.notesVisible) notesBtn.click();
-                  if (furiganaBtn && AppState.furiganaEnabled) furiganaBtn.click();
-                  AppState.dictEnabled = false;
-                  AppState.readingMode = true;
-                } else {
-                  if (notesBtn && AppState.notesVisible !== !!AppState._savedNotes) notesBtn.click();
-                  if (furiganaBtn && AppState.furiganaEnabled !== !!AppState._savedFurigana) furiganaBtn.click();
-                  AppState.dictEnabled = !!AppState._savedDict;
-                  AppState.readingMode = false;
-                }
-                this.checked = AppState.readingMode;
-                syncSwitches();
-              });
             })();
             // ==================== 大屏左側導航欄（像參考圖首頁選單） ====================
             (function () {
@@ -4441,9 +4560,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 if (act === 'vocab') {
                   // 大屏：左欄「全部词汇」→ 主頁右欄直接顯示「全部詞彙」內嵌視圖（不開全屏獨立頁）
                   if (window.__vocabInline) window.__vocabInline.show();
-                } else if (act === 'vocabbook') {
-                  // 大屏：左欄「生词本」→ 開全屏生詞本頁（分類／SRS／匯出管理）
-                  if (window.__vocabBookOpen) window.__vocabBookOpen();
                 } else if (act === 'review') {
                   // 大屏：左欄複習計劃 → 主頁右欄直接顯示「今日複習」內嵌視圖（不開全屏生詞本頁）
                   if (window.__reviewInline) window.__reviewInline.show();
@@ -4461,10 +4577,6 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               var exT = document.getElementById('msnExportToggle'), ex = document.getElementById('msnExport');
               if (exT && ex) exT.addEventListener('click', function () {
                 ex.classList.toggle('open'); exT.classList.toggle('open', ex.classList.contains('open'));
-              });
-              var hpT = document.getElementById('msnHelpToggle'), hp = document.getElementById('msnHelp');
-              if (hpT && hp) hpT.addEventListener('click', function () {
-                hp.classList.toggle('open'); hpT.classList.toggle('open', hp.classList.contains('open'));
               });
               // 左欄底部「支持作者」→ 開讚助彈窗（與首頁入口共用）
               var sp = document.getElementById('msnSupportBtn');
@@ -4547,10 +4659,10 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 <span class="row-badge" title="点这里把音频跳到这句" onclick="seekToSubtitle(${originalIndex})">${originalIndex + 1}</span>
                 <div class="text-box">
                   <div class="jp-row">
-                    <div class="japanese-text" role="button" tabindex="0" title="點擊跳到這句音訊" onclick="seekToSubtitle(${originalIndex})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();seekToSubtitle(${originalIndex})}">${jp}</div>
+                    <div class="japanese-text">${jp}</div>
 <div class="row-actions"><button class="action-btn" data-text="${escapeHtml(sub.japanese || sub.originalText)}" onclick="speakText(this)" title="朗读这句">🔊</button></div>
                   </div>
-                  ${sub.chinese ? `<div class="chinese-text" role="button" tabindex="0" title="點擊跳到這句音訊" onclick="seekToSubtitle(${originalIndex})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();seekToSubtitle(${originalIndex})}">${highlightZh}</div>` : ''}
+                  ${sub.chinese ? `<div class="chinese-text">${highlightZh}</div>` : ''}
                 </div>
                 <div class="note-area"><div class="note-container">
                   <textarea class="note-box ${noteClasses}" data-index="${originalIndex}" placeholder="✏️ 写点笔记…（自动帮你存好）">${escapeHtml(noteContent)}</textarea>
@@ -4787,10 +4899,8 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           arr.forEach(ensureSrs);
           return arr.filter(function (en) { return srsGet(en).due <= now; });
         }
-        // 大屏左欄徽章：生词本＝總詞彙數、复习计划＝今日待複習數（0 時隱藏）
+        // 大屏左欄徽章：复习计划＝今日待複習數（0 時隱藏）
         function updateMsnBadges() {
-          var vb = document.getElementById('msnVocabBadge');
-          if (vb) { var n = Object.keys(vocabMap).length; vb.textContent = n; vb.style.display = n > 0 ? 'flex' : 'none'; }
           var rv = document.getElementById('msnReviewBadge');
           if (rv) { var d = srsTodayList().length; rv.textContent = d; rv.style.display = d > 0 ? 'flex' : 'none'; }
         }
@@ -5043,7 +5153,12 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     var _rEl = e.target.closest('.row');
                     if (_rEl && !e.target.closest('.wf-word') && !e.target.closest('rt') && !e.target.closest('.row-badge') && !e.target.closest('button') && !e.target.closest('textarea')) {
                         var _di = parseInt(_rEl.getAttribute('data-index'), 10);
-                        if (!isNaN(_di)) { e.stopPropagation(); window.seekToSubtitle(_di); }
+                        if (!isNaN(_di)) {
+                            e.stopPropagation(); window.seekToSubtitle(_di);
+                            // 手動點擊：加一瞬閃爍，讓「跳到了這句」更明顯（小屏尤其有用）
+                            var _sb = _rEl.querySelector('.subtitle');
+                            if (_sb) { _sb.classList.remove('just-jumped'); void _sb.offsetWidth; _sb.classList.add('just-jumped'); }
+                        }
                     }
                     return;
                 }
@@ -5519,16 +5634,20 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             }
           };
 
-          // ============ 主頁右欄「全部詞彙」內嵌視圖（點左欄生詞本時顯示，不開全屏頁） ============
+          // ============ 主頁右欄「全部詞彙」內嵌視圖（設計圖版面：狀態 chips＋卡片列表） ============
           var vi = document.getElementById('vocabInline');
           var viSearch = document.getElementById('vocabInlineSearch');
           var viSort = document.getElementById('vocabInlineSort');
           var viGroup = document.getElementById('vocabInlineGroup');
           var viChips = document.getElementById('vocabInlineChips');
+          var viCat = document.getElementById('vocabInlineCat');
           var viList = document.getElementById('vocabInlineList');
           var viOpen = document.getElementById('vocabInlineExportBtn');
           var viActiveCat = '';
-          var viSrsOnly = false;
+          var viStatus = '';          // ''=全部 | 'due'=待复习 | 'mastered'=已掌握 | '__uncat'=未分类
+          var VI_MASTERED_LV = 5;     // 第 6 階（30 天間隔）以上視為已掌握
+          function viIsDue(en) { return srsGet(en).due <= Date.now(); }
+          function viIsMastered(en) { return srsGet(en).lv >= VI_MASTERED_LV; }
 
           function getInlineFiltered() {
             var q = (viSearch.value || '').trim().toLowerCase();
@@ -5538,9 +5657,10 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 return ((en.note || '') + ' ' + (en.sentence || '') + ' ' + (en.sentenceZh || '') + ' ' + (en.sourceFile || '') + ' ' + (en.category || '')).toLowerCase().indexOf(q) >= 0;
               });
             }
-            if (viSrsOnly) arr = arr.filter(function (en) { return srsGet(en).due <= Date.now(); });
-            if (viActiveCat === '__uncat') arr = arr.filter(function (en) { return !en.category; });
-            else if (viActiveCat) arr = arr.filter(function (en) { return en.category === viActiveCat; });
+            if (viStatus === 'due') arr = arr.filter(viIsDue);
+            else if (viStatus === 'mastered') arr = arr.filter(viIsMastered);
+            else if (viStatus === '__uncat') arr = arr.filter(function (en) { return !en.category; });
+            if (viActiveCat) arr = arr.filter(function (en) { return en.category === viActiveCat; });
             var mode = viSort.value;
             arr.sort(function (a, b) {
               if (mode === 'old') return (a.updatedAt || '').localeCompare(b.updatedAt || '');
@@ -5551,15 +5671,95 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             return arr;
           }
 
+          // 設計圖版面卡片：#序號＋分類標籤／狀態 chip／分類下拉／刪除、日文詞＋🔊、中文、來源＋時間碼、右下動作鈕、翻面筆記
+          function inlineCardHtml(en, idx) {
+            var key = en.key;
+            var s = srsGet(en);
+            var dueNow = s.due <= Date.now();
+            var mastered = s.lv >= VI_MASTERED_LV;
+            var cls = mastered ? 'st-mastered' : (dueNow ? 'st-due' : '');
+            var statusChip = mastered
+              ? '<span class="vi-status s-done">✓ 已掌握</span>'
+              : (dueNow ? '<span class="vi-status s-due">⊕ 今日待复习</span>'
+                        : '<span class="vi-status s-wait">⊖ 待复习</span>');
+            var lines = String(en.note == null ? '' : en.note).split('\n').map(String)
+              .filter(function (l) { return l.trim() !== ''; });
+            var word = lines.length ? lines.shift().trim() : '';
+            var gloss = lines.length ? '<div class="vi-gloss">' + lines.map(escapeHtml).join('<br>') + '</div>' : '';
+            var tag = en.category ? '<span class="vi-tag">' + escapeHtml(en.category) + '</span>' : '';
+            var opts = '<option value="">（未分类）</option>';
+            userCategories.forEach(function (c) {
+              opts += '<option value="' + escapeHtml(c) + '"' + (en.category === c ? ' selected' : '') + '>' + escapeHtml(c) + '</option>';
+            });
+            opts += '<option value="__new">＋ 新增分类…</option>';
+            var lv = Math.min(s.lv, 5), st = '';
+            for (var i = 0; i < 5; i++) st += '<span class="rv2-star' + (i < lv ? ' on' : '') + '">★</span>';
+            var flip = '<div class="vb-flip-ans">'
+              + '<div class="vb-ans-h">釋義 / 筆記</div>'
+              + '<div class="vb-ans-b">' + escapeHtml(en.note || '（沒有筆記）') + '</div>'
+              + '<div class="vb-ans-h" style="margin-top:8px;">記憶強度</div>'
+              + '<div class="rv2-stars-row"><span>' + st + '</span><span class="rv2-lvbadge">第 ' + (s.lv + 1) + ' 階</span></div>'
+              + '<div class="vb-flip-moods">'
+              + '<button type="button" class="vb-flip-mood" data-g="1"><span class="face">😣</span>完全沒記住</button>'
+              + '<button type="button" class="vb-flip-mood" data-g="2"><span class="face">🙁</span>有點模糊</button>'
+              + '<button type="button" class="vb-flip-mood" data-g="3"><span class="face">😐</span>一般</button>'
+              + '<button type="button" class="vb-flip-mood" data-g="4"><span class="face">🙂</span>比較清楚</button>'
+              + '<button type="button" class="vb-flip-mood" data-g="5"><span class="face">😄</span>非常清楚</button>'
+              + '</div></div>';
+            return '<div class="vi-card ' + cls + '" data-key="' + escapeHtml(key) + '">'
+              + '<div class="vi-card-head">'
+              +   '<span class="vi-idx">#' + (idx + 1) + '</span>' + tag
+              +   '<span style="flex:1"></span>'
+              +   statusChip
+              +   '<select class="vocab-cat" data-catkey="' + escapeHtml(key) + '">' + opts + '</select>'
+              +   '<button class="vi-del" type="button" data-del="' + escapeHtml(key) + '" title="删除">🗑</button>'
+              + '</div>'
+              + '<div class="vi-word-row">'
+              +   '<span class="vi-word">' + escapeHtml(word) + '</span>'
+              +   '<button class="vi-speak" type="button" data-speak="' + escapeHtml(word) + '" title="朗读">🔊</button>'
+              + '</div>'
+              + gloss
+              + (en.sentenceZh ? '<div class="vi-zh">' + escapeHtml(en.sentenceZh) + '</div>' : '')
+              + '<div class="vi-card-meta">'
+              +   '<span>📁 来源：' + escapeHtml(en.sourceFile || '未知文件') + '</span>'
+              +   (en.time ? '<span>⏱ ' + escapeHtml(en.time) + '</span>' : '')
+              + '</div>'
+              + '<div class="vi-card-actions">'
+              +   '<button class="vi-srs" type="button" data-srsno="' + escapeHtml(key) + '" title="退回第一階，10 分鐘後再練">↺ 忘掉</button>'
+              +   '<button class="vi-srs" type="button" data-srsok="' + escapeHtml(key) + '" title="間隔拉長">✓ 记住</button>'
+              +   '<button class="vi-ans-btn" type="button" data-flip="1">查看答案</button>'
+              + '</div>'
+              + flip
+              + '</div>';
+          }
+
           function renderInlineVocab() {
             if (!vi || !viList) return;
-            var entries = getInlineFiltered();
+            var all = Object.keys(vocabMap).map(function (k) { return vocabMap[k]; });
             var dueN = (typeof srsTodayList === 'function') ? srsTodayList().length : 0;
-            var parts = ['<button type="button" class="vocab-chip' + (viActiveCat === '' ? ' active' : '') + '" data-cat="">全部</button>',
-                         '<button type="button" class="vocab-chip' + (viSrsOnly ? ' active' : '') + '" data-srs="1">⏰ 待複習 (' + dueN + ')</button>'];
-            parts.push('<button type="button" class="vocab-chip' + (viActiveCat === '__uncat' ? ' active' : '') + '" data-cat="__uncat">未分类</button>');
-            userCategories.forEach(function (c) { parts.push('<button type="button" class="vocab-chip' + (viActiveCat === c ? ' active' : '') + '" data-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + '</button>'); });
-            if (viChips) viChips.innerHTML = parts.join('');
+            var masteredN = all.filter(viIsMastered).length;
+            var uncatN = all.filter(function (en) { return !en.category; }).length;
+            var cnt = document.getElementById('vocabInlineCount');
+            if (cnt) cnt.textContent = '共 ' + all.length + ' 个词条 · 其中 ' + dueN + ' 个待复习';
+            var fabN = document.getElementById('viReviewFabN');
+            if (fabN) fabN.textContent = dueN;
+            var fab = document.getElementById('viReviewFab');
+            if (fab) fab.style.display = dueN > 0 ? '' : 'none';
+            if (viCat) {
+              var copts = '<option value="">全部分类</option>';
+              userCategories.forEach(function (c) { copts += '<option value="' + escapeHtml(c) + '"' + (viActiveCat === c ? ' selected' : '') + '>' + escapeHtml(c) + '</option>'; });
+              viCat.innerHTML = copts;
+            }
+            if (viChips) {
+              var parts = [
+                '<button type="button" class="vocab-chip' + (viStatus === '' ? ' active' : '') + '" data-status="">全部 (' + all.length + ')</button>',
+                '<button type="button" class="vocab-chip' + (viStatus === 'due' ? ' active' : '') + '" data-status="due">待复习 (' + dueN + ')</button>',
+                '<button type="button" class="vocab-chip' + (viStatus === 'mastered' ? ' active' : '') + '" data-status="mastered">已掌握 (' + masteredN + ')</button>',
+                '<button type="button" class="vocab-chip' + (viStatus === '__uncat' ? ' active' : '') + '" data-status="__uncat">未分类 (' + uncatN + ')</button>'
+              ];
+              viChips.innerHTML = parts.join('');
+            }
+            var entries = getInlineFiltered();
             if (!entries.length) {
               viList.innerHTML = '<div class="vocab-empty">没有符合条件的生词本内容。<br>在字幕的笔记框里写点东西就会自动加入；也可用上方「分类 / 搜索」来整理 ♡</div>';
               return;
@@ -5570,11 +5770,11 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               var html = [];
               Object.keys(groups).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (f) {
                 html.push('<div class="vocab-group-head">📁 ' + escapeHtml(f) + ' <span style="font-weight:400;color:#a89e8e;">(' + groups[f].length + ')</span></div>');
-                groups[f].forEach(function (en) { html.push(cardHtml(en)); });
+                groups[f].forEach(function (en) { html.push(inlineCardHtml(en, entries.indexOf(en))); });
               });
               viList.innerHTML = html.join('');
             } else {
-              viList.innerHTML = entries.map(cardHtml).join('');
+              viList.innerHTML = entries.map(inlineCardHtml).join('');
             }
           }
 
@@ -5586,11 +5786,14 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               if (srsNo) { srsGrade(srsNo, 0); renderInlineVocab(); renderVocabBook(); return; }
               var delKey = e.target.getAttribute('data-del');
               if (delKey) { deleteVocabEntry(delKey); renderInlineVocab(); renderVocabBook(); return; }
-              var item = e.target.closest('.vocab-item');
+              var sp = e.target.closest('[data-speak]');
+              if (sp) { var tmp = document.createElement('span'); tmp.setAttribute('data-text', sp.getAttribute('data-speak')); window.speakText(tmp); return; }
+              var item = e.target.closest('.vi-card');
               if (!item) return;
+              if (e.target.closest('[data-flip]')) { item.classList.toggle('flipped'); return; }
               var mood = e.target.closest('.vb-flip-mood');
               if (mood) { srsGrade(item.getAttribute('data-key'), parseInt(mood.getAttribute('data-g'), 10) - 1); renderInlineVocab(); renderVocabBook(); return; }
-              if (e.target.closest('.vocab-cat, .vocab-srs, .vocab-meta')) return;
+              if (e.target.closest('.vocab-cat, .vi-card-meta')) return;
               item.classList.toggle('flipped');
             });
             viList.addEventListener('change', function (e) {
@@ -5608,21 +5811,27 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           if (viSearch) viSearch.addEventListener('input', renderInlineVocab);
           if (viSort) viSort.addEventListener('change', renderInlineVocab);
           if (viGroup) viGroup.addEventListener('change', renderInlineVocab);
+          if (viCat) viCat.addEventListener('change', function () { viActiveCat = viCat.value; renderInlineVocab(); });
           if (viChips) viChips.addEventListener('click', function (e) {
-            var srsChip = e.target.getAttribute('data-srs');
-            if (srsChip !== null) { viSrsOnly = !viSrsOnly; renderInlineVocab(); return; }
-            var c = e.target.getAttribute('data-cat');
-            if (c === null) return;
-            viActiveCat = (viActiveCat === c) ? '' : c;
+            var chip = e.target.closest('[data-status]');
+            if (!chip) return;
+            var st = chip.getAttribute('data-status');
+            viStatus = (viStatus === st) ? '' : st;
             renderInlineVocab();
           });
           if (viOpen) viOpen.addEventListener('click', function () { if (typeof vpdfOpen === 'function') vpdfOpen(); });
+          var viFab = document.getElementById('viReviewFab');
+          if (viFab) viFab.addEventListener('click', function () {
+            var btn = document.querySelector('#mainSideNav [data-msn="review"]');
+            if (btn) btn.click();
+          });
 
           // 對外開關，供左欄導航呼叫
           window.__vocabInline = {
             show: function () {
               if (!vi) return;
               close();   // 確保完整生詞本頁已關閉
+              if (window.__reviewInline) window.__reviewInline.hide();   // 避免複習計劃視圖殘留、疊在全部词汇下方
               var sub = document.getElementById('subtitles');
               var es = document.getElementById('emptyState');
               var ss = document.getElementById('scrollSentinel');
@@ -5747,13 +5956,162 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
               var c = ri.querySelector('input[name="rvMode"][value="' + rvOrder + '"]');
               if (c) c.checked = true;
             }
-            function irStart() {
-              if (!rvAllArr().length) { showGlobalStatus('生詞本還是空的，先在字幕的筆記框寫點東西吧 ♡', 2800); return; }
+            function irStartWith(arr) {
+              if (sessBody) sessBody.hidden = false;
+              if (planBody) planBody.hidden = true;
               syncRiMode();
-              queue = irBuildQueue(); pos = 0; graded = false;
+              queue = rvSortArr(arr.slice()); pos = 0; graded = false;
               if (!queue.length) { irFinish(true); return; }
               irShowCard();
             }
+            function irStart() {
+              if (!rvAllArr().length) { showGlobalStatus('生詞本還是空的，先在字幕的筆記框寫點東西吧 ♡', 2800); return; }
+              irStartWith(irBuildQueue());
+            }
+
+            // ===== 複習計劃視圖（列表＋統計＋週曆＋側欄） =====
+            var planBody = irE('riPlanBody'), sessBody = irE('riSessionBody');
+            var rpListArr = [], rpFilter = 'all', rpSort = 'due';
+            var RP_TIPS = ['建议每天复习 3~5 次，每次 10~15 分钟，效果更佳 ♪', '记不住的词选「完全没记住」，10 分钟后会马上再练一次', '复习时先自己想答案，再点「查看答案」，记忆会更深', '新词当天复习印象最深，别攒到周末哦 ♡'];
+            function rpDayStart(ms) { var x = new Date(ms); x.setHours(0, 0, 0, 0); return x.getTime(); }
+            function rpIsToday(ms) { var t = rpDayStart(Date.now()); return ms >= t && ms < t + 864e5; }
+            function rpCounts() {
+              var all = rvAllArr(), now = Date.now(), due = 0, done = 0, mas = 0;
+              all.forEach(function (en) { var s = srsGet(en); if (s.due <= now) due++; if (s.last && rpIsToday(new Date(s.last).getTime())) done++; if (s.lv >= 5) mas++; });
+              return { all: all.length, due: due, done: done, mastered: mas };
+            }
+            function rpStatusOf(en) {
+              var s = srsGet(en);
+              if (s.due <= Date.now()) return 'due';
+              if (s.last && rpIsToday(new Date(s.last).getTime())) return 'done';
+              return s.lv >= 5 ? 'mastered' : 'future';
+            }
+            function rpWeekData() {
+              var dow = (new Date().getDay() + 6) % 7, t0 = rpDayStart(Date.now()), mon = t0 - dow * 864e5;
+              var labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], out = [];
+              for (var i = 0; i < 7; i++) {
+                var st = mon + i * 864e5, ed = st + 864e5, c = 0;
+                rvAllArr().forEach(function (w) { var d = srsGet(w).due; if (i === dow ? d < ed : (d >= st && d < ed)) c++; });
+                var dt = new Date(st);
+                out.push({ label: labels[i], ch: labels[i].charAt(1), date: (dt.getMonth() + 1) + '/' + dt.getDate(), n: c, today: i === dow, past: i < dow });
+              }
+              return out;
+            }
+            function rpRenderHead() {
+              var c = rpCounts();
+              var e1 = irE('rpDueN'); if (e1) e1.textContent = c.due;
+              var e2 = irE('rpDoneN'); if (e2) e2.textContent = c.done;
+              var e3 = irE('rpSideDue'); if (e3) e3.textContent = c.due;
+              var e4 = irE('rpSideDone'); if (e4) e4.textContent = c.done;
+              var e5 = irE('rpSideAll'); if (e5) e5.textContent = c.all;
+              var e6 = irE('rpBookN'); if (e6) e6.textContent = c.all + ' 词';
+              var C = 2 * Math.PI * 36, fg = irE('rpRing');
+              if (fg) { fg.style.strokeDasharray = C; fg.style.strokeDashoffset = C * ((c.done + c.due) ? (1 - c.done / (c.done + c.due)) : 1); }
+              var num = irE('rpRingNum'); if (num) num.textContent = c.done + '/' + (c.done + c.due);
+            }
+            function rpRenderWeek() {
+              var data = rpWeekData(), max = 1, wk = irE('rpWeek'), bars = irE('rpBars'), h1 = '', h2 = '';
+              data.forEach(function (d) { if (d.n > max) max = d.n; });
+              data.forEach(function (d) {
+                h1 += '<div class="rp-day' + (d.today ? ' on' : '') + (d.past ? ' past' : '') + (d.n ? '' : ' empty') + '"><div class="wd">' + d.label + '</div><div class="dt">' + d.date + '</div><div class="n">' + d.n + '</div><i class="dot"></i></div>';
+                h2 += '<div class="rp-barcol' + (d.today ? ' on' : '') + '"><i style="height:' + Math.round(d.n / max * 100) + '%"></i><span>' + d.ch + '</span></div>';
+              });
+              if (wk) wk.innerHTML = h1;
+              if (bars) bars.innerHTML = h2;
+            }
+            function rpRenderChips() {
+              var c = rpCounts(), box = irE('rpChips');
+              if (!box) return;
+              var defs = [['all', '全部', c.all], ['due', '今日待复习', c.due], ['done', '已完成', c.done], ['mastered', '已掌握', c.mastered]];
+              box.innerHTML = defs.map(function (d) {
+                return '<button type="button" data-f="' + d[0] + '"' + (rpFilter === d[0] ? ' class="on"' : '') + '>' + d[1] + ' (' + d[2] + ')</button>';
+              }).join('');
+            }
+            function rpItemHtml(en, i) {
+              var s = srsGet(en), st = rpStatusOf(en);
+              var noteLines = (en.note || '').split('\n');
+              var word = noteLines[0] || en.sentence || '（這條沒有內容）';
+              var rd = noteLines.slice(1).join(' ').trim();
+              var tag, tagCls = '';
+              if (st === 'due') { tag = '今日待複習'; }
+              else if (st === 'done') { tag = '✓ 已完成'; tagCls = ' g'; }
+              else if (s.lv >= 5) { tag = '已掌握'; tagCls = ' g'; }
+              else { tag = srsDueText(en); }
+              var meta = [];
+              if (en.sourceFile) meta.push('<span>📁 ' + escapeHtml(en.sourceFile) + '</span>');
+              if (en.time) meta.push('<span>🕘 ' + escapeHtml(en.time) + '</span>');
+              if (en.category) meta.push('<span>🏷 ' + escapeHtml(en.category) + '</span>');
+              var btn = (st === 'due')
+                ? '<button type="button" class="rp-start" data-rpstart="' + i + '">▶ 开始复习</button>'
+                : '<button type="button" class="rp-detail-btn" data-rpexp="' + i + '">查看详情</button>';
+              return '<div class="rp-item' + (st === 'due' ? ' due' : '') + '">' +
+                '<div class="rp-no">' + String(i + 1).padStart(2, '0') + '</div>' +
+                '<div class="rp-item-main">' +
+                  '<span class="rp-tag' + tagCls + '">' + tag + '</span>' +
+                  '<div class="rp-word">' + escapeHtml(word) + '</div>' +
+                  (rd ? '<div class="rp-reading">' + escapeHtml(rd) + '</div>' : '') +
+                  (en.sentenceZh ? '<div class="rp-zh">' + escapeHtml(en.sentenceZh) + '</div>' : '') +
+                  (meta.length ? '<div class="rp-meta">' + meta.join('') + '</div>' : '') +
+                  '<div class="rp-detail">' +
+                    '<div class="rp-d-sec"><div class="rp-d-h">釋義 / 筆記</div><div class="rp-d-b">' + (en.note ? escapeHtml(en.note) : '—') + '</div></div>' +
+                    '<div class="rp-d-sec"><div class="rp-d-h">例句</div><div class="rp-d-b jp">' + escapeHtml(en.sentence || '—') + '</div>' + (en.sentenceZh ? '<div class="rp-d-zh">' + escapeHtml(en.sentenceZh) + '</div>' : '') + '</div>' +
+                    '<div class="rp-d-sec"><div class="rp-d-h">記憶強度</div><div class="rp-d-b">' + srsDots(Math.min(s.lv, 5)) + '<span class="rp-d-lv">第 ' + (s.lv + 1) + ' 階</span></div></div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="rp-actions">' + btn + '</div>' +
+              '</div>';
+            }
+            function rpRenderList() {
+              var arr = rvAllArr().slice();
+              if (rpFilter === 'due') arr = arr.filter(function (en) { return rpStatusOf(en) === 'due'; });
+              else if (rpFilter === 'done') arr = arr.filter(function (en) { return rpStatusOf(en) === 'done'; });
+              else if (rpFilter === 'mastered') arr = arr.filter(function (en) { return srsGet(en).lv >= 5; });
+              arr.sort(function (a, b) {
+                if (rpSort === 'seq') return (new Date(a.createdAt || 0)).getTime() - (new Date(b.createdAt || 0)).getTime();
+                return srsGet(a).due - srsGet(b).due;
+              });
+              rpListArr = arr;
+              var box = irE('rpList');
+              if (!box) return;
+              if (!arr.length) { box.innerHTML = '<div class="rp-empty">這個分類暫時沒有詞彙 ♡</div>'; return; }
+              box.innerHTML = arr.map(function (en, i) { return rpItemHtml(en, i); }).join('');
+            }
+            function showPlan() {
+              if (sessBody) sessBody.hidden = true;
+              if (planBody) planBody.hidden = false;
+              rpRenderHead(); rpRenderWeek(); rpRenderChips(); rpRenderList();
+              var tip = irE('rpTip'); if (tip) tip.textContent = RP_TIPS[Math.floor(Date.now() / 864e5) % RP_TIPS.length];
+            }
+            var rpListEl = irE('rpList');
+            if (rpListEl) rpListEl.addEventListener('click', function (e) {
+              var sb = e.target.closest('[data-rpstart]');
+              if (sb) {
+                var en = rpListArr[parseInt(sb.getAttribute('data-rpstart'), 10)];
+                if (en) {
+                  var rest = srsTodayList().filter(function (w) { return w.key !== en.key; });
+                  irStartWith([en].concat(rest));
+                }
+                return;
+              }
+              var ex = e.target.closest('[data-rpexp]');
+              if (ex) {
+                var item = ex.closest('.rp-item');
+                if (item) {
+                  item.classList.toggle('expanded');
+                  ex.textContent = item.classList.contains('expanded') ? '收起详情' : '查看详情';
+                }
+              }
+            });
+            var chipsEl = irE('rpChips');
+            if (chipsEl) chipsEl.addEventListener('click', function (e) {
+              var b = e.target.closest('button[data-f]'); if (!b) return;
+              rpFilter = b.getAttribute('data-f');
+              rpRenderChips(); rpRenderList();
+            });
+            var sortEl = irE('rpSort');
+            if (sortEl) sortEl.addEventListener('change', function () { rpSort = this.value; rpRenderList(); });
+            var backBtn = irE('rpBackBtn');
+            if (backBtn) backBtn.addEventListener('click', function () { showPlan(); });
             var irHint = irE('irHint'); if (irHint) irHint.addEventListener('click', irReveal);
             var irThinkBtn = irE('irThink'); if (irThinkBtn) irThinkBtn.addEventListener('click', irThink);
             var irNextBtn = irE('irNext'); if (irNextBtn) irNextBtn.addEventListener('click', irNext);
@@ -5779,6 +6137,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             });
             document.addEventListener('keydown', function (e) {
               if (ri.hidden) return;
+              if (sessBody && sessBody.hidden) return;   // 計劃列表視圖時不攔截鍵盤
               if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
               if (e.key === 'Enter' || e.keyCode === 13) { if (irE('irAnswer').hidden) irReveal(); else irNext(); return; }
               var gmap = { '1': 0, '2': 1, '3': 2, '4': 3, '5': 4 };
@@ -6388,14 +6747,12 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
         // 6) 支持作者：低调入口 + 弹窗（微信二维码待用户上传后嵌入）
         (function () {
           var modal = document.getElementById('authorModal');
-          var btn = document.getElementById('supportAuthorBtn');
           var qr = document.getElementById('authorQr');
           var ph = document.getElementById('authorQrPlaceholder');
-          if (!modal || !btn) return;
+          if (!modal) return;
           function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
           function close() { modal.hidden = true; document.body.style.overflow = ''; }
-          window.__openAuthorModal = open;  // 大屏左欄「支持作者」入口
-          btn.addEventListener('click', open);
+          window.__openAuthorModal = open;  // 大屏左欄「支持作者」（msnSupportBtn）呼叫開啟
           modal.querySelectorAll('[data-author-close]').forEach(function (el) { el.addEventListener('click', close); });
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
           // 暴露设置二维码的方法，供上传微信码后调用：setAuthorQr(dataUri)
