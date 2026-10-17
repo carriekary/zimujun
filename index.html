@@ -389,7 +389,24 @@
           main { padding-bottom: 12px; }
           /* 明確啟用內框觸控滾動（含 iOS 慣性），確保字幕框在小屏可滑 */
           #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 64px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
+          /* 底部播放欄顯示時，留出空間避免最後一句被蓋住 */
+          body.mpb-show #subtitles { padding-bottom: 150px; }
+          body.mpb-show main { padding-bottom: 150px; }
         }
+
+        /* ==================== 小屏底部播放栏（上一句／播放／下一句 + 进度条） ==================== */
+        #mPlayerBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: none; flex-direction: column; gap: 4px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: #fffdf8; border-top: 1px solid #f0e4d8; box-shadow: 0 -4px 16px rgba(60, 53, 48, 0.08); }
+        body.mpb-show #mPlayerBar { display: flex; }
+        @media (min-width: 901px) { #mPlayerBar { display: none !important; } }
+        .mpb-prog { display: flex; align-items: center; gap: 10px; }
+        .mpb-time { flex: 0 0 auto; font-size: 11px; color: #8a7a6a; font-variant-numeric: tabular-nums; letter-spacing: 0.2px; }
+        .mpb-track { flex: 1 1 0; min-width: 40px; height: 5px; border-radius: 4px; background: #eee3d3; overflow: hidden; cursor: pointer; touch-action: none; }
+        .mpb-fill { height: 100%; width: 0%; background: var(--accent, #b02430); border-radius: 4px; }
+        .mpb-btns { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .mpb-skip { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: #5b544a; font-size: 11px; font-family: inherit; padding: 4px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .mpb-skip:active { color: var(--accent, #b02430); }
+        .mpb-play { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 50%; border: none; background: var(--accent, #b02430); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(176, 36, 48, 0.32); transition: transform 0.12s ease; -webkit-tap-highlight-color: transparent; }
+        .mpb-play:active { transform: scale(0.94); }
 
         /* ==================== 和风纸白主题（白纸 × 朱红 × 金） ==================== */
         :root {
@@ -4484,6 +4501,83 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     if (v.readyState < 3) medStatus('⟳ 缓冲中…（卡一下是正常的，别急）', '');
                 });
                 v.addEventListener('error', function () { if (errLocked()) return; medStatus('⚠ 这个档案读不到（可能是网页不是媒体档，或连结失效）。', 'bad'); });
+
+                // ==================== 小屏底部播放栏（≤900px：上一句／播放／下一句 + 进度条） ====================
+                (function () {
+                    var bar = document.getElementById('mPlayerBar'); if (!bar) return;
+                    var track = document.getElementById('mpbTrack'), fill = document.getElementById('mpbFill');
+                    var curEl = document.getElementById('mpbCur'), durEl = document.getElementById('mpbDur');
+                    var icoPlay = document.getElementById('mpbIcoPlay'), icoPause = document.getElementById('mpbIcoPause');
+                    function fmt(t) { t = Math.max(0, t || 0); var m = Math.floor(t / 60), s = Math.floor(t % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
+                    function subsVisible() { var sub = document.getElementById('subtitles'); return !!(sub && sub.style.display !== 'none' && !sub.hidden); }
+                    function syncShow() {
+                        var ok = window.matchMedia('(max-width: 900px)').matches && !!v.src && !!v.duration && !isNaN(v.duration) && v.duration > 0 && subsVisible();
+                        document.body.classList.toggle('mpb-show', !!ok);
+                        try { bar.hidden = !ok; } catch (e) { }
+                    }
+                    function update() {
+                        if (!v.duration || isNaN(v.duration) || v.duration <= 0) { fill.style.width = '0%'; curEl.textContent = fmt(0); durEl.textContent = fmt(0); }
+                        else {
+                            var pct = Math.max(0, Math.min(100, v.currentTime / v.duration * 100));
+                            fill.style.width = pct + '%';
+                            curEl.textContent = fmt(v.currentTime); durEl.textContent = fmt(v.duration);
+                            try { track.setAttribute('aria-valuenow', Math.round(pct)); } catch (e) { }
+                        }
+                        var playing = !!v.src && !v.paused;
+                        icoPlay.style.display = playing ? 'none' : '';
+                        icoPause.style.display = playing ? '' : 'none';
+                        syncShow();
+                    }
+                    function curSubIdx() {
+                        var t = v.currentTime - MP.audioDelaySec;
+                        var list = AppState.processedSubtitles, found = -1;
+                        for (var i = 0; i < list.length; i++) {
+                            var s0 = subSec(list[i].startTime); if (s0 < 0) continue;
+                            if (s0 - 0.05 <= t) found = i; else break;
+                        }
+                        return (found < 0) ? 0 : found;
+                    }
+                    // 上一句／下一句：有音讯在播 → 跳到该句首继续播；还没开始播 → 只高亮＋滚动
+                    function gotoIdx(i) {
+                        if (i < 0 || i >= AppState.processedSubtitles.length) return;
+                        var sub = AppState.processedSubtitles[i];
+                        ensureRowRendered(i);
+                        var st0 = subSec(sub.startTime); if (st0 < 0) return;
+                        if (v.src && MP.started) {
+                            markPlaying(i, true);
+                            MP.singleSentence = false; MP.singleStopAt = 0;
+                            try { v.currentTime = Math.max(0, st0 + MP.audioDelaySec); if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () { }); } } catch (e) { }
+                        } else if (window.seekToSubtitle) {
+                            window.seekToSubtitle(i);
+                        }
+                    }
+                    ['timeupdate', 'play', 'pause', 'ended', 'seeked', 'loadedmetadata', 'emptied'].forEach(function (ev) { v.addEventListener(ev, update); });
+                    window.addEventListener('resize', syncShow);
+                    var subEl = document.getElementById('subtitles');
+                    if (subEl && window.MutationObserver) { try { new MutationObserver(syncShow).observe(subEl, { attributes: true, attributeFilter: ['style', 'hidden'] }); } catch (e) { } }
+                    document.getElementById('mpbPlay').addEventListener('click', function () {
+                        if (!v.src) return;
+                        if (v.paused) { MP.singleSentence = false; MP.singleStopAt = 0; var p = v.play(); if (p && p.catch) p.catch(function () { }); }
+                        else { v.pause(); }
+                    });
+                    document.getElementById('mpbPrev').addEventListener('click', function () { gotoIdx(curSubIdx() - 1); });
+                    document.getElementById('mpbNext').addEventListener('click', function () { gotoIdx(curSubIdx() + 1); });
+                    // 进度条：点／拖 = 跳时间，松手弹到对应字幕句
+                    var drag = false;
+                    function seekAt(clientX, jump) {
+                        if (!v.duration || isNaN(v.duration)) return;
+                        var r = track.getBoundingClientRect(); if (!r.width) return;
+                        var ratio = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+                        try { v.currentTime = ratio * v.duration; } catch (e) { }
+                        update();
+                        if (jump && typeof mpHeaderJumpToTime === 'function') mpHeaderJumpToTime(v.currentTime - MP.audioDelaySec);
+                    }
+                    track.addEventListener('pointerdown', function (e) { drag = true; try { track.setPointerCapture(e.pointerId); } catch (_) { } seekAt(e.clientX, false); });
+                    track.addEventListener('pointermove', function (e) { if (drag) seekAt(e.clientX, false); });
+                    track.addEventListener('pointerup', function (e) { if (drag) { drag = false; seekAt(e.clientX, true); } });
+                    track.addEventListener('pointercancel', function () { drag = false; });
+                    update();
+                })();
             }
             // 播放器下方控制列：速度 / 音讯偏移（负=字幕提前、正=字幕延后）
             // 头部 🎵 音钮的红点还是要照著真实播放状态跑（play / pause / ended）
@@ -6762,8 +6856,30 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           };
         })();
       })();
-    </script>
-  <script>
+   </script>
+  <!-- 小屏底部播放栏（≤900px 且已载入音讯时显示；浅色和风样式） -->
+  <div id="mPlayerBar" hidden>
+    <div class="mpb-prog">
+      <span id="mpbCur" class="mpb-time">00:00</span>
+      <div id="mpbTrack" class="mpb-track" role="slider" aria-label="音讯进度（点一下或拖动可跳到该处）" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="mpbFill" class="mpb-fill"></div></div>
+      <span id="mpbDur" class="mpb-time">00:00</span>
+    </div>
+    <div class="mpb-btns">
+      <button type="button" id="mpbPrev" class="mpb-skip" aria-label="上一句">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 5h2v14H6z" fill="currentColor"/><path d="M20 5v14L9 12z" fill="currentColor"/></svg>
+        <span>上一句</span>
+      </button>
+      <button type="button" id="mpbPlay" class="mpb-play" aria-label="播放／暂停">
+        <svg id="mpbIcoPlay" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M8 5 L19 12 L8 19 Z" fill="currentColor"/></svg>
+        <svg id="mpbIcoPause" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" style="display:none"><rect x="7" y="5" width="3.6" height="14" rx="1.2" fill="currentColor"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.2" fill="currentColor"/></svg>
+      </button>
+      <button type="button" id="mpbNext" class="mpb-skip" aria-label="下一句">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M16 5h2v14h-2z" fill="currentColor"/><path d="M4 5v14l11-7z" fill="currentColor"/></svg>
+        <span>下一句</span>
+      </button>
+    </div>
+  </div>
+<script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('./sw.js').catch(function (e) {
