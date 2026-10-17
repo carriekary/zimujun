@@ -4504,6 +4504,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 // ==================== 小屏底部播放栏（≤900px：上一句／播放／下一句 + 进度条） ====================
                 (function () {
                     var bar = document.getElementById('mPlayerBar'); if (!bar) return;
+                    var v = medEl(); if (!v) return;
                     var track = document.getElementById('mpbTrack'), fill = document.getElementById('mpbFill');
                     var curEl = document.getElementById('mpbCur'), durEl = document.getElementById('mpbDur');
                     var icoPlay = document.getElementById('mpbIcoPlay'), icoPause = document.getElementById('mpbIcoPause');
