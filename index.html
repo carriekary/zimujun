@@ -4502,7 +4502,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 v.addEventListener('error', function () { if (errLocked()) return; medStatus('⚠ 这个档案读不到（可能是网页不是媒体档，或连结失效）。', 'bad'); });
 
                 // ==================== 小屏底部播放栏（≤900px：上一句／播放／下一句 + 进度条） ====================
-                (function () {
+                function __mpbInit() {
                     var bar = document.getElementById('mPlayerBar'); if (!bar) return;
                     var v = medEl(); if (!v) return;
                     var track = document.getElementById('mpbTrack'), fill = document.getElementById('mpbFill');
@@ -4577,7 +4577,12 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     track.addEventListener('pointerup', function (e) { if (drag) { drag = false; seekAt(e.clientX, true); } });
                     track.addEventListener('pointercancel', function () { drag = false; });
                     update();
-                })();
+                }
+                // 重要：#mPlayerBar 的 HTML 在本 script 區塊「之後」（靠近 </body>）。
+                // 若在此直接 getElementById 會是 null → return → 監聽器全沒綁上，
+                // 播放欄會變成只靠 CSS 顯示出來、按了卻毫無反應的擺設。故等 DOM 解析完再初始化。
+                if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', __mpbInit); }
+                else { __mpbInit(); }
             }
             // 播放器下方控制列：速度 / 音讯偏移（负=字幕提前、正=字幕延后）
             // 头部 🎵 音钮的红点还是要照著真实播放状态跑（play / pause / ended）
