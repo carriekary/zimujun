@@ -4511,7 +4511,8 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     function fmt(t) { t = Math.max(0, t || 0); var m = Math.floor(t / 60), s = Math.floor(t % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
                     function subsVisible() { var sub = document.getElementById('subtitles'); return !!(sub && sub.style.display !== 'none' && !sub.hidden); }
                     function syncShow() {
-                        var ok = window.matchMedia('(max-width: 900px)').matches && !!v.src && !!v.duration && !isNaN(v.duration) && v.duration > 0 && subsVisible();
+                        // 小屏且正在看字幕就顯示（不強求先載音訊；沒音訊時播放鍵會提示先載入）
+                        var ok = window.matchMedia('(max-width: 900px)').matches && subsVisible();
                         document.body.classList.toggle('mpb-show', !!ok);
                         try { bar.hidden = !ok; } catch (e) { }
                     }
@@ -4556,7 +4557,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                     var subEl = document.getElementById('subtitles');
                     if (subEl && window.MutationObserver) { try { new MutationObserver(syncShow).observe(subEl, { attributes: true, attributeFilter: ['style', 'hidden'] }); } catch (e) { } }
                     document.getElementById('mpbPlay').addEventListener('click', function () {
-                        if (!v.src) return;
+                        if (!v.src) { if (typeof showGlobalStatus === 'function') showGlobalStatus('先載入音訊，才能播放喔 ♪', 1800); return; }
                         if (v.paused) { MP.singleSentence = false; MP.singleStopAt = 0; var p = v.play(); if (p && p.catch) p.catch(function () { }); }
                         else { v.pause(); }
                     });
