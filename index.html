@@ -147,6 +147,23 @@
         .offset-control .offset-value { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; color: #b02430; }
         .offset-control .offset-reset { border: 1px solid #d8cdb4; background: #fff; color: #6b6357; border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; }
         .offset-control .offset-reset:hover { background: #f3ead8; color: #b02430; }
+        /* 設定抽屜：小屏把右下角「生词本／汇出档案」搬進來的動作項 */
+        .settings-sep { height: 1px; background: #f0e6d4; margin: 8px 0; }
+        .settings-action { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box;
+          padding: 13px 18px; border: none; background: transparent; cursor: pointer; text-align: left;
+          font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink, #3c3530);
+          transition: background .15s ease, color .15s ease; }
+        .settings-action:hover { background: #f7efe0; color: var(--vermillion, #b02430); }
+        .settings-action .sa-ico { font-size: 15px; flex: none; }
+        .settings-action .sa-arrow { margin-left: auto; color: #b3aa9a; font-size: 18px; line-height: 1; transition: transform .15s ease; }
+        .settings-action.open .sa-arrow { transform: rotate(90deg); }
+        .settings-export { display: flex; flex-direction: column; gap: 6px; padding: 4px 18px 10px 42px; }
+        .settings-export:not(.open) { display: none; }
+        .settings-export-btn { display: flex; align-items: center; gap: 8px; border: 1px solid #e6ddc8; background: #fff;
+          color: #5a5246; font-size: 12.5px; font-weight: 600; padding: 9px 12px; border-radius: 8px; cursor: pointer;
+          text-align: left; width: 100%; box-sizing: border-box; font-family: inherit;
+          transition: background .15s ease, color .15s ease, border-color .15s ease; }
+        .settings-export-btn:hover { background: #f7efe0; color: var(--vermillion, #b02430); border-color: var(--gold, #c9a15f); }
         @media (max-width: 900px) { .offset-control { width: 100%; justify-content: space-between; } .offset-control input[type="range"] { flex: 1; width: auto; } }
 
         /* ===== 大屏：主頁左側導航欄（像參考圖的「首頁」選單）；設置回歸左滑抽屜，由導航欄打開 ===== */
@@ -224,6 +241,8 @@
            小屏仍由右下角「生詞本」鈕開啟全屏頁，任何小屏設置不受影響 */
         @media (max-width: 900px) {
           #vocabInline, #reviewInline { display: none !important; }
+          /* 右下角的「生词本／汇出档案」已搬到設定抽屜，小屏隱藏原懸浮按鈕組 */
+          .button-container { display: none !important; }
         }
 
         .search-box {
@@ -1881,6 +1900,13 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
         <div class="settings-row">
           <span class="settings-label">📖 wiki词典</span>
           <label class="settings-switch"><input type="checkbox" id="swDict"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
+        </div>
+        <div class="settings-sep"></div>
+        <button type="button" class="settings-action" id="sdVocabBookBtn"><span class="sa-ico">📚</span>生词本</button>
+        <button type="button" class="settings-action settings-fold" id="sdExportToggle"><span class="sa-ico">📤</span>汇出档案<span class="sa-arrow">›</span></button>
+        <div class="settings-export" id="sdExport">
+          <button type="button" class="settings-export-btn" id="sdExportPdfBtn">📕 导全文 PDF</button>
+          <button type="button" class="settings-export-btn" id="sdExportPdfNotesBtn">📝 导笔记 PDF</button>
         </div>
       </div>
     </aside>
@@ -5545,6 +5571,22 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
           if (navPdf) navPdf.addEventListener('click', () => { const b = document.getElementById('exportPdfBtn'); if (b) b.click(); });
           const navNotes = document.getElementById('navExportPdfNotesBtn');
           if (navNotes) navNotes.addEventListener('click', () => { const b = document.getElementById('exportPdfNotesBtn'); if (b) b.click(); });
+        })();
+
+        // 小屏：把設定抽屜裡的「生词本／汇出档案」接到既有邏輯（右下角按鈕已隱藏，功能搬到設定）
+        (function wireSettingsDrawerActions() {
+          var drawer = document.getElementById('settingsDrawer');
+          var backdrop = document.getElementById('settingsBackdrop');
+          function closeDrawer() { if (drawer) drawer.classList.remove('open'); if (backdrop) backdrop.classList.remove('show'); }
+          var vb = document.getElementById('sdVocabBookBtn');
+          if (vb) vb.addEventListener('click', function () { closeDrawer(); if (window.__vocabBookOpen) window.__vocabBookOpen(); });
+          var exTog = document.getElementById('sdExportToggle');
+          var exBox = document.getElementById('sdExport');
+          if (exTog && exBox) exTog.addEventListener('click', function () { exBox.classList.toggle('open'); exTog.classList.toggle('open'); });
+          var exPdf = document.getElementById('sdExportPdfBtn');
+          if (exPdf) exPdf.addEventListener('click', function () { closeDrawer(); var b = document.getElementById('exportPdfBtn'); if (b) b.click(); });
+          var exNotes = document.getElementById('sdExportPdfNotesBtn');
+          if (exNotes) exNotes.addEventListener('click', function () { closeDrawer(); var b = document.getElementById('exportPdfNotesBtn'); if (b) b.click(); });
         })();
 
         // ==================== 生词本弹窗（查看 / 删除 / 跳转来源） ====================
