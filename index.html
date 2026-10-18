@@ -407,8 +407,10 @@
         @media (max-width: 900px) {
           /* 解除 body 高度鎖定，讓整頁可作為字幕無法內滾時的捲動後備（避免小屏完全滑不動） */
           html, body { height: auto; min-height: 100%; }
-          /* 底部播放欄在小屏固定顯示，預留空間避免最後一句被蓋住 */
-          main { padding-bottom: 150px; }
+          /* 底部播放欄是 position:fixed，空間要留在字幕框內部（#subtitles 已有 padding-bottom:150px），
+             不再加在 main 上——否則頁面會比視窗高出一截、整頁也能滾，形成「字幕框＋頁面」雙滾動區，
+             拖曳與跳句時兩者互相拉扯，就是小屏「不穩定、很容易跳出去」的主因 */
+          main { padding-bottom: 12px; }
           /* 明確啟用內框觸控滾動（含 iOS 慣性），確保字幕框在小屏可滑 */
           #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 150px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
         }
@@ -5261,7 +5263,7 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
             // ===== 小屏手勢：輕點＝跳到該句；長按＝查詞 =====
             // （原本點到 .wf-word 就彈詞典面板並 return，導致小屏永遠跳不了句、詞典卻一直彈出）
             var SMALL_Q = '(max-width: 900px)';
-            var lp = { timer: 0, fired: false, x: 0, y: 0, word: null };
+            var lp = { timer: 0, fired: false, tapHandled: false, moved: false, x: 0, y: 0, t0: 0, word: null, idx: -1 };
             function smSmall() { return window.matchMedia(SMALL_Q).matches; }
             function smDictLookup(word) {
                 if (!word || !AppState.dictEnabled || typeof window.dictSearch !== 'function') return;
@@ -5276,40 +5278,56 @@ window.XY_exportVocabApkg = async function (notes, deckName) {
                 window.dictSearch(word.getAttribute('data-surface') || word.textContent,
                     { reading: rtEl ? rtEl.textContent : '', sentence: wSent, index: wIdx });
             }
+            // 跳到指定句：高亮＋置中＋閃一下（touchend 與 click 兩條路徑共用）
+            function smSeekRow(idx) {
+                if (typeof idx !== 'number' || isNaN(idx) || idx < 0) return;
+                if (typeof window.seekToSubtitle === 'function') window.seekToSubtitle(idx);
+                var row = document.querySelector('#subtitles .row[data-index="' + idx + '"]');
+                var sb = row ? row.querySelector('.subtitle') : null;
+                if (sb) { sb.classList.remove('just-jumped'); void sb.offsetWidth; sb.classList.add('just-jumped'); }
+            }
             subElRoot.addEventListener('touchstart', function (e) {
-                if (!smSmall()) return;
-                lp.fired = false;
+                lp.fired = false; lp.tapHandled = false; lp.moved = false;
+                if (!smSmall()) { lp.word = null; lp.idx = -1; return; }
+                var row = e.target.closest('.row');
+                var ri = row ? parseInt(row.getAttribute('data-index'), 10) : -1;
+                lp.idx = isNaN(ri) ? -1 : ri;
                 var w = e.target.closest('.wf-word');
-                if (!w) { lp.word = null; return; }
-                lp.word = w;
+                lp.word = w || null;
                 var t = e.touches && e.touches[0];
-                lp.x = t ? t.clientX : 0; lp.y = t ? t.clientY : 0;
+                lp.x = t ? t.clientX : 0; lp.y = t ? t.clientY : 0; lp.t0 = Date.now();
                 clearTimeout(lp.timer);
-                lp.timer = setTimeout(function () {
+                // 只有按在「詞」上才起長按查詞計時；按其他位置純粹是輕點跳句
+                if (lp.word) lp.timer = setTimeout(function () {
                     lp.fired = true;
                     try { if (navigator.vibrate) navigator.vibrate(15); } catch (e2) { }
                     smDictLookup(lp.word);
                 }, 480);
             }, { passive: true });
             subElRoot.addEventListener('touchmove', function (e) {
-                if (!lp.timer) return;
                 var t = e.touches && e.touches[0]; if (!t) return;
-                // 手指滑動 → 視為捲動，取消長按查詞
+                // 手指滑動 → 視為捲動，取消長按與輕點
                 if (Math.abs(t.clientX - lp.x) > 12 || Math.abs(t.clientY - lp.y) > 12) {
+                    lp.moved = true;
                     clearTimeout(lp.timer); lp.timer = 0; lp.word = null;
                 }
             }, { passive: true });
             subElRoot.addEventListener('touchend', function () {
                 clearTimeout(lp.timer); lp.timer = 0;
                 if (!lp.fired) lp.word = null;
+                // 小屏輕點（短暫、沒滑動、沒觸發長按）→ 直接跳句，不依賴 iOS 的 click
+                if (smSmall() && !lp.fired && !lp.moved && lp.idx >= 0 && (Date.now() - lp.t0) < 450) {
+                    lp.tapHandled = true;
+                    smSeekRow(lp.idx);
+                }
             }, { passive: true });
             subElRoot.addEventListener('touchcancel', function () {
-                clearTimeout(lp.timer); lp.timer = 0; lp.word = null;
+                clearTimeout(lp.timer); lp.timer = 0; lp.word = null; lp.idx = -1;
             }, { passive: true });
 
             subElRoot.addEventListener('click', function (e) {
-                // 長按已查詞：忽略隨之而來的 click，避免又跳句
-                if (lp.fired) { lp.fired = false; lp.word = null; return; }
+                // 長按已查詞、或 touchend 已跳句：忽略隨之而來的 click，避免重複觸發
+                if (lp.fired || lp.tapHandled) { lp.fired = false; lp.tapHandled = false; lp.word = null; return; }
                 var rt = e.target.closest('rt');          // 只點擊「注音」本身才開啟修改
                 if (!rt) {
                     var ww = e.target.closest('.wf-word');   // 點「詞身」→ 查詞（內建詞典／維基詞典）
