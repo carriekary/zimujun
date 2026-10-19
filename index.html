@@ -418,19 +418,17 @@
         @media (max-width: 900px) {
           /* 解除 body 高度鎖定，讓整頁可作為字幕無法內滾時的捲動後備（避免小屏完全滑不動） */
           html, body { height: auto; min-height: 100%; }
-          /* 底部播放欄是 position:fixed，空間要留在字幕框內部（#subtitles 已有 padding-bottom:150px），
-             不再加在 main 上——否則頁面會比視窗高出一截、整頁也能滾，形成「字幕框＋頁面」雙滾動區，
-             拖曳與跳句時兩者互相拉扯，就是小屏「不穩定、很容易跳出去」的主因 */
+          /* 底部播放欄已在小屏隱藏（改由「🎵 音訊」面板 + 點句播放），字幕框底部只需留少量呼吸空間 */
           main { padding-bottom: 12px; }
           /* 明確啟用內框觸控滾動（含 iOS 慣性），確保字幕框在小屏可滑 */
-          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 150px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
+          #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
         }
 
         /* ==================== 小屏底部播放栏（上一句／播放／下一句 + 进度条） ==================== */
         /* 小屏直接由媒體查詢顯示，不依賴 JS；JS 只在開啟內嵌視圖時加 body.mpb-hide 隱藏它 */
         #mPlayerBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: none; flex-direction: column; gap: 4px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: #fffdf8; border-top: 1px solid #f0e4d8; box-shadow: 0 -4px 16px rgba(60, 53, 48, 0.08); }
         @media (min-width: 901px) { #mPlayerBar { display: none !important; } }
-        @media (max-width: 900px) { #mPlayerBar { display: flex; } body.mpb-hide #mPlayerBar { display: none !important; } }
+        @media (max-width: 900px) { #mPlayerBar { display: none !important; } }
         .mpb-prog { display: flex; align-items: center; gap: 10px; }
         .mpb-time { flex: 0 0 auto; font-size: 11px; color: #8a7a6a; font-variant-numeric: tabular-nums; letter-spacing: 0.2px; }
         .mpb-track { flex: 1 1 0; min-width: 40px; height: 5px; border-radius: 4px; background: #eee3d3; overflow: hidden; cursor: pointer; touch-action: none; }
