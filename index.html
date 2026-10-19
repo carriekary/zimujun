@@ -189,12 +189,12 @@
         .msn-arrow { margin-left: auto; color: #b3aa9a; font-size: 18px; line-height: 1; transition: transform .15s ease; flex: none; }
         .msn-row.open .msn-arrow { transform: rotate(90deg); }
         /* 大屏左欄：複習計劃下的匯出按鈕組（小屏左欄隱藏，不會出現） */
-        .msn-export { display: flex; flex-direction: column; gap: 4px; margin: 2px 0 2px 30px; }
+        .msn-export { display: flex; flex-direction: column; gap: 3px; margin: 2px 0 2px 30px; }
         .msn-export:not(.open) { display: none; }
         .msn-export-btn {
           display: flex; align-items: center; justify-content: flex-start; gap: 6px;
           border: 1px solid #e6ddc8; background: #fff; color: #5a5246;
-          font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px;
+          font-size: 11.5px; font-weight: 600; padding: 4px 10px; line-height: 1.3; border-radius: 8px;
           cursor: pointer; text-align: left; width: 100%; box-sizing: border-box; font-family: inherit;
           transition: background .15s ease, color .15s ease, border-color .15s ease; }
         .msn-export-btn:hover { background: #f7efe0; color: var(--vermillion, #b02430); border-color: var(--gold, #c9a15f); }
@@ -205,7 +205,7 @@
           border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
         /* 左欄底部：支持作者（字體／小圖標與上方「导出」行一致：左對齊、透明底、currentColor 圖標） */
         .msn-support { margin-top: auto; margin-bottom: 2px; display: flex; align-items: center; gap: 11px;
-          background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px;
+          background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 7px 12px; line-height: 1.3;
           font-size: 14px; font-weight: 500; color: #6b6357; cursor: pointer; width: 100%; box-sizing: border-box; font-family: inherit;
           transition: background .15s ease, color .15s ease; }
         .msn-support .ico { font-size: 16px; flex: none; display: inline-flex; align-items: center; }
@@ -335,7 +335,7 @@
         .note-box.has-content { border-color: #ff9800; background: #fff8e1; color: #e65100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .note-box:focus { outline: none; border-color: #4CAF50; background: #fff; box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2); }
         
-        .file-info { position: fixed; bottom: 66px; right: 20px; background: rgba(255, 255, 255, 0.95); padding: 8px 12px; border-radius: 6px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; border: 1px solid #ddd; max-width: 300px; }
+        .file-info { position: fixed; bottom: 66px; right: 20px; background: rgba(255, 255, 255, 0.95); padding: 8px 12px; border-radius: 6px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; border: 1px solid #ddd; max-width: 300px; pointer-events: none; }
         .highlight { background: #ffff00; color: #d32f2f; font-weight: 700; padding: 0 2px; border-radius: 2px; }
         
         .button-container { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; align-items: flex-end; }
@@ -4085,6 +4085,21 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     var icoPlay = document.getElementById('mpbIcoPlay'), icoPause = document.getElementById('mpbIcoPause');
                     function fmt(t) { t = Math.max(0, t || 0); var m = Math.floor(t / 60), s = Math.floor(t % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
                     function subsVisible() { var sub = document.getElementById('subtitles'); return !!(sub && sub.style.display !== 'none' && !sub.hidden); }
+                    // 小屏控制鈕：同時綁定 touchend 與 click，並用 done 旗標防止「輕觸→touchend+click 各觸發一次」造成連續切換（看起來像沒反應）。
+                    // 這能解決 iOS Safari 上 click 偶爾不派發、導致底部播放鈕按了沒反應的問題。
+                    function bindTap(el, fn) {
+                        if (!el) return;
+                        var done = false;
+                        el.addEventListener('touchend', function (e) {
+                            if (e && e.cancelable) { try { e.preventDefault(); } catch (_) { } }
+                            done = true; setTimeout(function () { done = false; }, 600);
+                            fn(e);
+                        });
+                        el.addEventListener('click', function (e) {
+                            if (done) { done = false; return; }
+                            fn(e);
+                        });
+                    }
                     function syncShow() {
                         // 底部欄在 ≤900px 由 CSS 媒體查詢直接顯示；這裡只在「開啟內嵌視圖（字幕被隱藏）或無字幕資料」時隱藏它
                         var hide = !subsVisible() || !AppState.processedSubtitles.length;
@@ -4130,13 +4145,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     window.addEventListener('resize', syncShow);
                     var subEl = document.getElementById('subtitles');
                     if (subEl && window.MutationObserver) { try { new MutationObserver(syncShow).observe(subEl, { attributes: true, attributeFilter: ['style', 'hidden'], childList: true }); } catch (e) { } }
-                    document.getElementById('mpbPlay').addEventListener('click', function () {
+                    bindTap(document.getElementById('mpbPlay'), function () {
                         if (!v.src) { if (typeof showGlobalStatus === 'function') showGlobalStatus('先載入音訊，才能播放喔 ♪', 1800); return; }
                         if (v.paused) { MP.singleSentence = false; MP.singleStopAt = 0; var p = v.play(); if (p && p.catch) p.catch(function () { }); }
                         else { v.pause(); }
                     });
-                    document.getElementById('mpbPrev').addEventListener('click', function () { gotoIdx(curSubIdx() - 1); });
-                    document.getElementById('mpbNext').addEventListener('click', function () { gotoIdx(curSubIdx() + 1); });
+                    bindTap(document.getElementById('mpbPrev'), function () { gotoIdx(curSubIdx() - 1); });
+                    bindTap(document.getElementById('mpbNext'), function () { gotoIdx(curSubIdx() + 1); });
                     // 进度条：点／拖 = 跳时间，松手弹到对应字幕句
                     var drag = false;
                     function seekAt(clientX, jump) {
