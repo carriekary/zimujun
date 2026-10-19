@@ -4091,7 +4091,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                         if (!el) return;
                         var done = false;
                         el.addEventListener('touchend', function (e) {
-                            if (e && e.cancelable) { try { e.preventDefault(); } catch (_) { } }
+                            // 注意：不要在這裡 preventDefault —— iOS Safari 會因此把這次觸控從「使用者手勢」剔除，
+                            // 導致隨後的 v.play() 被瀏覽器以 NotAllowedError 拒絕（靜默 catch 後看起來就像「按了沒反應、播不了」）。
+                            // 改用 done 旗標擋掉隨之而來的 click，避免 touchend+click 各觸發一次造成連切。
                             done = true; setTimeout(function () { done = false; }, 600);
                             fn(e);
                         });
@@ -4147,7 +4149,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     if (subEl && window.MutationObserver) { try { new MutationObserver(syncShow).observe(subEl, { attributes: true, attributeFilter: ['style', 'hidden'], childList: true }); } catch (e) { } }
                     bindTap(document.getElementById('mpbPlay'), function () {
                         if (!v.src) { if (typeof showGlobalStatus === 'function') showGlobalStatus('先載入音訊，才能播放喔 ♪', 1800); return; }
-                        if (v.paused) { MP.singleSentence = false; MP.singleStopAt = 0; var p = v.play(); if (p && p.catch) p.catch(function () { }); }
+                        if (v.paused) { MP.singleSentence = false; MP.singleStopAt = 0; var p = v.play(); if (p && p.catch) p.catch(function (err) { if (typeof showGlobalStatus === 'function') showGlobalStatus('播放被浏览器拦下：' + ((err && err.name) || '再点一下试试'), 2600); }); }
                         else { v.pause(); }
                     });
                     bindTap(document.getElementById('mpbPrev'), function () { gotoIdx(curSubIdx() - 1); });
