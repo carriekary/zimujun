@@ -63320,6 +63320,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 box.insertAdjacentHTML('beforeend', html);
                 SUB_WIN_END = to;
                 AppState.renderedCount = to;
+                _enforceDomCap();   // 硬性 DOM 行數上限（向前補載後也檢查）
             }
             // 新行筆記框對齊
             if (AppState.notesVisible) {
@@ -63401,12 +63402,28 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             if (topIdx === Infinity) return;
             trimAbove(topIdx + SUB_KEEP_ABOVE);
         }
+        // 硬性 DOM 行數上限保護：spacer 方案下裁行不減 scrollTop/scrollHeight，觸底續載可能陷入
+        // 「灌 → 裁 → 觸底判斷仍成立 → 再灌」的正回饋，把整部劇 DOM 灌爆記憶體、被 iOS 強制重載頁面。
+        // 此函式在每次增補後檢查，DOM .row 數超過上限就強制裁掉上方行（用 spacer 補高，不震動），把行數壓回安全範圍。
+        var _DOM_ROW_CAP = 260;
+        function _enforceDomCap() {
+            if (AppState.searchActive) return;
+            var box = subBox(); if (!box) return;
+            var rows = box.querySelectorAll('.row');
+            if (rows.length <= _DOM_ROW_CAP) return;
+            // 裁掉最上方超過上限的那部分（約 rows.length - 200 行），以最上方可見行為基準向下保留
+            var excess = rows.length - 200;
+            var cutIdx = parseInt(rows[excess].getAttribute('data-index'), 10);
+            trimAbove(cutIdx + SUB_KEEP_ABOVE);
+        }
         // 往回捲動複習時，若已捲到頂部邊緣，自動把上面的行補回來
         function maybeUnTrim() {
             if (AppState.searchActive) return;
             var box = subBox(); if (!box) return;
             if (SUB_WIN_START <= 0) return;
-            if (box.scrollTop < 120) {
+            // spacer 方案下裁行不減 scrollTop，往回滾時會先看到 top-spacer 空白。故以「scrollTop 接近 top-spacer 高度」
+            // 作為補回觸發點（而非固定 120px），讓用戶一滾到空白邊緣就即時把上方行補回、spacer 同步縮短。
+            if (box.scrollTop < _topPad + 120) {
                 renderRange(Math.max(0, SUB_WIN_START - SUB_CHUNK), SUB_WIN_START, true);
             }
         }
@@ -63434,6 +63451,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             
             AppState.renderedCount += nextBatch.length;
             SUB_WIN_END = AppState.renderedCount;
+            _enforceDomCap();   // 硬性 DOM 行數上限：spacer 方案下防止觸底續載正回饋把整部劇 DOM 灌爆記憶體
             // 字幕改成框內滾動後，整頁滾動不再能帶出新的批次，所以在框底接力補載
             // （自動跟句的程序化滾動進行中時不接力——否則播放中會把整部劇的 DOM 一次灌進來）
             if (!_autoScrolling) setTimeout(feedSubtitlesIfNearBottom, 0);
