@@ -62689,6 +62689,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         };
 
         function markPlaying(idx, forceScroll) {
+            // 手機（窄螢幕）播放時完全關閉自動跟句：連「高亮當前句」都不做，做成純靜態。
+            // 自動跟句（!forceScroll）直接 return，不做任何 DOM 操作（不查 row、不 ensureRowRendered、不高亮、不滾動），
+            // 徹底省掉 timeupdate 每秒多次的 DOM 鏈，讓低端手機播放最順、最省記憶體。
+            // 手動跳句（forceScroll=true，點數字/拖進度條）仍完整運作：跳音頻+滾動+高亮。
+            var isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
+            if (isMobile && !forceScroll) { lastPlayIdx = -1; return; }
             if (idx === lastPlayIdx && !forceScroll) return;
             var mk = medEl();
             // 播放器暂停又刚好落在句与句的中间缝隙：不要清掉亮框又不补上，否则整片字幕会熄掉
@@ -62708,12 +62714,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             if (!row) return;
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
-            // 手機（窄螢幕）上播放時完全不自動跟句滾動，只有手動點句（forceScroll=true）才滾動+跳音頻。
-            // 目的：省掉播放中每秒多次的「timeupdate→markPlaying→滾動→觸底續載→trimAbove」整條 DOM 操作鏈，
-            // 讓低端手機播放順暢不卡、記憶體壓力大減。桌面版維持原跟句滾動。
-            var isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
-            var skipFollowScroll = isMobile && !forceScroll;
-            if (!skipFollowScroll && (forceScroll || !follow || follow.checked)) {
+            if (forceScroll || !follow || follow.checked) {
                 try {
                     var box = document.getElementById('subtitles');
                     if (box && box.scrollHeight > box.clientHeight + 4) {
@@ -62732,9 +62733,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     }
                 } catch (e) { }
             }
-            // 手機自動跟句不滾動時，畫面不動、上方行不會滾出視窗，故也跳過 trimAbove（省 DOM 操作）；
-            // 桌面跟句滾動時才需要裁行維持 DOM 有界。
-            if (!skipFollowScroll) trimAbove(idx);   // 播放推进时裁掉上方已滚出视窗的多余行，避免整部剧 DOM 灌爆 iPhone 记忆体
+            // trimAbove 裁行改採 spacer 佔位（不寫 scrollTop），可安全地在滾動期間執行，不再與 rAF 搶寫 scrollTop
+            trimAbove(idx);   // 播放推进时裁掉上方已滚出视窗的多余行，避免整部剧 DOM 灌爆 iPhone 记忆体
         }
         var _mpHp = null, _mpHf = null, _mpHt = null, _mpHc = null, _mpHd = null;
         function mpHpFmt(t) {
