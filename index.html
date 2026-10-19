@@ -282,7 +282,9 @@
 
         main { padding: calc(var(--header-height) + 12px) var(--container-padding) 12px; max-width: var(--max-width); margin: 0 auto; }
         #subtitles { display: block; position: relative; max-height: calc(100vh - 150px); overflow-y: auto; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; /* iOS 內框慣性滾動 */ }
-        
+        /* 滑窗虛擬化佔位條：裁掉上方行時把高度累積到 top-spacer、補回時扣掉，
+           讓總高度不變、scrollTop 完全不用動 → 視覺位置不跳、也不與 rAF 緩動搶寫 scrollTop（消除震動） */
+        .sub-spacer-top, .sub-spacer-bottom { display: block; width: 100%; height: 0; flex: none; pointer-events: none; }
         .row { display: block; margin: 3px 0; transition: opacity 0.2s ease; }
         .subtitle {
           background: #fff; padding: 8px 12px; border-radius: 8px;
@@ -1346,7 +1348,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </head>
 
 <body data-page-node-id="Vz3opl7ZLz83recg6PnmBc">
-    <div id="appVersion" aria-hidden="true">v4.3 · 10/19</div>
+    <div id="appVersion" aria-hidden="true">v4.5 · 10/19</div>
 
     <!-- 背景漂浮软糖与小亮片 -->
 
@@ -1912,7 +1914,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
 
         <script>
-    var LOANWORDS = {
+    var LOANWORDS = null; function _buildLoanwords() { return {
 "ア・カプリッチオ": "capriccio",
 "ア・カペラ": "cappella",
 "ア・テンポ": "tempo",
@@ -60647,7 +60649,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 "ネトネト": "gooey",
 "ペタペタ": "flop-flop",
 "ギュウギュウ": "packed tight"
-} ;;
+    }; }
+    function getLoanwords() { if (!LOANWORDS) LOANWORDS = _buildLoanwords(); return LOANWORDS; }
     </script>
     <script>
         // ==================== 核心状态 ====================
@@ -60775,13 +60778,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 const hasKanji = /[\u4e00-\u9faf]/.test(surface);
                 const hasJP = hasJapanese(surface);
                 // 整词合并：本 token 起向后拼接（最多 3 个相邻 token），命中外来语字典/覆寫時当整词显示英文
-                if (!hasKanji && typeof LOANWORDS !== 'undefined') {
+                if (!hasKanji) { const LW = getLoanwords();
                     let mergedKey = null, span = 0, acc = '', mergedEn = true;
                     for (let k = 0; k < 3 && i + k < tokens.length; k++) {
                         acc += tokens[i + k].surface_form;
                         const m = acc.normalize('NFKC');
                         if (userReadingOverrides && userReadingOverrides[m]) { mergedKey = m; span = k + 1; mergedEn = isKatakanaStr(m); break; }
-                        if (LOANWORDS[m]) { mergedKey = m; span = k + 1; mergedEn = true; break; }
+                        if (LW[m]) { mergedKey = m; span = k + 1; mergedEn = true; break; }
                         if (typeof READING_OVERRIDES !== 'undefined' && READING_OVERRIDES[m]) { mergedKey = m; span = k + 1; mergedEn = false; break; }
                     }
                     if (mergedKey) {
@@ -60789,7 +60792,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                         if (ov) {
                             html += wfWordRuby(mergedKey, ov, isKatakanaStr(mergedKey), true);
                         } else if (mergedEn) {
-                            html += wfWordRuby(mergedKey, LOANWORDS[mergedKey], true, false);
+                            html += wfWordRuby(mergedKey, LW[mergedKey], true, false);
                         } else {
                             html += wfWordRuby(mergedKey, READING_OVERRIDES[mergedKey], false, false);
                         }
@@ -61321,7 +61324,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 document.getElementById('subtitles').innerHTML = '';
                 document.getElementById('subtitles').scrollTop = 0; _feedGuard = 0;
                 document.getElementById('fileInfo').style.display = 'none';
-                AppState.processedSubtitles = []; AppState.filteredData = []; AppState.renderedCount = 0; SUB_WIN_START = 0; SUB_WIN_END = 0; subSpacerH = 0;
+                AppState.processedSubtitles = []; AppState.filteredData = []; AppState.renderedCount = 0; SUB_WIN_START = 0; SUB_WIN_END = 0;
                 AppState.notesData = {}; AppState.currentFileName = '';
                 updateNoteCount(); showGlobalStatus('已清空所有档案');
             } else { processAndDisplayData(); showGlobalStatus(`已恢复单一档案显示`); }
@@ -62581,11 +62584,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 自动滚动中标记：自动跟句（播放时）触发的程序化滚动会设 true，期间不要因「接近底部」而疯狂预载字幕，
         // 否则会在播放中把整部剧的 <ruby> DOM 一口氣灌进内存，造成瞬间尖峰把 iPhone 擠爆。
         var _autoScrolling = false;
+        // 自动滚动期间 markPlaying 仍会要求裁掉上方行（trimAbove）；若此时直接改 scrollTop 会与 rAF 缓动动画抢著写
+        // scrollTop → 字幕上下震动。故滚动中先把目标句记下来，等滚动真正结束（_endAutoScroll）再补裁。
+        var _pendingTrimIdx = null;
+        function _endAutoScroll() {
+            if (!_autoScrolling) return;
+            _autoScrolling = false;
+            if (_pendingTrimIdx != null) {
+                var _t = _pendingTrimIdx; _pendingTrimIdx = null;
+                try { trimAbove(_t); } catch (e2) { }
+            }
+        }
 
         // 音频 → 字幕：播放时把当下行标亮
         window.smoothScrollBox = function (box, top) {
             if (!box) return;
             top = Math.max(0, top);
+            // 修复震动：启动新一轮滚动前，先收尾上一轮（执行被 _pendingTrimIdx 延迟的 trimAbove），
+            // 避免 _pendingTrimIdx 被新值覆盖而遗漏，也避免两轮 rAF 的 scrollTop 写入时序错位
+            if (_autoScrolling) _endAutoScroll();
             // 全部浏览器/手机统一用手动 rAF 缓动滚动，不再依赖 scrollTo/scrollIntoView 的 smooth 选项
             // （旧 iOS Safari 及部分移动端 WebKit 会静默忽略带 smooth 选项的调用，导致「点数字不滚」）
             var start = box.scrollTop, dist = top - start, dur = 340, t0 = null;
@@ -62596,14 +62613,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var p = Math.min(1, (ts - t0) / dur);
                 var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
                 box.scrollTop = start + dist * e;
-                if (p < 1) requestAnimationFrame(step); else { _autoScrolling = false; }
+                if (p < 1) requestAnimationFrame(step); else { _endAutoScroll(); }
             }
             requestAnimationFrame(step);
-            // 安全兜底：万一动画被打断（如切到背景），2s 后强制解除标记
-            setTimeout(function () { _autoScrolling = false; }, dur + 1200);
+            // 安全兜底：动画正常会在 ~340ms 内结束（结束即 _endAutoScroll 解标记）；这里只在被异常打断时兜底，
+            // 超时设很短（dur+250≈590ms），避免 _autoScrolling 长期为真、与下一句 markPlaying 的 trimAbove 抢 scrollTop 造成字幕震动
+            setTimeout(_endAutoScroll, dur + 250);
         };
         window.smoothScrollWindow = function (top) {
             top = Math.max(0, top);
+            // 修复震动：启动新一轮整页滚动前，先收尾上一轮（同 smoothScrollBox）
+            if (_autoScrolling) _endAutoScroll();
             // 整页滚动也用 rAF 手动缓动，避开 iOS/移动端 WebKit 静默忽略 scrollTo smooth 的问题
             var start = window.scrollY || window.pageYOffset || 0, dist = top - start, dur = 340, t0 = null;
             if (Math.abs(dist) < 2) { window.scrollTo(0, top); return; }
@@ -62613,10 +62633,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var p = Math.min(1, (ts - t0) / dur);
                 var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
                 window.scrollTo(0, start + dist * e);
-                if (p < 1) requestAnimationFrame(step); else { _autoScrolling = false; }
+                if (p < 1) requestAnimationFrame(step); else { _endAutoScroll(); }
             }
             requestAnimationFrame(step);
-            setTimeout(function () { _autoScrolling = false; }, dur + 1200);
+            setTimeout(_endAutoScroll, dur + 250);
         };
         // 把某行滚进可视区：优先字幕框内滚；框不可滚（手机某些布局是整页滚）时退回整页滚。
         // 解决手机上「框内 scrollTop 没动、整页却在滚」导致自动跟句 / 点数字不滚的问题。
@@ -62637,6 +62657,36 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 }
             }
         };
+        // 修复震动：自动跟句专用的「最小滚动」策略。自动播放时逐句都强制居中（scrollRowToCenter）
+        // 会导致每一句都启动一段 340ms 的 rAF 缓动，而 timeupdate 每秒触发多次、连续短句时上一段缓动
+        // 尚未结束下一段又启动，delta 每次都基于「正在变动中的 scrollTop」重算 → 滚过头又拉回 → 持续前后拉扯（震动）。
+        // 此策略改为：仅当当前句即将/已经滚出可视区时才做一次性、非动画的「刚好滚进视野」滚动；
+        // 当前句仍在可视区内时完全不滚，让字幕自然地由用户或极少量滚动推进，从根上消除每句反复拉扯。
+        // centered=true 时仍居中（手动跳句/点数字/拖进度条用），否则只做最小量滚动（自动跟句用）。
+        window.scrollRowIntoView = function (row, box, centered) {
+            if (!row) return;
+            var bt = box.getBoundingClientRect();
+            var rt = row.getBoundingClientRect();
+            // 顶部留白（标头/控制列）与底部留白，作为「贴近边缘就滚动」的触发阈值
+            var topMargin = 40, bottomMargin = 48;
+            var outTop = rt.top < bt.top + topMargin;
+            var outBottom = rt.bottom > bt.bottom - bottomMargin;
+            if (centered) {
+                // 手动跳句：仍居中缓动（沿用原 scrollRowToCenter 逻辑）
+                var delta = (rt.top - bt.top) - (box.clientHeight - rt.height) / 2;
+                window.smoothScrollBox(box, box.scrollTop + delta);
+                return;
+            }
+            if (!outTop && !outBottom) return;   // 已在可视区内：不滚，避免每句反复拉扯
+            // 刚出可视区：做一次性「最小量」缓动，只滚到刚好可见的位置（不居中）
+            var targetTop;
+            if (outTop) {
+                targetTop = box.scrollTop - (bt.top + topMargin - rt.top);
+            } else {
+                targetTop = box.scrollTop + (rt.bottom - (bt.bottom - bottomMargin));
+            }
+            window.smoothScrollBox(box, Math.max(0, targetTop));
+        };
 
         function markPlaying(idx, forceScroll) {
             if (idx === lastPlayIdx && !forceScroll) return;
@@ -62656,30 +62706,29 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
             }
             if (!row) return;
-            trimAbove(idx);   // 播放推进时裁掉上方已滚出视窗的多余行，避免整部剧 DOM 灌爆 iPhone 记忆体
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
                 try {
                     var box = document.getElementById('subtitles');
-                    // 优先框内滚；框不可滚（手机整页滚）时自动退回整页滚，保证自动跟句在手机也生效
-                    window.scrollRowToCenter(row, box);
+                    if (box && box.scrollHeight > box.clientHeight + 4) {
+                        // 修复震动：自动跟句（forceScroll=false）改用最小滚动——仅当当前句滚出可视区才做一次性滚动，
+                        // 不再逐句强制居中 + rAF 缓动，从根上消除「每句都重新算 delta → 滚过头又拉回」的持续拉扯。
+                        // 手动跳句（forceScroll=true，点数字/拖进度条）仍居中缓动。
+                        window.scrollRowIntoView(row, box, !!forceScroll);
+                    } else {
+                        // 框不可滚（手机整页滚）：维持整页居中滚动的原逻辑
+                        var r = row.getBoundingClientRect();
+                        var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+                        if (r.top < 8 || r.bottom > vh - 8) {
+                            var target = (window.scrollY || window.pageYOffset || 0) + r.top - vh / 2 + r.height / 2;
+                            window.smoothScrollWindow(Math.max(0, target));
+                        }
+                    }
                 } catch (e) { }
             }
-        }
-        // 字幕是分批懶加載（初始 50 句，滑到底才續載）：從播放條跳到後段句、或點後段數字時，
-        // 目標 row 可能還沒進 DOM，markPlaying 會找不到 row 而「跳不到該句」。先補渲染直到該 row 出現（或全載完）。
-        function ensureRowRendered(idx) {
-            try {
-                var _box = document.getElementById('subtitles');
-                if (!_box) return;
-                var _g = 0;
-                while (_g < 600) {
-                    if (_box.querySelector('.row[data-index="' + idx + '"]')) return;
-                    if (AppState.renderedCount >= AppState.filteredData.length) return;
-                    renderNextBatch(); _g++;
-                }
-            } catch (e) { }
+            // trimAbove 裁行改採 spacer 佔位（不寫 scrollTop），可安全地在滾動期間執行，不再與 rAF 搶寫 scrollTop
+            trimAbove(idx);   // 播放推进时裁掉上方已滚出视窗的多余行，避免整部剧 DOM 灌爆 iPhone 记忆体
         }
         var _mpHp = null, _mpHf = null, _mpHt = null, _mpHc = null, _mpHd = null;
         function mpHpFmt(t) {
@@ -62959,7 +63008,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 // 手機開啟時彈出版本提示：讓使用者一眼確認是否讀到最新檔（避免 Safari 強快取讀到舊版卻以為是新版）
                 try {
                     if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches && typeof showGlobalStatus === 'function') {
-                        showGlobalStatus('小野字幕君 v4.2 已載入 ✅', 2200);
+                        showGlobalStatus('小野字幕君 v4.5 已載入 ✅', 2200);
                     }
                 } catch (e) { }
             }
@@ -63190,10 +63239,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
             // 重置渲染状态
             AppState.renderedCount = 0;
-            SUB_WIN_START = 0; SUB_WIN_END = 0; subSpacerH = 0;
+            SUB_WIN_START = 0; SUB_WIN_END = 0;
+            _resetSpacers();
             const container = document.getElementById('subtitles');
             container.innerHTML = ''; 
-            ensureSubSpacer();   // 预置顶部占位条（滑窗用，保持滚动位置不变）
 
             // 渲染第一批资料
             renderNextBatch();
@@ -63205,50 +63254,67 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }
         }
 
-        // ============ 字幕 DOM 滑窗（virtualization） ============
-        // 只保留「當前句 ± 緩衝」的少量行在 DOM，其餘用頂部占位條（#subSpacer）頂替高度、
-        // 保持滾動位置不變。這樣無論一集多少句，DOM 行數都被限制在 ~90 行以內，播放時不會因
-        // 整部劇字幕全灌進 DOM 而把 iPhone 記憶體擠爆（表現為「播放中跳回主頁、重新開始」）。
+        // ============ 字幕 DOM 滑窗（virtualization，無占位條） ============
+        // 只保留「當前句 ± 緩衝」的少量行在 DOM，其餘隨捲動裁掉／補回。
+        // 直接用 #subtitles 滾動盒子的 scrollTop 補償（刪上方行就扣 scrollTop、補上方行就加 scrollTop），
+        // 視覺位置不跳動，也不會留下擋視線的空白占位條。無論一集多少句，DOM 行數都被限制在 ~90 行以內，
+        // 播放或手動瀏覽長劇都不會因整部劇字幕全灌進 DOM 而把 iPhone 記憶體擠爆（表現為「無法開啟頁面」）。
         // 往回捲動複習時會自動把上面的行補回來。搜尋態下不啟用滑窗（維持原本行為）。
-        var SUB_SPACER = null;
-        var subSpacerH = 0;        // 頂部占位條當前高度（= 已被裁掉、位於視窗上方的行總高）
+        function subBox() { return document.getElementById('subtitles'); }
         var SUB_WIN_START = 0;     // 當前 DOM 中最小的 originalIndex
         var SUB_WIN_END = 0;       // 已向前渲染到的最大 originalIndex（不含）
         var SUB_KEEP_ABOVE = 60;   // 當前句上方最多保留的行數
         var SUB_KEEP_BELOW = 30;   // 當前句下方最多保留的行數
         var SUB_CHUNK = 50;        // 往回補載時每次補的行數
-        function ensureSubSpacer() {
-            var box = document.getElementById('subtitles');
-            if (!box) return null;
-            SUB_SPACER = box.querySelector('#subSpacer');
-            if (!SUB_SPACER) {
-                SUB_SPACER = document.createElement('div');
-                SUB_SPACER.id = 'subSpacer';
-                SUB_SPACER.setAttribute('aria-hidden', 'true');
-                SUB_SPACER.style.cssText = 'width:100%;height:' + subSpacerH + 'px;';
-                box.insertBefore(SUB_SPACER, box.firstChild);
-            }
-            SUB_SPACER.style.height = subSpacerH + 'px';
-            return SUB_SPACER;
+        // 佔位 spacer 累積高度（裁行→加高、補行→扣高），取代「改 scrollTop 補償」，從根上消除震動
+        var _topPad = 0;           // 已被裁掉的上方行總高（放在 .sub-spacer-top 上）
+        var _bottomPad = 0;        // 已被裁掉的下方行總高（放在 .sub-spacer-bottom 上）
+        function _topSpacer() {
+            var box = subBox(); if (!box) return null;
+            var el = box.querySelector('.sub-spacer-top');
+            if (!el) { el = document.createElement('div'); el.className = 'sub-spacer-top'; box.insertBefore(el, box.firstChild); }
+            return el;
         }
-        // 渲染 [from, to) 區間的行；prepend=true 時插到頂部占位條之後（往回補），否則接在最後（向前補）
+        function _bottomSpacer() {
+            var box = subBox(); if (!box) return null;
+            var el = box.querySelector('.sub-spacer-bottom');
+            if (!el) { el = document.createElement('div'); el.className = 'sub-spacer-bottom'; box.appendChild(el); }
+            return el;
+        }
+        function _applyPads() {
+            var ts = _topSpacer(); if (ts) ts.style.height = _topPad + 'px';
+            // bottom-spacer 目前未使用（只裁上方行），保留以備將來下方滑窗；僅在有高度時才建，避免 0 高空元素干擾 append
+            if (_bottomPad > 0) { var bs = _bottomSpacer(); if (bs) bs.style.height = _bottomPad + 'px'; }
+            else { var box = subBox(); if (box) { var _bs = box.querySelector('.sub-spacer-bottom'); if (_bs) _bs.parentNode.removeChild(_bs); } }
+        }
+        function _resetSpacers() {
+            _topPad = 0; _bottomPad = 0;
+            var box = subBox();
+            if (box) {
+                var ts = box.querySelector('.sub-spacer-top'); if (ts) ts.parentNode.removeChild(ts);
+                var bs = box.querySelector('.sub-spacer-bottom'); if (bs) bs.parentNode.removeChild(bs);
+            }
+        }
+        // 渲染 [from, to) 區間的行；prepend=true 時插到最前面（往回補），否則接在最後（向前補）
         function renderRange(from, to, prepend) {
             from = Math.max(0, from); to = Math.min(AppState.filteredData.length, to);
             if (to <= from) return;
-            var box = ensureSubSpacer(); if (!box) return;
+            var box = subBox(); if (!box) return;
             var items = AppState.filteredData.slice(from, to);
             var html = items.map(createSubtitleRowHTML).join('');
             if (prepend) {
-                SUB_SPACER.insertAdjacentHTML('afterend', html);
-                // 剛插入的行緊接占位條之後，量其總高後從占位條扣掉 → 滾動位置不變
+                var first = box.querySelector('.row');
+                if (first) first.insertAdjacentHTML('beforebegin', html);
+                else box.insertAdjacentHTML('beforeend', html);
+                // 量剛插入行的總高，從 top-spacer 扣除 → 總高度不變、scrollTop 不動，視覺位置自動保持
                 var ins = box.querySelectorAll('.row');
                 var addedH = 0;
                 for (var k = 0; k < ins.length; k++) {
                     var di = parseInt(ins[k].getAttribute('data-index'), 10);
-                    if (di >= from && di < to) addedH += ins[k].offsetHeight;
+                    if (di >= from && di < to) addedH += ins[k].getBoundingClientRect().height;
                 }
-                subSpacerH = Math.max(0, subSpacerH - addedH);
-                SUB_SPACER.style.height = subSpacerH + 'px';
+                _topPad = Math.max(0, _topPad - addedH);
+                _applyPads();
                 SUB_WIN_START = from;
             } else {
                 box.insertAdjacentHTML('beforeend', html);
@@ -63292,40 +63358,55 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 }
             } catch (e) { }
         }
-        // 裁掉「當前句上方、且已滾出視窗上方」的多餘行，把它們的高度併入頂部占位條
+        // 裁掉「當前句上方、且已滾出視窗上方」的多餘行；把高度累積到 top-spacer（總高不變、scrollTop 不動 → 不震動）
         function trimAbove(focusIdx) {
             if (AppState.searchActive) return;
-            var box = document.getElementById('subtitles'); if (!box || !SUB_SPACER) return;
+            var box = subBox(); if (!box) return;
             var lo = Math.max(0, focusIdx - SUB_KEEP_ABOVE);
             if (SUB_WIN_START >= lo) return;
             var viewTop = (box.scrollHeight > box.clientHeight + 4) ? box.getBoundingClientRect().top : 0;
             var rows = box.querySelectorAll('.row');
-            var removedH = 0, minIdx = Infinity;
+            var toRemove = [], minIdx = Infinity, removedH = 0;
             for (var i = 0; i < rows.length; i++) {
                 var idx = parseInt(rows[i].getAttribute('data-index'), 10);
                 if (idx < lo) {
                     var r = rows[i].getBoundingClientRect();
                     if (r.bottom < viewTop - 8) {           // 完全在視窗上方才刪，避免畫面跳動
                         try { var nb = rows[i].querySelector('.note-box'); if (nb) saveNote(nb); } catch (e2) { }
-                        removedH += rows[i].offsetHeight;
-                        box.removeChild(rows[i]);
+                        removedH += r.height;
+                        toRemove.push(rows[i]);
                     } else { if (idx < minIdx) minIdx = idx; }
-                } else { if (idx < minIdx) minIdx = idx; }
+                } else { if (idx < minIdx) minIdx = idx; break; }
             }
-            if (removedH > 0) {
-                subSpacerH += removedH;
-                SUB_SPACER.style.height = subSpacerH + 'px';
+            if (toRemove.length) {
+                for (var t = 0; t < toRemove.length; t++) box.removeChild(toRemove[t]);
+                // 佔位 spacer：把刪掉的高度加到 top-spacer，總高度不變 → scrollTop 完全不用動，視覺位置不跳、不與 rAF 搶寫
+                _topPad += removedH;
+                _applyPads();
+                if (minIdx !== Infinity && minIdx > SUB_WIN_START) SUB_WIN_START = minIdx;
             }
-            if (minIdx !== Infinity && minIdx > SUB_WIN_START) SUB_WIN_START = minIdx;
         }
-        // 往回捲動複習時，若已捲到頂部占位條邊緣，自動把上面的行補回來
+        // 手動瀏覽時：以視窗內最上面那行為基準，把上方行裁掉，保持 DOM 有界（播放與手動瀏覽都適用）
+        function trimOffscreenTop() {
+            if (AppState.searchActive) return;
+            var box = subBox(); if (!box) return;
+            var rows = box.querySelectorAll('.row');
+            if (!rows.length) return;
+            var viewTop = (box.scrollHeight > box.clientHeight + 4) ? box.getBoundingClientRect().top : 0;
+            var topIdx = Infinity;
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i].getBoundingClientRect();
+                if (r.bottom >= viewTop - 8) { topIdx = parseInt(rows[i].getAttribute('data-index'), 10); break; }
+            }
+            if (topIdx === Infinity) return;
+            trimAbove(topIdx + SUB_KEEP_ABOVE);
+        }
+        // 往回捲動複習時，若已捲到頂部邊緣，自動把上面的行補回來
         function maybeUnTrim() {
             if (AppState.searchActive) return;
-            if (subSpacerH <= 0 || SUB_WIN_START <= 0 || !SUB_SPACER) return;
-            var box = document.getElementById('subtitles'); if (!box) return;
-            var sRect = SUB_SPACER.getBoundingClientRect();
-            var viewTop = (box.scrollHeight > box.clientHeight + 4) ? box.getBoundingClientRect().top : 0;
-            if (sRect.bottom > viewTop - 4) {
+            var box = subBox(); if (!box) return;
+            if (SUB_WIN_START <= 0) return;
+            if (box.scrollTop < 120) {
                 renderRange(Math.max(0, SUB_WIN_START - SUB_CHUNK), SUB_WIN_START, true);
             }
         }
@@ -63340,7 +63421,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const chunkSize = 50; // 每次触底加载的句数
             const nextBatch = AppState.filteredData.slice(AppState.renderedCount, AppState.renderedCount + chunkSize);
             
-            const container = ensureSubSpacer();
+            const container = subBox();
             if (container) container.insertAdjacentHTML('beforeend', nextBatch.map(createSubtitleRowHTML).join(''));
             
             // 针对刚加载进来有内容的笔记框进行高度计算（取最後 nextBatch.length 個 .row）
@@ -63375,12 +63456,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             _box.addEventListener('scroll', function () {
                 if (_autoScrolling) return;   // 自动跟句滚动中：跳过，避免边滚边无限预载
                 if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
-                maybeUnTrim();   // 往回捲到頂部占位條邊緣時，自動把上面的行補回來
+                maybeUnTrim();      // 往回捲到頂部邊緣時，自動把上面的行補回來
+                trimOffscreenTop(); // 手動瀏覽：把視窗上方的行裁掉，保持 DOM 有界
             }, { passive: true });
-            // 手機是整頁滾動（框本身不可滾）：用 window 滾動事件接手「往回補載」
+            // 手機若為整頁滾動（框本身不可滾），用 window 滾動事件接手
             window.addEventListener('scroll', function () {
                 if (_autoScrolling) return;
                 maybeUnTrim();
+                trimOffscreenTop();
             }, { passive: true });
         })();
 
@@ -63991,7 +64074,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           sentence: opts.sentence || '',
           index: (opts.index != null && opts.index !== '') ? opts.index : null,
           texts: [],
-          loan: (typeof LOANWORDS !== 'undefined' && LOANWORDS[word]) ? LOANWORDS[word] : ''
+          loan: (getLoanwords()[word] || '')
         };
         var panel = dpEl('dictPanel');
         if (!panel) { showGlobalStatus('查詞面板還沒準備好，重整一下頁面试试 ♪'); return; }
