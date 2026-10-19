@@ -1346,7 +1346,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </head>
 
 <body data-page-node-id="Vz3opl7ZLz83recg6PnmBc">
-    <div id="appVersion" aria-hidden="true">v4.2 · 10/19</div>
+    <div id="appVersion" aria-hidden="true">v4.3 · 10/19</div>
 
     <!-- 背景漂浮软糖与小亮片 -->
 
@@ -61321,7 +61321,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 document.getElementById('subtitles').innerHTML = '';
                 document.getElementById('subtitles').scrollTop = 0; _feedGuard = 0;
                 document.getElementById('fileInfo').style.display = 'none';
-                AppState.processedSubtitles = []; AppState.filteredData = []; AppState.renderedCount = 0;
+                AppState.processedSubtitles = []; AppState.filteredData = []; AppState.renderedCount = 0; SUB_WIN_START = 0; SUB_WIN_END = 0; subSpacerH = 0;
                 AppState.notesData = {}; AppState.currentFileName = '';
                 updateNoteCount(); showGlobalStatus('已清空所有档案');
             } else { processAndDisplayData(); showGlobalStatus(`已恢复单一档案显示`); }
@@ -62656,6 +62656,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
             }
             if (!row) return;
+            trimAbove(idx);   // 播放推进时裁掉上方已滚出视窗的多余行，避免整部剧 DOM 灌爆 iPhone 记忆体
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
@@ -63189,8 +63190,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
             // 重置渲染状态
             AppState.renderedCount = 0;
+            SUB_WIN_START = 0; SUB_WIN_END = 0; subSpacerH = 0;
             const container = document.getElementById('subtitles');
             container.innerHTML = ''; 
+            ensureSubSpacer();   // 预置顶部占位条（滑窗用，保持滚动位置不变）
 
             // 渲染第一批资料
             renderNextBatch();
@@ -63202,19 +63205,154 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }
         }
 
+        // ============ 字幕 DOM 滑窗（virtualization） ============
+        // 只保留「當前句 ± 緩衝」的少量行在 DOM，其餘用頂部占位條（#subSpacer）頂替高度、
+        // 保持滾動位置不變。這樣無論一集多少句，DOM 行數都被限制在 ~90 行以內，播放時不會因
+        // 整部劇字幕全灌進 DOM 而把 iPhone 記憶體擠爆（表現為「播放中跳回主頁、重新開始」）。
+        // 往回捲動複習時會自動把上面的行補回來。搜尋態下不啟用滑窗（維持原本行為）。
+        var SUB_SPACER = null;
+        var subSpacerH = 0;        // 頂部占位條當前高度（= 已被裁掉、位於視窗上方的行總高）
+        var SUB_WIN_START = 0;     // 當前 DOM 中最小的 originalIndex
+        var SUB_WIN_END = 0;       // 已向前渲染到的最大 originalIndex（不含）
+        var SUB_KEEP_ABOVE = 60;   // 當前句上方最多保留的行數
+        var SUB_KEEP_BELOW = 30;   // 當前句下方最多保留的行數
+        var SUB_CHUNK = 50;        // 往回補載時每次補的行數
+        function ensureSubSpacer() {
+            var box = document.getElementById('subtitles');
+            if (!box) return null;
+            SUB_SPACER = box.querySelector('#subSpacer');
+            if (!SUB_SPACER) {
+                SUB_SPACER = document.createElement('div');
+                SUB_SPACER.id = 'subSpacer';
+                SUB_SPACER.setAttribute('aria-hidden', 'true');
+                SUB_SPACER.style.cssText = 'width:100%;height:' + subSpacerH + 'px;';
+                box.insertBefore(SUB_SPACER, box.firstChild);
+            }
+            SUB_SPACER.style.height = subSpacerH + 'px';
+            return SUB_SPACER;
+        }
+        // 渲染 [from, to) 區間的行；prepend=true 時插到頂部占位條之後（往回補），否則接在最後（向前補）
+        function renderRange(from, to, prepend) {
+            from = Math.max(0, from); to = Math.min(AppState.filteredData.length, to);
+            if (to <= from) return;
+            var box = ensureSubSpacer(); if (!box) return;
+            var items = AppState.filteredData.slice(from, to);
+            var html = items.map(createSubtitleRowHTML).join('');
+            if (prepend) {
+                SUB_SPACER.insertAdjacentHTML('afterend', html);
+                // 剛插入的行緊接占位條之後，量其總高後從占位條扣掉 → 滾動位置不變
+                var ins = box.querySelectorAll('.row');
+                var addedH = 0;
+                for (var k = 0; k < ins.length; k++) {
+                    var di = parseInt(ins[k].getAttribute('data-index'), 10);
+                    if (di >= from && di < to) addedH += ins[k].offsetHeight;
+                }
+                subSpacerH = Math.max(0, subSpacerH - addedH);
+                SUB_SPACER.style.height = subSpacerH + 'px';
+                SUB_WIN_START = from;
+            } else {
+                box.insertAdjacentHTML('beforeend', html);
+                SUB_WIN_END = to;
+                AppState.renderedCount = to;
+            }
+            // 新行筆記框對齊
+            if (AppState.notesVisible) {
+                var newRows = box.querySelectorAll('.row');
+                var startK = prepend ? 0 : Math.max(0, newRows.length - (to - from));
+                for (var j = startK; j < newRows.length; j++) {
+                    var nb = newRows[j].querySelector('.note-box'); if (nb) autoResizeTextarea(nb);
+                }
+            }
+        }
+        // 播放／跳句時：確保目標句所在的視窗 [idx-60, idx+30) 已在 DOM（不足就向前或往回補）
+        function ensureRowRendered(idx) {
+            try {
+                if (AppState.searchActive) {
+                    // 搜尋態：維持原本的「從頭向前補到 idx」行為
+                    var _box = document.getElementById('subtitles'); if (!_box) return;
+                    var _g = 0;
+                    while (_g < 600) {
+                        if (_box.querySelector('.row[data-index="' + idx + '"]')) return;
+                        if (AppState.renderedCount >= AppState.filteredData.length) return;
+                        renderNextBatch(); _g++;
+                    }
+                    return;
+                }
+                var box = document.getElementById('subtitles'); if (!box) return;
+                if (box.querySelector('.row[data-index="' + idx + '"]')) return;
+                var N = AppState.filteredData.length;
+                var a = Math.max(0, idx - SUB_KEEP_ABOVE);
+                var b = Math.min(N, idx + SUB_KEEP_BELOW);
+                if (idx >= SUB_WIN_END) renderRange(SUB_WIN_END, b, false);        // 向前補
+                else if (idx < SUB_WIN_START) renderRange(a, SUB_WIN_START, true);  // 往回補
+                // 視窗內但有缺口（一般不會發生，因視窗連續）則雙向補齊
+                if (!box.querySelector('.row[data-index="' + idx + '"]')) {
+                    if (SUB_WIN_END < b) renderRange(SUB_WIN_END, b, false);
+                    if (SUB_WIN_START > a) renderRange(a, SUB_WIN_START, true);
+                }
+            } catch (e) { }
+        }
+        // 裁掉「當前句上方、且已滾出視窗上方」的多餘行，把它們的高度併入頂部占位條
+        function trimAbove(focusIdx) {
+            if (AppState.searchActive) return;
+            var box = document.getElementById('subtitles'); if (!box || !SUB_SPACER) return;
+            var lo = Math.max(0, focusIdx - SUB_KEEP_ABOVE);
+            if (SUB_WIN_START >= lo) return;
+            var viewTop = (box.scrollHeight > box.clientHeight + 4) ? box.getBoundingClientRect().top : 0;
+            var rows = box.querySelectorAll('.row');
+            var removedH = 0, minIdx = Infinity;
+            for (var i = 0; i < rows.length; i++) {
+                var idx = parseInt(rows[i].getAttribute('data-index'), 10);
+                if (idx < lo) {
+                    var r = rows[i].getBoundingClientRect();
+                    if (r.bottom < viewTop - 8) {           // 完全在視窗上方才刪，避免畫面跳動
+                        try { var nb = rows[i].querySelector('.note-box'); if (nb) saveNote(nb); } catch (e2) { }
+                        removedH += rows[i].offsetHeight;
+                        box.removeChild(rows[i]);
+                    } else { if (idx < minIdx) minIdx = idx; }
+                } else { if (idx < minIdx) minIdx = idx; }
+            }
+            if (removedH > 0) {
+                subSpacerH += removedH;
+                SUB_SPACER.style.height = subSpacerH + 'px';
+            }
+            if (minIdx !== Infinity && minIdx > SUB_WIN_START) SUB_WIN_START = minIdx;
+        }
+        // 往回捲動複習時，若已捲到頂部占位條邊緣，自動把上面的行補回來
+        function maybeUnTrim() {
+            if (AppState.searchActive) return;
+            if (subSpacerH <= 0 || SUB_WIN_START <= 0 || !SUB_SPACER) return;
+            var box = document.getElementById('subtitles'); if (!box) return;
+            var sRect = SUB_SPACER.getBoundingClientRect();
+            var viewTop = (box.scrollHeight > box.clientHeight + 4) ? box.getBoundingClientRect().top : 0;
+            if (sRect.bottom > viewTop - 4) {
+                renderRange(Math.max(0, SUB_WIN_START - SUB_CHUNK), SUB_WIN_START, true);
+            }
+        }
+
         function renderNextBatch() {
             if (AppState.renderedCount >= AppState.filteredData.length) return; // 已全部渲染完毕
+
+            // windowing 模式下，播放自動跟句進行中（_autoScrolling）時不在此處 append：
+            // 改由 ensureRowRendered 精確控制向前補、trimAbove 裁上方，避免下方無限累積把 iPhone 記憶體灌爆
+            if (!AppState.searchActive && _autoScrolling) return;
 
             const chunkSize = 50; // 每次触底加载的句数
             const nextBatch = AppState.filteredData.slice(AppState.renderedCount, AppState.renderedCount + chunkSize);
             
-            const container = document.getElementById('subtitles');
-            container.insertAdjacentHTML('beforeend', nextBatch.map(createSubtitleRowHTML).join(''));
+            const container = ensureSubSpacer();
+            if (container) container.insertAdjacentHTML('beforeend', nextBatch.map(createSubtitleRowHTML).join(''));
             
-            // 针对刚加载进来有内容的笔记框进行高度计算
-            container.querySelectorAll(`.row:nth-child(n+${AppState.renderedCount + 1}) .note-box`).forEach(autoResizeTextarea);
+            // 针对刚加载进来有内容的笔记框进行高度计算（取最後 nextBatch.length 個 .row）
+            if (AppState.notesVisible && container) {
+                var all = container.querySelectorAll('.row');
+                for (var k = Math.max(0, all.length - nextBatch.length); k < all.length; k++) {
+                    var nb = all[k].querySelector('.note-box'); if (nb) autoResizeTextarea(nb);
+                }
+            }
             
             AppState.renderedCount += nextBatch.length;
+            SUB_WIN_END = AppState.renderedCount;
             // 字幕改成框內滾動後，整頁滾動不再能帶出新的批次，所以在框底接力補載
             // （自動跟句的程序化滾動進行中時不接力——否則播放中會把整部劇的 DOM 一次灌進來）
             if (!_autoScrolling) setTimeout(feedSubtitlesIfNearBottom, 0);
@@ -63237,6 +63375,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             _box.addEventListener('scroll', function () {
                 if (_autoScrolling) return;   // 自动跟句滚动中：跳过，避免边滚边无限预载
                 if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
+                maybeUnTrim();   // 往回捲到頂部占位條邊緣時，自動把上面的行補回來
+            }, { passive: true });
+            // 手機是整頁滾動（框本身不可滾）：用 window 滾動事件接手「往回補載」
+            window.addEventListener('scroll', function () {
+                if (_autoScrolling) return;
+                maybeUnTrim();
             }, { passive: true });
         })();
 
