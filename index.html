@@ -379,6 +379,8 @@
           .subtitle.note-open .note-area { display: flex; }
           .note-container { width: 100%; flex: none; }
           .note-box { width: 100%; min-height: 18px; max-height: 70px; overflow-y: auto !important; }
+          .es-chip-row { flex-wrap: nowrap; gap: 6px; }
+          .es-chips .chip { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: 11.5px; }
         }
         
         @media (max-width: 600px) {
@@ -1439,19 +1441,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div class="settings-body">
         <div class="settings-row">
           <span class="settings-label">📝 笔记内容</span>
-          <label class="settings-switch"><input type="checkbox" id="swNotes"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
+          <label class="settings-switch"><input type="checkbox" id="swNotes" checked><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
           <span class="settings-label">🌐 双语阅读</span>
-          <label class="settings-switch"><input type="checkbox" id="swBilingual"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
+          <label class="settings-switch"><input type="checkbox" id="swBilingual" checked><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
           <span class="settings-label"><span class="sl-emoji">🔤</span><span class="sl-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></svg></span>假名注音</span>
-          <label class="settings-switch"><input type="checkbox" id="swFurigana"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
+          <label class="settings-switch"><input type="checkbox" id="swFurigana" checked><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-row">
           <span class="settings-label">📖 wiki词典</span>
-          <label class="settings-switch"><input type="checkbox" id="swDict"><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
+          <label class="settings-switch"><input type="checkbox" id="swDict" checked><span class="settings-slider"><span class="ss-on">ON</span><span class="ss-off">OFF</span></span></label>
         </div>
         <div class="settings-sep"></div>
         <button type="button" class="settings-action" id="sdVocabBookBtn"><span class="sa-ico">📚</span>生词本</button>
@@ -3868,9 +3870,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         };
 
         function markPlaying(idx, forceScroll) {
-            if (idx === lastPlayIdx && !forceScroll) return;
             var mk = medEl();
-            // 播放器暂停又刚好落在句与句的中间缝隙：不要清掉亮框又不补上，否则整片字幕会熄掉
+            var row = idx >= 0
+                ? document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle')
+                : null;
+            // 先确认目标行存在，再更新 lastPlayIdx；否则懒加载行缺失时会被永久短路。
+            if (idx >= 0 && !row) return;
+            if (idx === lastPlayIdx && !forceScroll) return;
+            // 暂停时若时间刚好落在两句之间，保留上一句高亮。
             var keep = (idx < 0 && mk && mk.paused);
             if (!keep) {
                 var old = document.querySelectorAll('#subtitles .subtitle.is-playing');
@@ -3878,14 +3885,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }
             lastPlayIdx = idx;
             if (idx < 0) return;
-            var row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
-            if (!row) return;
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
                 try {
                     var box = document.getElementById('subtitles');
-                    // 优先框内滚；框不可滚（手机整页滚）时自动退回整页滚，保证自动跟句在手机也生效
                     window.scrollRowToCenter(row, box);
                 } catch (e) { }
             }
@@ -4000,8 +4004,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var e0 = subSec(list[i].endTime);
                 if (t >= s0 - 0.05 && (e0 < 0 || t <= e0 + 0.05)) { found = i; break; }
             }
+            if (found >= 0) {
+                // 自然播放也可能走到尚未进入 DOM 的懒加载字幕（初始只渲染 50 句）。
+                var _subBox = document.getElementById('subtitles');
+                if (_subBox && !_subBox.querySelector('.row[data-index="' + found + '"]')) {
+                    ensureRowRendered(found);
+                }
+            }
             markPlaying(found);
         }
+        // iPhone 从微信切回页面或 Safari 恢复前台时，按真实 currentTime 立即重新对齐。
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) { try { mediaTick(); } catch (e) { } }
+        });
+        window.addEventListener('pageshow', function () {
+            try { mediaTick(); } catch (e) { }
+        });
         var _mpDelayShown = null;
         function mpDelaySync(quiet) {
             var v = MP.audioDelaySec;
@@ -4026,6 +4044,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var v = medEl();
             if (v) {
                 v.addEventListener('timeupdate', mediaTick);
+                // iOS Safari / 微信 WebView：播放、跳转、元数据就绪时也立即同步。
+                v.addEventListener('play', mediaTick);
+                v.addEventListener('playing', mediaTick);
+                v.addEventListener('seeked', mediaTick);
+                v.addEventListener('loadedmetadata', mediaTick);
                 v.addEventListener('timeupdate', mpHeaderProgSync);
                 v.addEventListener('loadedmetadata', mpHeaderProgSync);
                 v.addEventListener('play', mpHeaderProgSync);
@@ -4201,6 +4224,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var sd = document.getElementById('swDict');
                 if (sd) sd.checked = !!AppState.dictEnabled;
               }
+              syncSwitches();   // 初始同步一次：大屏時開關已搬進左欄、抽屜不開，也要先反映真實狀態
               function openSettings() { syncSwitches(); drawer.classList.add('open'); backdrop.classList.add('show'); }
               function closeSettings() { drawer.classList.remove('open'); backdrop.classList.remove('show'); }
               document.getElementById('settingsBtn').addEventListener('click', openSettings);
