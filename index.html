@@ -1356,7 +1356,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </head>
 
 <body data-page-node-id="Vz3opl7ZLz83recg6PnmBc">
-    <div id="appVersion" aria-hidden="true">v4.0 · 10/19</div>
+    <div id="appVersion" aria-hidden="true">v4.1 · 10/19</div>
 
     <!-- 背景漂浮软糖与小亮片 -->
 
@@ -4085,30 +4085,36 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 v.addEventListener('error', function () { if (errLocked()) return; medStatus('⚠ 这个档案读不到（可能是网页不是媒体档，或连结失效）。', 'bad'); });
 
                 // ==================== 小屏底部播放栏（≤900px：上一句／播放／下一句 + 进度条） ====================
+                var __mpbInited = false;
                 function __mpbInit() {
-                    var bar = document.getElementById('mPlayerBar'); if (!bar) return;
+                    if (__mpbInited) return;
+                    var bar = document.getElementById('mPlayerBar');
+                    if (!bar) {
+                        // 極少見的時序：DOM 還沒解析到 #mPlayerBar。loading 階段交給 DOMContentLoaded 再跑；
+                        // 非 loading 階段則下一幀重試一次，避免「按鈕永遠沒綁上事件 → 點了完全沒反應」。
+                        if (document.readyState !== 'loading') setTimeout(__mpbInit, 0);
+                        return;
+                    }
+                    __mpbInited = true;
                     var v = medEl(); if (!v) return;
                     var track = document.getElementById('mpbTrack'), fill = document.getElementById('mpbFill');
                     var curEl = document.getElementById('mpbCur'), durEl = document.getElementById('mpbDur');
                     var icoPlay = document.getElementById('mpbIcoPlay'), icoPause = document.getElementById('mpbIcoPause');
                     function fmt(t) { t = Math.max(0, t || 0); var m = Math.floor(t / 60), s = Math.floor(t % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
                     function subsVisible() { var sub = document.getElementById('subtitles'); return !!(sub && sub.style.display !== 'none' && !sub.hidden); }
-                    // 小屏控制鈕：同時綁定 touchend 與 click，並用 done 旗標防止「輕觸→touchend+click 各觸發一次」造成連續切換（看起來像沒反應）。
-                    // 這能解決 iOS Safari 上 click 偶爾不派發、導致底部播放鈕按了沒反應的問題。
+                    // 小屏控制鈕：用與「大屏播放鍵」完全相同、已被證明可用的綁定（click 為主，touchend 為備援，時間戳防重複）。
+                    // 不呼叫 preventDefault，保留 iOS 的使用者手勢 token，確保 v.play() 不會被 NotAllowedError 拒絕。
                     function bindTap(el, fn) {
                         if (!el) return;
-                        var done = false;
-                        el.addEventListener('touchend', function (e) {
-                            // 注意：不要在這裡 preventDefault —— iOS Safari 會因此把這次觸控從「使用者手勢」剔除，
-                            // 導致隨後的 v.play() 被瀏覽器以 NotAllowedError 拒絕（靜默 catch 後看起來就像「按了沒反應、播不了」）。
-                            // 改用 done 旗標擋掉隨之而來的 click，避免 touchend+click 各觸發一次造成連切。
-                            done = true; setTimeout(function () { done = false; }, 600);
+                        var last = 0;
+                        function go(e) {
+                            var n = Date.now();
+                            if (n - last < 500) return; // 同一個輕觸的 touchend+click 只執行一次
+                            last = n;
                             fn(e);
-                        });
-                        el.addEventListener('click', function (e) {
-                            if (done) { done = false; return; }
-                            fn(e);
-                        });
+                        }
+                        el.addEventListener('click', go);
+                        el.addEventListener('touchend', function (e) { go(e); });
                     }
                     function syncShow() {
                         // 底部欄在 ≤900px 由 CSS 媒體查詢直接顯示；這裡只在「開啟內嵌視圖（字幕被隱藏）或無字幕資料」時隱藏它
@@ -4183,6 +4189,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 // 播放欄會變成只靠 CSS 顯示出來、按了卻毫無反應的擺設。故等 DOM 解析完再初始化。
                 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', __mpbInit); }
                 else { __mpbInit(); }
+                // 手機開啟時彈出版本提示：讓使用者一眼確認是否讀到最新檔（避免 Safari 強快取讀到舊版卻以為是新版）
+                try {
+                    if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches && typeof showGlobalStatus === 'function') {
+                        showGlobalStatus('小野字幕君 v4.1 已載入 ✅', 2200);
+                    }
+                } catch (e) { }
             }
             // 播放器下方控制列：速度 / 音讯偏移（负=字幕提前、正=字幕延后）
             // 头部 🎵 音钮的红点还是要照著真实播放状态跑（play / pause / ended）
