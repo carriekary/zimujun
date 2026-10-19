@@ -60686,6 +60686,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         ];
         // 词典来源：jsDelivr gcore 镜像优先(国内通常可达+长快取，首次快) → 本机(github) → 其他镜像
         // 词典来源：本机(github 同源) 优先(已随仓库上传，最快最稳) → jsDelivr 多镜像备援
+        // 是否 iOS（含 iPadOS）：用以在 iOS 上改變注音字典的載入策略（避免與音頻解碼疊加擠爆記憶體）
+        var IS_IOS = (function () {
+            var ua = navigator.userAgent || '';
+            var p = navigator.platform || '';
+            return /iPad|iPhone|iPod/.test(ua) || (p === 'MacIntel' && navigator.maxTouchPoints > 1);
+        })();
+
         const KURO_DICT_SOURCES = [
             "kuromoji/dict",
             "https://gcore.jsdelivr.net/npm/kuromoji@0.1.2/dict",
@@ -60815,6 +60822,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
         async function initKuromoji() {
             if (kuroLoading) return kuroLoading;
+            // iOS：播放音頻時不載入約 20MB 的注音字典，否則與音頻解碼疊加會把 WebContent 擠爆
+            // （表現為「無法開啟頁面」）。播放中若被觸發，則每 2.5s 檢查一次，暫停後才真正載。
+            if (IS_IOS && MP && MP.started) {
+                if (!window.__kuroRetry) {
+                    window.__kuroRetry = true;
+                    var _kc = setInterval(function () { if (!(MP && MP.started)) { clearInterval(_kc); window.__kuroRetry = false; try { initKuromoji(); } catch (e) { } } }, 2500);
+                }
+                return;
+            }
             kuroLoading = (async () => {
                 try {
                     await loadScriptFallback(KURO_SCRIPT_SOURCES);
@@ -60844,8 +60860,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 注音引擎推遲到「整頁載入完成（window.load）」之後才去抓字典：先讓頁面渲染、可操作，
         // 再背景載入。這能避免開頁瞬間同時扛住「3.2MB 頁面 + 8MB 注音字典」導致 iPhone 的 WebContent
         // 被系統殺掉（表現為 Safari 「無法開啟頁面」）。字典就緒後會自行為已載入的字幕補生成注音。
+        // —— 但 iOS 上「不」自動載入：注音字典解壓後約 20MB，若與音頻解碼同時在記憶體裡會擠爆 iPhone。
+        //    iOS 改為「用到才載」：使用者點一下「顯示注音／隱藏注音」時才載；播放中會延後到暫停後（見上方防護）。
         function __scheduleKuromoji() {
             if (typeof initKuromoji !== 'function') return;
+            if (IS_IOS) return;   // iOS：交給注音開關的按需載入，避免與音頻疊加
             if (document.readyState === 'complete') { try { initKuromoji(); } catch (e) { } }
             else { window.addEventListener('load', function () { setTimeout(function () { try { initKuromoji(); } catch (e) { } }, 400); }); }
         }
@@ -62559,6 +62578,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var _pp = v.play(); if (_pp && _pp.catch) _pp.catch(function () { });
             } catch (e) { }
         };
+        // 自动滚动中标记：自动跟句（播放时）触发的程序化滚动会设 true，期间不要因「接近底部」而疯狂预载字幕，
+        // 否则会在播放中把整部剧的 <ruby> DOM 一口氣灌进内存，造成瞬间尖峰把 iPhone 擠爆。
+        var _autoScrolling = false;
+
         // 音频 → 字幕：播放时把当下行标亮
         window.smoothScrollBox = function (box, top) {
             if (!box) return;
@@ -62567,28 +62590,33 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             // （旧 iOS Safari 及部分移动端 WebKit 会静默忽略带 smooth 选项的调用，导致「点数字不滚」）
             var start = box.scrollTop, dist = top - start, dur = 340, t0 = null;
             if (Math.abs(dist) < 2) { box.scrollTop = top; return; }
+            _autoScrolling = true;
             function step(ts) {
                 if (t0 === null) t0 = ts;
                 var p = Math.min(1, (ts - t0) / dur);
                 var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
                 box.scrollTop = start + dist * e;
-                if (p < 1) requestAnimationFrame(step);
+                if (p < 1) requestAnimationFrame(step); else { _autoScrolling = false; }
             }
             requestAnimationFrame(step);
+            // 安全兜底：万一动画被打断（如切到背景），2s 后强制解除标记
+            setTimeout(function () { _autoScrolling = false; }, dur + 1200);
         };
         window.smoothScrollWindow = function (top) {
             top = Math.max(0, top);
             // 整页滚动也用 rAF 手动缓动，避开 iOS/移动端 WebKit 静默忽略 scrollTo smooth 的问题
             var start = window.scrollY || window.pageYOffset || 0, dist = top - start, dur = 340, t0 = null;
             if (Math.abs(dist) < 2) { window.scrollTo(0, top); return; }
+            _autoScrolling = true;
             function step(ts) {
                 if (t0 === null) t0 = ts;
                 var p = Math.min(1, (ts - t0) / dur);
                 var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
                 window.scrollTo(0, start + dist * e);
-                if (p < 1) requestAnimationFrame(step);
+                if (p < 1) requestAnimationFrame(step); else { _autoScrolling = false; }
             }
             requestAnimationFrame(step);
+            setTimeout(function () { _autoScrolling = false; }, dur + 1200);
         };
         // 把某行滚进可视区：优先字幕框内滚；框不可滚（手机某些布局是整页滚）时退回整页滚。
         // 解决手机上「框内 scrollTop 没动、整页却在滚」导致自动跟句 / 点数字不滚的问题。
@@ -62622,6 +62650,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             lastPlayIdx = idx;
             if (idx < 0) return;
             var row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
+            if (!row) {
+                // 目标句尚未渲染进 DOM（懒加载）：只补载到该句为止，不要一次灌整部剧
+                ensureRowRendered(idx);
+                row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
+            }
             if (!row) return;
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
@@ -62925,7 +62958,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 // 手機開啟時彈出版本提示：讓使用者一眼確認是否讀到最新檔（避免 Safari 強快取讀到舊版卻以為是新版）
                 try {
                     if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches && typeof showGlobalStatus === 'function') {
-                        showGlobalStatus('小野字幕君 v4.1 已載入 ✅', 2200);
+                        showGlobalStatus('小野字幕君 v4.2 已載入 ✅', 2200);
                     }
                 } catch (e) { }
             }
@@ -63183,10 +63216,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             
             AppState.renderedCount += nextBatch.length;
             // 字幕改成框內滾動後，整頁滾動不再能帶出新的批次，所以在框底接力補載
-            setTimeout(feedSubtitlesIfNearBottom, 0);
+            // （自動跟句的程序化滾動進行中時不接力——否則播放中會把整部劇的 DOM 一次灌進來）
+            if (!_autoScrolling) setTimeout(feedSubtitlesIfNearBottom, 0);
         }
         var _feedGuard = 0;
         function feedSubtitlesIfNearBottom() {
+            if (_autoScrolling) return;   // 自动跟句滚动中：不要因接近底部而疯狂预载
             var _box = document.getElementById('subtitles');
             if (!_box || _feedGuard > 40) return;
             if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 500) {
@@ -63200,13 +63235,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var _box = document.getElementById('subtitles');
             if (!_box) return;
             _box.addEventListener('scroll', function () {
+                if (_autoScrolling) return;   // 自动跟句滚动中：跳过，避免边滚边无限预载
                 if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
             }, { passive: true });
         })();
 
         // 建立無限滾動觸發器 (Intersection Observer)
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
+            if (!_autoScrolling && entries[0].isIntersecting) {
                 renderNextBatch();
             }
         }, { rootMargin: '400px' }); // 距离底部还有 400px 时就提早加载，做到无缝滑动
@@ -63502,6 +63538,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           document.body.classList.toggle('hide-furigana', !AppState.furiganaEnabled);
           // 显示注音时，若部分行生成已完成却还没刷进 DOM（如生成途中滚到的新行），立即补刷
           if (AppState.furiganaEnabled) refillFuriganaDOM();
+          // iOS：注音字典改為「用到才載」——首次點開注音時觸發載入（播放中則延後到暫停後，見 initKuromoji 防護）
+          if (IS_IOS && AppState.furiganaEnabled) { try { initKuromoji(); } catch (e) { } }
           document.querySelectorAll('.note-box').forEach(autoResizeTextarea);
         });
 
