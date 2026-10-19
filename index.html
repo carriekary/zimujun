@@ -402,6 +402,13 @@
           .action-group { gap: 4px; }
           .action-group .bilingual-btn, .action-group .toggle-notes-btn { font-size: 10.5px; padding: 6px 1px; letter-spacing: -0.2px; }
         }
+        /* 版本標記（手機右上角，桌機隱藏）：用來一眼確認是否讀到最新檔案，避免 iPhone Safari 強快取讀到舊版。
+           確認讀到新版後可隨時請助理拿掉。 */
+        #appVersion { position: fixed; top: 3px; right: 6px; z-index: 99999;
+          font-size: 9.5px; font-family: ui-monospace, "SF Mono", Consolas, monospace;
+          color: rgba(60, 53, 48, .42); font-weight: 700; letter-spacing: .3px;
+          pointer-events: none; user-select: none; }
+        @media (min-width: 901px) { #appVersion { display: none; } }
         /* ≤900px（手機/平板/窄窗）：頁面剛好填滿可視範圍，不再多出頁面長卷軸
            （原本 main padding-bottom:180px 令頁面恒高 ~190px，拉頁面卷軸時
              字幕框被推上標頭底下、底部留白升起來擋內容；改為跟桌面一樣只捲字幕框內部。
@@ -1349,6 +1356,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </head>
 
 <body data-page-node-id="Vz3opl7ZLz83recg6PnmBc">
+    <div id="appVersion" aria-hidden="true">v4.0 · 10/19</div>
 
     <!-- 背景漂浮软糖与小亮片 -->
 
