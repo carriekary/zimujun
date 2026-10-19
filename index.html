@@ -305,7 +305,7 @@
           padding-right: 40px; 
           justify-content: center; text-align: center;
         }
-        .japanese-text { font-family: "Hiragino Maru Gothic ProN", "Noto Sans JP", "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Meiryo", "Hiragino Sans", sans-serif; font-weight: 600; font-size: 16px; color: #3a3a3a; margin-bottom: 2px; line-height: 1.9; text-align: left; flex: 1; min-width: 0; }
+        .japanese-text { font-family: "Hiragino Maru Gothic ProN", "Noto Sans JP", "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Meiryo", "Hiragino Sans", sans-serif; font-weight: 400; font-size: 16px; color: #3a3a3a; margin-bottom: 2px; line-height: 1.9; text-align: left; flex: 1; min-width: 0; }
         .jp-row { display: flex; align-items: center; gap: 6px; width: 100%; }
         .chinese-text { font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif; font-size: 14px; color: #666; border-top: 1px dashed #eee; padding-top: 2px; margin-top: 2px; line-height: 1.4; text-align: left; }
         .single-language .chinese-text { display: none; }
@@ -3870,14 +3870,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         };
 
         function markPlaying(idx, forceScroll) {
-            var mk = medEl();
-            var row = idx >= 0
-                ? document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle')
-                : null;
-            // 先确认目标行存在，再更新 lastPlayIdx；否则懒加载行缺失时会被永久短路。
-            if (idx >= 0 && !row) return;
             if (idx === lastPlayIdx && !forceScroll) return;
-            // 暂停时若时间刚好落在两句之间，保留上一句高亮。
+            var mk = medEl();
+            // 播放器暂停又刚好落在句与句的中间缝隙：不要清掉亮框又不补上，否则整片字幕会熄掉
             var keep = (idx < 0 && mk && mk.paused);
             if (!keep) {
                 var old = document.querySelectorAll('#subtitles .subtitle.is-playing');
@@ -3885,11 +3880,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }
             lastPlayIdx = idx;
             if (idx < 0) return;
+            var row = document.querySelector('#subtitles .row[data-index="' + idx + '"] .subtitle');
+            if (!row) return;
             row.classList.add('is-playing');
             var follow = document.getElementById('mpFollow');
             if (forceScroll || !follow || follow.checked) {
                 try {
                     var box = document.getElementById('subtitles');
+                    // 优先框内滚；框不可滚（手机整页滚）时自动退回整页滚，保证自动跟句在手机也生效
                     window.scrollRowToCenter(row, box);
                 } catch (e) { }
             }
@@ -4004,22 +4002,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var e0 = subSec(list[i].endTime);
                 if (t >= s0 - 0.05 && (e0 < 0 || t <= e0 + 0.05)) { found = i; break; }
             }
-            if (found >= 0) {
-                // 自然播放也可能走到尚未进入 DOM 的懒加载字幕（初始只渲染 50 句）。
-                var _subBox = document.getElementById('subtitles');
-                if (_subBox && !_subBox.querySelector('.row[data-index="' + found + '"]')) {
-                    ensureRowRendered(found);
-                }
-            }
             markPlaying(found);
         }
-        // iPhone 从微信切回页面或 Safari 恢复前台时，按真实 currentTime 立即重新对齐。
-        document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) { try { mediaTick(); } catch (e) { } }
-        });
-        window.addEventListener('pageshow', function () {
-            try { mediaTick(); } catch (e) { }
-        });
         var _mpDelayShown = null;
         function mpDelaySync(quiet) {
             var v = MP.audioDelaySec;
@@ -4044,11 +4028,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var v = medEl();
             if (v) {
                 v.addEventListener('timeupdate', mediaTick);
-                // iOS Safari / 微信 WebView：播放、跳转、元数据就绪时也立即同步。
-                v.addEventListener('play', mediaTick);
-                v.addEventListener('playing', mediaTick);
-                v.addEventListener('seeked', mediaTick);
-                v.addEventListener('loadedmetadata', mediaTick);
                 v.addEventListener('timeupdate', mpHeaderProgSync);
                 v.addEventListener('loadedmetadata', mpHeaderProgSync);
                 v.addEventListener('play', mpHeaderProgSync);
