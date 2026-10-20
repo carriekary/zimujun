@@ -422,6 +422,8 @@
           main { padding-bottom: 12px; }
           /* 明確啟用內框觸控滾動（含 iOS 慣性），確保字幕框在小屏可滑 */
           #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
+          /* 手機滑窗裁行/補行頻繁，關掉 .row 的透明度過渡，減少重繪與合成開銷，滑動更跟手 */
+          .row { transition: none; }
         }
 
         /* ==================== 小屏底部播放栏（上一句／播放／下一句 + 进度条） ==================== */
@@ -62824,6 +62826,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             mediaTickAt(t - MP.audioDelaySec);
         }
         function mediaTickAt(t) {
+            // 手機（窄螢幕）自動跟句：markPlaying 會直接 return（不滾動、不高亮），
+            // 因此對整份字幕表做線性掃描的結果會被完全丟棄。直接跳過掃描，省掉每秒數百~數千次
+            // 的時間字串解析（subSec），低端手機播放明顯更順、更省電。
+            // 點句跳轉（forceScroll=true，走 seekToSubtitle/mpHeaderJumpToTime）不受影響，仍會正常定位。
+            if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) { markPlaying(-1); return; }
             var list = AppState.processedSubtitles, found = -1;
             for (var i = 0; i < list.length; i++) {
                 var s0 = subSec(list[i].startTime); if (s0 < 0) continue;
@@ -63475,17 +63482,28 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         (function initSubBoxFeed() {
             var _box = document.getElementById('subtitles');
             if (!_box) return;
-            _box.addEventListener('scroll', function () {
-                if (_autoScrolling) return;   // 自动跟句滚动中：跳过，避免边滚边无限预载
-                if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
+            // rAF 節流：滑動事件在低端手機上一幀可能觸發多次，每次都對每行做 getBoundingClientRect
+            // 會造成明顯掉幀。改成每個動畫幀最多跑一次 trim/maybeUnTrim/renderNextBatch。
+            var _scrollScheduled = false;
+            function _runScrollWork(feed) {
+                if (_autoScrolling) return;
+                if (feed && _box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
                 maybeUnTrim();      // 往回捲到頂部邊緣時，自動把上面的行補回來
                 trimOffscreenTop(); // 手動瀏覽：把視窗上方的行裁掉，保持 DOM 有界
+            }
+            function _schedScroll(feed) {
+                if (_scrollScheduled) return;
+                _scrollScheduled = true;
+                requestAnimationFrame(function () { _scrollScheduled = false; _runScrollWork(feed); });
+            }
+            _box.addEventListener('scroll', function () {
+                if (_autoScrolling) return;   // 自动跟句滚动中：跳过，避免边滚边无限预载
+                _schedScroll(true);
             }, { passive: true });
-            // 手機若為整頁滾動（框本身不可滾），用 window 滾動事件接手
+            // 手機若為整頁滾動（框本身不可滾），用 window 滾動事件接手（整頁滾時不需觸底補載）
             window.addEventListener('scroll', function () {
                 if (_autoScrolling) return;
-                maybeUnTrim();
-                trimOffscreenTop();
+                _schedScroll(false);
             }, { passive: true });
         })();
 
