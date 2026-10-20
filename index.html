@@ -424,6 +424,8 @@
           #subtitles { max-height: calc(100vh - var(--header-height) - 48px); padding-bottom: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
           /* 手機滑窗裁行/補行頻繁，關掉 .row 的透明度過渡，減少重繪與合成開銷，滑動更跟手 */
           .row { transition: none; }
+          /* 小屏已改為「純靜態播放、點句才跳轉」，自動卷功能不再有意義，隱藏避免誤導 */
+          #mpFollowLabel { display: none !important; }
         }
 
         /* ==================== 小屏底部播放栏（上一句／播放／下一句 + 进度条） ==================== */
@@ -1888,7 +1890,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 </select>
                 <button type="button" class="mp-btn ghost" id="mpDzGo">▶ 播放剧集</button>
                 <button type="button" class="mp-btn ghost" id="mpPickBtn">📁 本机音档</button>
-                <label style="font-size:12.5px;color:#6b6156;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="mpFollow" checked /> 跟著播放自动卷</label>
+                <label id="mpFollowLabel" style="font-size:12.5px;color:#6b6156;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="mpFollow" checked /> 跟著播放自动卷</label>
             </div>
             <input id="mpFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.mp4,.webm,.mkv,.m4v" style="display: none;" />
 
