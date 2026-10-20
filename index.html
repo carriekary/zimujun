@@ -63482,42 +63482,47 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         (function initSubBoxFeed() {
             var _box = document.getElementById('subtitles');
             if (!_box) return;
-            // rAF 節流：滑動事件在低端手機上一幀可能觸發多次，每次都對每行做 getBoundingClientRect
-            // 會造成明顯掉幀。改成每個動畫幀最多跑一次 trim/maybeUnTrim/renderNextBatch。
-            var _scrollScheduled = false;
-            function _runScrollWork(feed) {
+            // 滑動掉幀根因：原本每一幀都跑 trimOffscreenTop + maybeUnTrim + renderNextBatch，
+            // 三者都對上百個 .row 做 getBoundingClientRect 量位置、還在滑動中 removeChild/insertAdjacentHTML 增刪 DOM，
+            // 每幀來一次 → 低端手機必卡。IntersectionObserver 觸底時也會每幀 insertAdjacentHTML，同樣掉幀。
+            // 修法：滑動過程中「完全不碰布局、不碰 DOM」，交給原生滾動絲滑滑動；重活改為「停止滑動後 180ms」才跑一次
+            // （trailing），並設 maxWait 500ms 上限——連續滑動超過 500ms 也至少裁/補一次，避免 DOM 無限增長。
+            // spacer 方案下裁行不動 scrollTop，所以中途裁行也不會畫面跳動，安全。
+            var _timer = null, _lastRun = 0, _MAXWAIT = 500, _IDLE = 180;
+            function _runScrollWork() {
                 if (_autoScrolling) return;
-                if (feed && _box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
+                if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
                 maybeUnTrim();      // 往回捲到頂部邊緣時，自動把上面的行補回來
                 trimOffscreenTop(); // 手動瀏覽：把視窗上方的行裁掉，保持 DOM 有界
+                _enforceDomCap();   // DOM 行數硬上限保護（連續下滑時也保持有界，避免記憶體爆）
             }
-            function _schedScroll(feed) {
-                if (_scrollScheduled) return;
-                _scrollScheduled = true;
-                requestAnimationFrame(function () { _scrollScheduled = false; _runScrollWork(feed); });
+            function _schedule() {
+                var now = Date.now();
+                if (_timer) {
+                    // 已排程：若距上次執行已超過 maxWait，立即補跑一次（防止連續滑動 DOM 爆長）
+                    if (now - _lastRun >= _MAXWAIT) { clearTimeout(_timer); _timer = null; _lastRun = now; _runScrollWork(); }
+                    return;
+                }
+                _timer = setTimeout(function () { _timer = null; _lastRun = Date.now(); _runScrollWork(); }, _IDLE);
             }
             _box.addEventListener('scroll', function () {
                 if (_autoScrolling) return;   // 自动跟句滚动中：跳过，避免边滚边无限预载
-                _schedScroll(true);
+                _schedule();
             }, { passive: true });
-            // 手機若為整頁滾動（框本身不可滾），用 window 滾動事件接手（整頁滾時不需觸底補載）
+            // 手機若為整頁滾動（框本身不可滾），用 window 滾動事件接手
             window.addEventListener('scroll', function () {
                 if (_autoScrolling) return;
-                _schedScroll(false);
+                _schedule();
             }, { passive: true });
-        })();
-
-        // 建立無限滾動觸發器 (Intersection Observer)
-        const observer = new IntersectionObserver((entries) => {
-            if (!_autoScrolling && entries[0].isIntersecting) {
-                renderNextBatch();
+            // 底部無限載入：併入同一套節流，避免觸底時每幀 insertAdjacentHTML 造成掉幀
+            if ('IntersectionObserver' in window) {
+                var _obs = new IntersectionObserver(function (entries) {
+                    if (!_autoScrolling && entries[0].isIntersecting) _schedule();
+                }, { rootMargin: '400px' }); // 距離底部還有 400px 時就提早排入載入，做到無縫滑動
+                var _sentinel = document.getElementById('scrollSentinel');
+                if (_sentinel) _obs.observe(_sentinel);
             }
-        }, { rootMargin: '400px' }); // 距离底部还有 400px 时就提早加载，做到无缝滑动
-
-        // 绑定感应区
-        window.addEventListener('DOMContentLoaded', () => {
-            observer.observe(document.getElementById('scrollSentinel'));
-        });
+        })();
 
         const debouncedSearch = debounce((e) => updateDisplay(e.target.value.trim()), 300);
         document.getElementById('searchBox').addEventListener('input', debouncedSearch);
