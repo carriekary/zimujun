@@ -61572,6 +61572,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             try { if (MP.hls) { MP.hls.destroy(); } } catch (e) { }
             MP.hls = null;
             MP.mode = 'file'; MP.src = url;
+            // 換新媒體時釋放上一個本機音檔的 blob URL：否则每載一集就永久留住一顆音檔 blob（動輒數十 MB），
+            // 多集累積下來數百 MB，播放＋瀏覽字幕時把 iOS WebContent 擠爆 → 跳回首頁／無法開啟頁面。
+            if (MP._blobUrl && MP._blobUrl !== url) { try { URL.revokeObjectURL(MP._blobUrl); } catch (e) { } MP._blobUrl = null; }
             medErr(''); showFix('');
             var settled = false, watch = null;
             function ok() {
@@ -63201,7 +63204,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var fi = document.getElementById('mpFile');
             if (fi) fi.addEventListener('change', function () {
                 var f = fi.files && fi.files[0]; if (!f) return;
-                loadMediaUrl(URL.createObjectURL(f));
+                var blobUrl = URL.createObjectURL(f);
+                loadMediaUrl(blobUrl);   // tryDirect 會先釋放上一個本機檔的 blob URL
+                MP._blobUrl = blobUrl;   // 記住這顆，下次換檔時釋放，避免音檔 blob 一路累積把 iPhone 記憶體擠爆
                 medErr('已載入本機檔：' + f.name);
                 setTimeout(closeMediaPanel, 700);
             });
@@ -63533,12 +63538,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var excess = rows.length - 200;
             var cutIdx = parseInt(rows[excess].getAttribute('data-index'), 10);
             trimAbove(cutIdx + SUB_KEEP_ABOVE);
-            // 往上捲時多餘行都在視窗「下方」，trimAbove 裁不到 → 改裁下方，確實把行數壓回安全範圍
-            rows = box.querySelectorAll('.row');
-            if (rows.length > _DOM_ROW_CAP) {
-                var keepIdx = parseInt(rows[Math.min(rows.length - 1, 200)].getAttribute('data-index'), 10);
-                trimBelow(keepIdx - SUB_KEEP_BELOW);
-            }
+            // 注意：此硬上限「只裁上方」。下方裁切交給 _runScrollWork 的 trimOffscreenBottom（含空白區 fallback）
+            // 在滾動時主動處理。若在这里也裁下方，會把 ensureRowRendered 剛為「跳句」補渲染的目標句（在視窗下方、
+            // 尚未滾到）立刻裁掉，導致點數字／拖進度條跳遠句時目標行消失、跳不過去。故下方裁切不在增補當下做。
         }
         // 往回捲動複習時，若已捲到頂部邊緣，自動把上面的行補回來
         function maybeUnTrim() {
