@@ -257,6 +257,8 @@
           #vocabInline, #reviewInline { display: none !important; }
           /* 右下角的「生词本／汇出档案」已搬到設定抽屜，小屏隱藏原懸浮按鈕組 */
           .button-container { display: none !important; }
+          /* 小屏：依需求移除設定抽屜裡的「生词本」入口（大屏左欄入口不受影響，元素保留以免接線出錯） */
+          #sdVocabBookBtn { display: none !important; }
           /* 小屏：輕點跳句、長按查詞——關掉 iOS 長按的原生選取／放大鏡選單，避免干擾 */
           .japanese-text .wf-word { -webkit-touch-callout: none; }
         }
@@ -60709,6 +60711,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var p = navigator.platform || '';
             return /iPad|iPhone|iPod/.test(ua) || (p === 'MacIntel' && navigator.maxTouchPoints > 1);
         })();
+        // 是否「手機版」：與全站一致的 ≤900px 斷點（含 Android）。大屏（≥901px）一切照舊、不受以下手機策略影響。
+        function isMobileView() { return !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches); }
+        // 音訊「實際正在播」：以播放器 paused/ended 為準（MP.started 一旦播放就整段為真、暫停也不复位，不適合當釋放依據）
+        function isAudioPlaying() { var v = document.getElementById('mpAudio'); return !!(v && v.src && !v.paused && !v.ended); }
+        var kuroGen = 0;   // 斷詞器釋放世代：手機播放中釋放時 +1，讓「釋放前已在載入」的那次完成後作廢，不會又把字典留回記憶體
+        // 手機播放中釋放斷詞器：kuromoji 字典 trie＋連線矩陣常駐數十 MB，與音訊緩衝疊加會把分頁記憶體擠爆→被系統殺掉重載（跳回首頁）。
+        // 播放時先釋放、暫停後按需重建；注音在播放期間暫時退化為純文字，暫停即恢復。大屏不呼叫此函式。
+        function releaseKuroMobile() { kuroGen++; kuro = null; isKuroshiroReady = false; kuroLoading = null; }
+        // 暫停後「延遲一點」再重建：單句練習會快速 play/pause 交替，若每次暫停都立刻重載字典會反复抖動。
+        // 1.2s 內又開始播就取消重建；只有真正停下來的暫停才重建斷詞器、恢復可見行注音。
+        var _kuroRebuildTimer = 0;
+        function scheduleKuroRebuildMobile() {
+            if (!isMobileView() || !AppState.furiganaEnabled) return;
+            clearTimeout(_kuroRebuildTimer);
+            _kuroRebuildTimer = setTimeout(function () { if (!isAudioPlaying()) { try { initKuromoji(); } catch (e) { } } }, 1200);
+        }
 
         const KURO_DICT_SOURCES = [
             "kuromoji/dict",
@@ -60839,15 +60857,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
         async function initKuromoji() {
             if (kuroLoading) return kuroLoading;
-            // iOS：播放音頻時不載入約 20MB 的注音字典，否則與音頻解碼疊加會把 WebContent 擠爆
-            // （表現為「無法開啟頁面」）。播放中若被觸發，則每 2.5s 檢查一次，暫停後才真正載。
-            if (IS_IOS && MP && MP.started) {
+            // 手機（含 Android）播放中：不載入斷詞器（字典解壓後數十 MB，與音訊緩衝疊加會把分頁記憶體擠爆→跳回首頁）。
+            // 以「實際播放狀態」判定：暫停後即可重建（舊版用 MP.started 會一旦播放就整段鎖死、暫停也不重載）。
+            // 播放中若被觸發，每 2.5s 檢查一次，暫停後「且注音有開啟」才真正載（手機注音預設關，沒開就不必載）。
+            if (isMobileView() && isAudioPlaying()) {
                 if (!window.__kuroRetry) {
                     window.__kuroRetry = true;
-                    var _kc = setInterval(function () { if (!(MP && MP.started)) { clearInterval(_kc); window.__kuroRetry = false; try { initKuromoji(); } catch (e) { } } }, 2500);
+                    var _kc = setInterval(function () { if (!isAudioPlaying()) { clearInterval(_kc); window.__kuroRetry = false; try { if (AppState.furiganaEnabled) initKuromoji(); } catch (e) { } } }, 2500);
                 }
                 return;
             }
+            var myGen = kuroGen;
             kuroLoading = (async () => {
                 try {
                     await loadScriptFallback(KURO_SCRIPT_SOURCES);
@@ -60857,14 +60877,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                         catch (e) { lastErr = e; }
                     }
                     if (!tokenizer) throw lastErr || new Error("词典载入失败");
+                    // 載入期間若已開始播放（手機）或已被釋放：作廢這次結果，不把斷詞器留進記憶體；清掉 kuroLoading 以便暫停後重載
+                    if (myGen !== kuroGen || (isMobileView() && isAudioPlaying())) { kuroLoading = null; return; }
                     kuro = tokenizer;
                     isKuroshiroReady = true;
                     showGlobalStatus("日语注音系统准备就绪！");
                     (function () { var _c = document.getElementById('subtitles'); var _l = _c.querySelector('.loading.engine-loading'); if (_l) _l.remove(); })();
                     // 注音引擎就绪：若页面已载入字幕，就地补生成注音（不再整页重渲染、也不清空笔记）
                     if (AppState.processedSubtitles.length) {
-                      updateProgress(0, '正在生成日语平假名注音…');
-                      generateFuriganaInChunks(AppState.renderEpoch || 0);
+                      if (isMobileView()) { refillFuriganaDOM(); }   // 手機：只補「可見行」按需生成，不整劇產生注音字串
+                      else { updateProgress(0, '正在生成日语平假名注音…'); generateFuriganaInChunks(AppState.renderEpoch || 0); }
                     }
                 } catch (err) {
                     console.error("注音引擎初始化失败:", err);
@@ -60877,11 +60899,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 注音引擎推遲到「整頁載入完成（window.load）」之後才去抓字典：先讓頁面渲染、可操作，
         // 再背景載入。這能避免開頁瞬間同時扛住「3.2MB 頁面 + 8MB 注音字典」導致 iPhone 的 WebContent
         // 被系統殺掉（表現為 Safari 「無法開啟頁面」）。字典就緒後會自行為已載入的字幕補生成注音。
-        // —— 但 iOS 上「不」自動載入：注音字典解壓後約 20MB，若與音頻解碼同時在記憶體裡會擠爆 iPhone。
-        //    iOS 改為「用到才載」：使用者點一下「顯示注音／隱藏注音」時才載；播放中會延後到暫停後（見上方防護）。
+        // —— 但手機版（含 Android）上「不」自動載入：注音字典解壓後數十 MB，若與音訊解碼同時在記憶體裡會擠爆分頁。
+        //    手機改為「用到才載」：使用者點一下「顯示注音／隱藏注音」時才載；播放中會延後到暫停後（見上方防護）。大屏照舊自動載。
         function __scheduleKuromoji() {
             if (typeof initKuromoji !== 'function') return;
-            if (IS_IOS) return;   // iOS：交給注音開關的按需載入，避免與音頻疊加
+            if (isMobileView()) return;   // 手機：交給注音開關的按需載入，避免與音頻疊加（大屏不受影響）
             if (document.readyState === 'complete') { try { initKuromoji(); } catch (e) { } }
             else { window.addEventListener('load', function () { setTimeout(function () { try { initKuromoji(); } catch (e) { } }, 400); }); }
         }
@@ -60995,12 +61017,35 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           }
         }
 
+        // 手機按需注音：只為「單一句」即时算出 ruby HTML，用完即棄、不寫回 processedSubtitles（不留全劇字串）。
+        // 注音關閉或斷詞器未就緒（含播放中被釋放）→退化為純文字；大屏仍走预生成 rubyHtml，不呼叫此函式。
+        function rubyForSub(sub) {
+          var jp = sub && (sub.japanese || sub.originalText || '');
+          if (!jp) return '';
+          if (AppState.furiganaEnabled && isKuroshiroReady && kuro && sub.japanese) {
+            try { return furiganaFromTokens(kuro.tokenize(sub.japanese)); }
+            catch (e) { return escapeHtml(sub.japanese); }
+          }
+          return escapeHtml(jp);
+        }
         // 把已经算好注音（rubyHtml）的行一次性刷进 DOM：
         // 解决「滚到一半注音还在生成、该行被渲染成纯文本后一直没注音」的问题
         function refillFuriganaDOM() {
           if (AppState.searchActive) return;            // 搜索态下高亮由 updateDisplay 接管，不在此覆盖
           if (!AppState.furiganaEnabled) return;        // 当前隐藏注音则不必刷（toggle 会再触发）
           const container = document.getElementById('subtitles');
+          if (isMobileView()) {
+            // 手機：只遍历「目前在 DOM 的可見行」按需生成，不遍历整劇、也不留存 rubyHtml 字串
+            const rows = container.querySelectorAll('.row');
+            for (let r = 0; r < rows.length; r++) {
+              const idx = parseInt(rows[r].getAttribute('data-index'), 10);
+              const sub = AppState.processedSubtitles[idx];
+              const el = rows[r].querySelector('.japanese-text');
+              if (el && sub) el.innerHTML = rubyForSub(sub);
+            }
+            if (AppState.notesVisible) container.querySelectorAll('.note-box').forEach(autoResizeTextarea);
+            return;
+          }
           const subs = AppState.processedSubtitles;
           for (let i = 0; i < subs.length; i++) {
             const el = container.querySelector(`.row[data-index="${i}"] .japanese-text`);
@@ -61118,6 +61163,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
         // 分块生成平假名注音：每批让出主线程，保持页面可响应；边生成边更新已渲染的行
         async function generateFuriganaInChunks(epoch) {
+          // 手機：不整劇預生成注音字串（會把全劇 rubyHtml 常駐記憶體）。改為只補「可見行」按需生成，
+          // 其餘行滾到時才在 createSubtitleRowHTML 即时算。大屏维持原本整劇分塊預生成。
+          if (isMobileView()) { refillFuriganaDOM(); return; }
           const subs = AppState.processedSubtitles;
           const total = subs.length;
           const CHUNK = 60;
@@ -61661,6 +61709,52 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 內建的 2dz 劇集表：問過一次就把播放地址記進工具裡。
         // 之後再貼同一個 id 時完全不需要本機小幫手（m3u8 自己有 CORS，可以直接播）。
         var DZ_SEED = {
+            "133003": { name: "飞翔情报室", list: [
+                { label: "线路1／第01集", url: "https://cdn2.ryplay2.com/20240826/11514_e74b3dd7/index.m3u8" },
+                { label: "线路1／第02集", url: "https://cdn2.ryplay2.com/20240826/11521_43752cbf/index.m3u8" },
+                { label: "线路1／第03集", url: "https://cdn2.ryplay2.com/20240826/11528_c395ed54/index.m3u8" },
+                { label: "线路1／第04集", url: "https://cdn2.ryplay2.com/20240826/11532_3bc66452/index.m3u8" },
+                { label: "线路1／第05集", url: "https://cdn2.ryplay2.com/20240826/11540_f6c9ab2b/index.m3u8" },
+                { label: "线路1／第06集", url: "https://cdn2.ryplay2.com/20240826/11547_0e9d7848/index.m3u8" },
+                { label: "线路1／第07集", url: "https://cdn2.ryplay2.com/20240826/11552_764b3b39/index.m3u8" },
+                { label: "线路1／第08集", url: "https://cdn2.ryplay2.com/20240826/11559_a0b93995/index.m3u8" },
+                { label: "线路1／第09集", url: "https://cdn2.ryplay2.com/20240826/11565_6e671bac/index.m3u8" },
+                { label: "线路1／第10集", url: "https://cdn2.ryplay2.com/20240826/11570_76f90228/index.m3u8" },
+                { label: "线路1／第11集", url: "https://cdn2.ryplay2.com/20240826/11577_4c577914/index.m3u8" },
+                { label: "线路2／第01集", url: "https://v3.wsyzym3u8.com/202308/24/W6ECA2wT3A2/video/index.m3u8" },
+                { label: "线路2／第02集", url: "https://v3.wsyzym3u8.com/202308/24/XiZBhb36vZ2/video/index.m3u8" },
+                { label: "线路2／第03集", url: "https://v3.wsyzym3u8.com/202308/24/VZnzVwXZkA2/video/index.m3u8" },
+                { label: "线路2／第04集", url: "https://v3.wsyzym3u8.com/202308/24/ZqEvu7gAhw2/video/index.m3u8" },
+                { label: "线路2／第05集", url: "https://v3.wsyzym3u8.com/202308/24/UBYGfAEdmJ2/video/index.m3u8" },
+                { label: "线路2／第06集", url: "https://v3.wsyzym3u8.com/202308/24/nDRUuNJ7xC2/video/index.m3u8" },
+                { label: "线路2／第07集", url: "https://v3.wsyzym3u8.com/202308/24/pVbVsNCN2X2/video/index.m3u8" },
+                { label: "线路2／第08集", url: "https://v3.wsyzym3u8.com/202308/24/utARgha9qN2/video/index.m3u8" },
+                { label: "线路2／第09集", url: "https://v3.wsyzym3u8.com/202308/24/KdGsE4y0yq2/video/index.m3u8" },
+                { label: "线路2／第10集", url: "https://v3.wsyzym3u8.com/202308/24/MZe2yhs2A52/video/index.m3u8" },
+                { label: "线路2／第11集", url: "https://v3.wsyzym3u8.com/202308/24/8UwdKrL1Fe2/video/index.m3u8" },
+                { label: "线路3／第01集", url: "https://v3.ppqrrs.com/wjv3/202308/24/W6ECA2wT3A2/video/index.m3u8" },
+                { label: "线路3／第02集", url: "https://v3.ppqrrs.com/wjv3/202308/24/XiZBhb36vZ2/video/index.m3u8" },
+                { label: "线路3／第03集", url: "https://v3.ppqrrs.com/wjv3/202308/24/VZnzVwXZkA2/video/index.m3u8" },
+                { label: "线路3／第04集", url: "https://v3.ppqrrs.com/wjv3/202308/24/ZqEvu7gAhw2/video/index.m3u8" },
+                { label: "线路3／第05集", url: "https://v3.ppqrrs.com/wjv3/202308/24/UBYGfAEdmJ2/video/index.m3u8" },
+                { label: "线路3／第06集", url: "https://v3.ppqrrs.com/wjv3/202308/24/nDRUuNJ7xC2/video/index.m3u8" },
+                { label: "线路3／第07集", url: "https://v3.ppqrrs.com/wjv3/202308/24/pVbVsNCN2X2/video/index.m3u8" },
+                { label: "线路3／第08集", url: "https://v3.ppqrrs.com/wjv3/202308/24/utARgha9qN2/video/index.m3u8" },
+                { label: "线路3／第09集", url: "https://v3.ppqrrs.com/wjv3/202308/24/KdGsE4y0yq2/video/index.m3u8" },
+                { label: "线路3／第10集", url: "https://v3.ppqrrs.com/wjv3/202308/24/MZe2yhs2A52/video/index.m3u8" },
+                { label: "线路3／第11集", url: "https://v3.ppqrrs.com/wjv3/202308/24/8UwdKrL1Fe2/video/index.m3u8" },
+                { label: "线路4／第01集", url: "https://v3.qqqrst.com/yyv3/202308/24/W6ECA2wT3A2/video/index.m3u8" },
+                { label: "线路4／第02集", url: "https://v3.qqqrst.com/yyv3/202308/24/XiZBhb36vZ2/video/index.m3u8" },
+                { label: "线路4／第03集", url: "https://v3.qqqrst.com/yyv3/202308/24/VZnzVwXZkA2/video/index.m3u8" },
+                { label: "线路4／第04集", url: "https://v3.qqqrst.com/yyv3/202308/24/ZqEvu7gAhw2/video/index.m3u8" },
+                { label: "线路4／第05集", url: "https://v3.qqqrst.com/yyv3/202308/24/UBYGfAEdmJ2/video/index.m3u8" },
+                { label: "线路4／第06集", url: "https://v3.qqqrst.com/yyv3/202308/24/nDRUuNJ7xC2/video/index.m3u8" },
+                { label: "线路4／第07集", url: "https://v3.qqqrst.com/yyv3/202308/24/pVbVsNCN2X2/video/index.m3u8" },
+                { label: "线路4／第08集", url: "https://v3.qqqrst.com/yyv3/202308/24/utARgha9qN2/video/index.m3u8" },
+                { label: "线路4／第09集", url: "https://v3.qqqrst.com/yyv3/202308/24/KdGsE4y0yq2/video/index.m3u8" },
+                { label: "线路4／第10集", url: "https://v3.qqqrst.com/yyv3/202308/24/MZe2yhs2A52/video/index.m3u8" },
+                { label: "线路4／第11集", url: "https://v3.qqqrst.com/yyv3/202308/24/8UwdKrL1Fe2/video/index.m3u8" }
+            ] },
             "72081": { name: "G弦上的你和我", list: [
                 { label: "线路1／第01集", url: "https://v6.wsyzym3u8.com/202410/06/JXmYJtqynY12/video/index.m3u8" },
                 { label: "线路1／第02集", url: "https://v12.wsyzym3u8.com/202410/06/aX31hLahvn8/video/index.m3u8" },
@@ -62939,16 +63033,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     }
                 }
 
-                v.addEventListener('play', function () { MP.started = true; medStatus('▶ 播放中…（句前的数字可以对到任何一句）', ''); });
+                v.addEventListener('play', function () { MP.started = true; medStatus('▶ 播放中…（句前的数字可以对到任何一句）', ''); if (isMobileView()) { clearTimeout(_kuroRebuildTimer); try { releaseKuroMobile(); } catch (e) { } } });
                 function errLocked() {
                     var e = document.getElementById('mpErr');
                     return !!(e && e.textContent.trim());
                 }
                 v.addEventListener('pause', function () {
+                    // 手機：暫停後按需重建斷詞器（延遲防抖），恢復可見行注音；大屏不受影響
+                    scheduleKuroRebuildMobile();
                     // 出错的讯息不要被「已暂停」洗掉，否则看不到为什么播不了
                     if (errLocked()) return;
                     medStatus('⏸ 已暂停。按句前的数字可以对著字幕反复练。', '');
                 });
+                v.addEventListener('ended', function () { scheduleKuroRebuildMobile(); });
                 v.addEventListener('waiting', function () {
                     if (errLocked()) return;
                     if (v.readyState < 3) medStatus('⟳ 缓冲中…（卡一下是正常的，别急）', '');
@@ -63225,8 +63322,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
         function createSubtitleRowHTML(item) {
           const { sub, originalIndex, isContext, highlightJp, highlightZh } = item;
-          // 非搜索态：优先用最新的 rubyHtml（注音可能在首次渲染后才生成完毕，避免后段行一直停在纯文本）
-          const jp = (!AppState.searchActive && sub.rubyHtml) ? sub.rubyHtml : highlightJp;
+          // 非搜索态：大屏优先用预生成的 rubyHtml；手機改為「可見行按需生成」（rubyForSub，不留全劇字串）。
+          // 搜索态沿用 highlightJp（含高亮）；手機搜索態因不預生成 rubyHtml，顯示純文字＋高亮。
+          const jp = AppState.searchActive ? highlightJp : (isMobileView() ? rubyForSub(sub) : (sub.rubyHtml || highlightJp));
           const noteContent = AppState.notesData[originalIndex] || '';
           const jpText = sub.japanese || sub.originalText || '';
           const hasNote = !!noteContent;
@@ -63930,10 +64028,31 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           document.body.classList.toggle('hide-furigana', !AppState.furiganaEnabled);
           // 显示注音时，若部分行生成已完成却还没刷进 DOM（如生成途中滚到的新行），立即补刷
           if (AppState.furiganaEnabled) refillFuriganaDOM();
-          // iOS：注音字典改為「用到才載」——首次點開注音時觸發載入（播放中則延後到暫停後，見 initKuromoji 防護）
-          if (IS_IOS && AppState.furiganaEnabled) { try { initKuromoji(); } catch (e) { } }
+          // 手機（含 Android）：注音字典「用到才載」——首次點開注音時觸發載入（播放中則延後到暫停後，見 initKuromoji 防護）；大屏已預載
+          if (isMobileView() && AppState.furiganaEnabled) { try { initKuromoji(); } catch (e) { } }
           document.querySelectorAll('.note-box').forEach(autoResizeTextarea);
         });
+
+        // ==================== 手機版設定預設：只開雙語，其餘三項待用戶開啟 ====================
+        // 大屏（≥901px）一切照舊（四項皆預設開）。手機（≤900px，含 Android）預設只開「雙語閱讀」，
+        // 「筆記內容／假名注音／wiki詞典」預設關；用戶在設定抽屜開啟後才啟用（注音也才按需載斷詞器）。
+        (function applyMobileSettingDefaults() {
+          if (!isMobileView()) return;
+          AppState.notesVisible = false;
+          AppState.furiganaEnabled = false;
+          AppState.dictEnabled = false;
+          AppState.bilingualEnabled = true;
+          document.body.classList.add('hide-notes');
+          document.body.classList.add('hide-furigana');
+          document.body.classList.remove('single-language');
+          var tn = document.getElementById('toggleNotesBtn'); if (tn) tn.textContent = '显示笔记';
+          var fg = document.getElementById('furiganaBtn'); if (fg) fg.textContent = '显示注音';
+          var bl = document.getElementById('bilingualBtn'); if (bl) bl.textContent = '单语显示';
+          var sn = document.getElementById('swNotes'); if (sn) sn.checked = false;
+          var sf = document.getElementById('swFurigana'); if (sf) sf.checked = false;
+          var sd = document.getElementById('swDict'); if (sd) sd.checked = false;
+          var sb = document.getElementById('swBilingual'); if (sb) sb.checked = true;
+        })();
 
         // 视窗尺寸变化会改变字幕框换行高度，笔记框需同步对齐
         window.addEventListener('resize', () => {
