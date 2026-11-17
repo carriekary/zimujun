@@ -189,8 +189,9 @@
         .msn-arrow { margin-left: auto; color: #b3aa9a; font-size: 18px; line-height: 1; transition: transform .15s ease; flex: none; }
         .msn-row.open .msn-arrow { transform: rotate(90deg); }
         /* 大屏左欄：複習計劃下的匯出按鈕組（小屏左欄隱藏，不會出現） */
-        .msn-export { display: flex; flex-direction: column; gap: 3px; margin: 2px 0 2px 30px; }
+        .msn-export { display: flex; flex-direction: column; gap: 3px; margin: 0 0 0 30px; }
         .msn-export:not(.open) { display: none; }
+        .msn-export.open { margin: 4px 0 6px 30px; }
         .msn-export-btn {
           display: flex; align-items: center; justify-content: flex-start; gap: 6px;
           border: 1px solid #e6ddc8; background: #fff; color: #5a5246;
@@ -203,9 +204,9 @@
         .msn-help:not(.open) { display: none; }
         .msn-help-b { font-size: 11.5px; color: #8a8073; background: #fff; border: 1px dashed #e6ddc8;
           border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
-        /* 左欄底部：支持作者（字體／小圖標與上方「导出」行一致：左對齊、透明底、currentColor 圖標） */
-        .msn-support { margin-top: auto; margin-bottom: 2px; display: flex; align-items: center; gap: 11px;
-          background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 7px 12px; line-height: 1.3;
+        /* 左欄：支持作者（緊接「导出」區下方，不再撐開置底；字體／小圖標與「导出」行一致） */
+        .msn-support { margin-top: 2px; margin-bottom: 2px; display: flex; align-items: center; gap: 11px;
+          background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 6px 12px; line-height: 1.3;
           font-size: 14px; font-weight: 500; color: #6b6357; cursor: pointer; width: 100%; box-sizing: border-box; font-family: inherit;
           transition: background .15s ease, color .15s ease; }
         .msn-support .ico { font-size: 16px; flex: none; display: inline-flex; align-items: center; }
@@ -216,8 +217,20 @@
         .msn-settings { margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e6ddc8; }
         /* 左欄「複習計劃」卡片已移至右欄 #reviewInline 的 .ri-side */
         .msn-settings-h { font-size: 11px; color: #b3aa9a; letter-spacing: 1px; padding: 0 4px 4px; font-weight: 700; }
-        .msn-settings .settings-row { padding: 9px 4px; border-bottom: 1px solid #f0e6d4; }
-        .msn-settings .settings-label { font-size: 12.5px; }
+        .msn-settings .settings-row { padding: 6px 4px; border-bottom: 1px solid #f0e6d4; }
+        .msn-settings .settings-label { font-size: 12px; }
+        /* 長方形 ON／OFF 兩段式開關：低對比暖灰，不干擾閱讀 */
+        .msn-settings .settings-switch { width: 48px; height: 18px; }
+        .msn-settings .settings-slider { display: flex; border-radius: 4px; background: #f3edde; border: 1px solid #ddd3bd; overflow: hidden; }
+        .msn-settings .settings-switch input:checked + .settings-slider { background: #f3edde; }
+        .msn-settings .settings-slider::before { display: none; }
+        .msn-settings .settings-slider .ss-on, .msn-settings .settings-slider .ss-off {
+          display: flex; flex: 1; align-items: center; justify-content: center;
+          font-size: 8.5px; font-weight: 700; letter-spacing: .5px; line-height: 1; color: #b3aa9a;
+          transition: background .15s ease, color .15s ease; }
+        .msn-settings .settings-slider .ss-off { border-left: 1px solid #ddd3bd; }
+        .msn-settings .settings-switch input:not(:checked) + .settings-slider .ss-off { background: #ddd3bd; color: #6b6357; }
+        .msn-settings .settings-switch:hover .settings-slider { border-color: #c9bd9f; }
         @media (min-width: 901px) {
           #mainSideNav {
             display: flex; flex-direction: column; gap: 4px;
@@ -233,8 +246,9 @@
           #vocabBookPage:not([hidden]) { z-index: 3000 !important; }
           /* 大屏：匯出按鈕已移至左欄「複習計劃」下，隱藏首頁頂部下拉；小屏保留 */
           #exportDropdownContainer { display: none !important; }
-          /* 大屏左欄開關：依設計圖改為紅色（小屏抽屜維持原色） */
-          #mainSideNav .settings-switch input:checked + .settings-slider { background: #b02430; }
+          /* 大屏左欄開關：ON 段以暖灰打亮、整軌維持米色（小屏抽屜維持原色） */
+          #mainSideNav .settings-switch input:checked + .settings-slider { background: #f3edde; }
+          #mainSideNav .settings-switch input:checked + .settings-slider .ss-on { background: #a89c86; color: #fffdf9; }
         }
 
         /* 小屏：強制隱藏右欄內嵌視圖（全部詞彙 / 今日複習），確保首頁不會出現這些版面；
@@ -63274,6 +63288,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 播放或手動瀏覽長劇都不會因整部劇字幕全灌進 DOM 而把 iPhone 記憶體擠爆（表現為「無法開啟頁面」）。
         // 往回捲動複習時會自動把上面的行補回來。搜尋態下不啟用滑窗（維持原本行為）。
         function subBox() { return document.getElementById('subtitles'); }
+        // 字幕框被內嵌視圖（全部詞彙／複習計劃）隱藏時，所有量測都是 0：滾動補載／裁行／補行一律暫停，
+        // 否則會把整部劇灌進 DOM、spacer 與視窗狀態錯亂，切回首頁時字幕消失或只剩空白。
+        // 顯示恢復後由內嵌視圖的 hide() 還原 scrollTop 並接續渲染。
+        function subBoxHidden() { var b = subBox(); return !b || b.style.display === 'none' || b.hidden; }
         var SUB_WIN_START = 0;     // 當前 DOM 中最小的 originalIndex
         var SUB_WIN_END = 0;       // 已向前渲染到的最大 originalIndex（不含）
         var SUB_KEEP_ABOVE = 60;   // 當前句上方最多保留的行數
@@ -63310,6 +63328,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         }
         // 渲染 [from, to) 區間的行；prepend=true 時插到最前面（往回補），否則接在最後（向前補）
         function renderRange(from, to, prepend) {
+            if (subBoxHidden()) return;
             from = Math.max(0, from); to = Math.min(AppState.filteredData.length, to);
             if (to <= from) return;
             var box = subBox(); if (!box) return;
@@ -63347,6 +63366,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 播放／跳句時：確保目標句所在的視窗 [idx-60, idx+30) 已在 DOM（不足就向前或往回補）
         function ensureRowRendered(idx) {
             try {
+                if (subBoxHidden()) return;
                 if (AppState.searchActive) {
                     // 搜尋態：維持原本的「從頭向前補到 idx」行為
                     var _box = document.getElementById('subtitles'); if (!_box) return;
@@ -63374,7 +63394,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         }
         // 裁掉「當前句上方、且已滾出視窗上方」的多餘行；把高度累積到 top-spacer（總高不變、scrollTop 不動 → 不震動）
         function trimAbove(focusIdx) {
-            if (AppState.searchActive) return;
+            if (AppState.searchActive || subBoxHidden()) return;
             var box = subBox(); if (!box) return;
             var lo = Math.max(0, focusIdx - SUB_KEEP_ABOVE);
             if (SUB_WIN_START >= lo) return;
@@ -63402,7 +63422,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         }
         // 手動瀏覽時：以視窗內最上面那行為基準，把上方行裁掉，保持 DOM 有界（播放與手動瀏覽都適用）
         function trimOffscreenTop() {
-            if (AppState.searchActive) return;
+            if (AppState.searchActive || subBoxHidden()) return;
             var box = subBox(); if (!box) return;
             var rows = box.querySelectorAll('.row');
             if (!rows.length) return;
@@ -63420,7 +63440,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         // 此函式在每次增補後檢查，DOM .row 數超過上限就強制裁掉上方行（用 spacer 補高，不震動），把行數壓回安全範圍。
         var _DOM_ROW_CAP = 260;
         function _enforceDomCap() {
-            if (AppState.searchActive) return;
+            if (AppState.searchActive || subBoxHidden()) return;
             var box = subBox(); if (!box) return;
             var rows = box.querySelectorAll('.row');
             if (rows.length <= _DOM_ROW_CAP) return;
@@ -63431,7 +63451,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         }
         // 往回捲動複習時，若已捲到頂部邊緣，自動把上面的行補回來
         function maybeUnTrim() {
-            if (AppState.searchActive) return;
+            if (AppState.searchActive || subBoxHidden()) return;
             var box = subBox(); if (!box) return;
             if (SUB_WIN_START <= 0) return;
             // spacer 方案下裁行不減 scrollTop，往回滾時會先看到 top-spacer 空白。故以「scrollTop 接近 top-spacer 高度」
@@ -63442,6 +63462,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         }
 
         function renderNextBatch() {
+            if (subBoxHidden()) return;   // 內嵌視圖開啟中不渲染；切回首頁時由 hide() 補回
             if (AppState.renderedCount >= AppState.filteredData.length) return; // 已全部渲染完毕
 
             // windowing 模式下，播放自動跟句進行中（_autoScrolling）時不在此處 append：
@@ -63471,7 +63492,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         }
         var _feedGuard = 0;
         function feedSubtitlesIfNearBottom() {
-            if (_autoScrolling) return;   // 自动跟句滚动中：不要因接近底部而疯狂预载
+            if (_autoScrolling || subBoxHidden()) return;   // 自动跟句滚动中／字幕被內嵌視圖隱藏：不要因接近底部而疯狂预载
             var _box = document.getElementById('subtitles');
             if (!_box || _feedGuard > 40) return;
             if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 500) {
@@ -63492,7 +63513,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             // spacer 方案下裁行不動 scrollTop，所以中途裁行也不會畫面跳動，安全。
             var _timer = null, _lastRun = 0, _MAXWAIT = 500, _IDLE = 180;
             function _runScrollWork() {
-                if (_autoScrolling) return;
+                if (_autoScrolling || subBoxHidden()) return;
                 if (_box.scrollTop + _box.clientHeight >= _box.scrollHeight - 400) renderNextBatch();
                 maybeUnTrim();      // 往回捲到頂部邊緣時，自動把上面的行補回來
                 trimOffscreenTop(); // 手動瀏覽：把視窗上方的行裁掉，保持 DOM 有界
@@ -64313,8 +64334,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           var activeCat = '';   // '' = 全部, '__uncat' = 未分类, 否则 = 分类名称
           var srsOnly = false;  // 只顯示今天到期要複習的
 
-          function open() { renderVocabBook(); vbTab('all'); page.hidden = false; document.body.style.overflow = 'hidden'; try { search.focus(); } catch (e) {} }
-          function close() { page.hidden = true; document.body.style.overflow = ''; }
+          function open() { page.hidden = false; renderVocabBook(); vbTab('all'); document.body.style.overflow = 'hidden'; try { search.focus(); } catch (e) {} }
+          function close() { page.hidden = true; document.body.style.overflow = ''; if (vi && !vi.hidden) renderInlineVocab(); }
           window.__vocabBookOpen = open;  // 大屏左欄「生词本」入口
 
           btn.addEventListener('click', open);
@@ -64327,7 +64348,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
               if (!page.hidden) close();
             }
           });
-          search.addEventListener('input', renderVocabBook);
+          var vbSearchTimer = 0;
+          search.addEventListener('input', function () { clearTimeout(vbSearchTimer); vbSearchTimer = setTimeout(renderVocabBook, 200); });
           sortSel.addEventListener('change', renderVocabBook);
           groupChk.addEventListener('change', renderVocabBook);
 
@@ -64446,7 +64468,57 @@ https://github.com/nodeca/pako/blob/main/LICENSE
               + '</div>';
           }
 
+          // —— 分頁渲染：先只畫第一批卡片，捲動接近底部再補下一批，避免一次重建上千張卡片 ——
+          // 同一篩選條件下重繪（評分/刪除/改分類）會保留已載入深度與捲動位置，卡片不跳動
+          var VB_PAGE_SIZE = 40;
+          function vbScroller(el) {
+            var oy = getComputedStyle(el).overflowY;
+            if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 4) return el;
+            return document.scrollingElement || document.documentElement;
+          }
+          function vbResetPager(container) {
+            var st = container.__vbPager;
+            if (st) { if (st.io) st.io.disconnect(); if (st.sentinel && st.sentinel.parentNode) st.sentinel.parentNode.removeChild(st.sentinel); }
+            container.__vbPager = null;
+          }
+          function vbPagedRender(container, sig, items, buildHtml) {
+            var scroller = vbScroller(container);
+            var prev = container.__vbPager;
+            var keep = prev && prev.sig === sig && prev.pos > 0;
+            var first = keep ? Math.max(VB_PAGE_SIZE, Math.min(prev.pos, items.length)) : VB_PAGE_SIZE;
+            var savedTop = keep ? scroller.scrollTop : 0;
+            vbResetPager(container);
+            var st = container.__vbPager = { sig: sig, pos: 0, io: null, sentinel: null };
+            function append(n) {
+              var end = Math.min(st.pos + n, items.length);
+              var html = [];
+              for (var i = st.pos; i < end; i++) html.push(buildHtml(items[i]));
+              st.pos = end;
+              if (st.io) { st.io.disconnect(); st.io = null; }
+              if (st.sentinel && st.sentinel.parentNode) st.sentinel.parentNode.removeChild(st.sentinel);
+              st.sentinel = null;
+              container.insertAdjacentHTML('beforeend', html.join(''));
+              if (st.pos >= items.length) return;
+              var sen = document.createElement('div');
+              sen.style.height = '1px';
+              container.appendChild(sen);
+              st.sentinel = sen;
+              if (typeof IntersectionObserver !== 'function') { append(items.length - st.pos); return; }
+              st.io = new IntersectionObserver(function (ents) {
+                for (var j = 0; j < ents.length; j++) {
+                  if (ents[j].isIntersecting) { append(VB_PAGE_SIZE); break; }
+                }
+              }, { root: null, rootMargin: '800px 0px' });
+              st.io.observe(sen);
+            }
+            st.append = append;
+            container.innerHTML = '';
+            append(first);
+            scroller.scrollTop = savedTop;
+          }
+
           function renderVocabBook() {
+            if (page.hidden) return;   // 隱藏時不重建，open() 會重新渲染
             var entries = getFiltered();
             var total = Object.keys(vocabMap).length;
             countEl.textContent = '共 ' + total + ' 条' + (entries.length !== total ? '（筛选出 ' + entries.length + ' 条）' : '');
@@ -64460,21 +64532,23 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             chips.innerHTML = parts.join('');
             // 清單
             if (!entries.length) {
+              vbResetPager(list);
               list.innerHTML = '<div class="vocab-empty">没有符合条件的生词本内容。<br>在字幕的笔记框里写点东西就会自动加入；也可用上方「分类 / 搜索」来整理 ♡</div>';
               return;
             }
+            var sig = [search.value, sortSel.value, groupChk.checked, activeCat, srsOnly].join('|');
+            var items = [];
             if (groupChk.checked) {
               var groups = {};
               entries.forEach(function (en) { var f = en.sourceFile || '未知文件'; (groups[f] = groups[f] || []).push(en); });
-              var html = [];
               Object.keys(groups).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (f) {
-                html.push('<div class="vocab-group-head">📁 ' + escapeHtml(f) + ' <span style="font-weight:400;color:#a89e8e;">(' + groups[f].length + ')</span></div>');
-                groups[f].forEach(function (en) { html.push(cardHtml(en)); });
+                items.push({ head: '<div class="vocab-group-head">📁 ' + escapeHtml(f) + ' <span style="font-weight:400;color:#a89e8e;">(' + groups[f].length + ')</span></div>' });
+                groups[f].forEach(function (en) { items.push({ en: en }); });
               });
-              list.innerHTML = html.join('');
             } else {
-              list.innerHTML = entries.map(cardHtml).join('');
+              entries.forEach(function (en) { items.push({ en: en }); });
             }
+            vbPagedRender(list, sig, items, function (it) { return it.head || cardHtml(it.en); });
           };
 
           // ============ 主頁右欄「全部詞彙」內嵌視圖（設計圖版面：狀態 chips＋卡片列表） ============
@@ -64578,6 +64652,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
           function renderInlineVocab() {
             if (!vi || !viList) return;
+            if (vi.hidden) return;   // 隱藏時不重建，show() 會重新渲染
             var all = Object.keys(vocabMap).map(function (k) { return vocabMap[k]; });
             var dueN = (typeof srsTodayList === 'function') ? srsTodayList().length : 0;
             var masteredN = all.filter(viIsMastered).length;
@@ -64604,21 +64679,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }
             var entries = getInlineFiltered();
             if (!entries.length) {
+              vbResetPager(viList);
               viList.innerHTML = '<div class="vocab-empty">没有符合条件的生词本内容。<br>在字幕的笔记框里写点东西就会自动加入；也可用上方「分类 / 搜索」来整理 ♡</div>';
               return;
             }
+            var sig = [viSearch.value, viSort.value, viGroup.checked, viStatus, viActiveCat].join('|');
+            var items = [];
             if (viGroup.checked) {
+              var idxOf = new Map();
+              entries.forEach(function (en, i) { idxOf.set(en, i); });
               var groups = {};
               entries.forEach(function (en) { var f = en.sourceFile || '未知文件'; (groups[f] = groups[f] || []).push(en); });
-              var html = [];
               Object.keys(groups).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (f) {
-                html.push('<div class="vocab-group-head">📁 ' + escapeHtml(f) + ' <span style="font-weight:400;color:#a89e8e;">(' + groups[f].length + ')</span></div>');
-                groups[f].forEach(function (en) { html.push(inlineCardHtml(en, entries.indexOf(en))); });
+                items.push({ head: '<div class="vocab-group-head">📁 ' + escapeHtml(f) + ' <span style="font-weight:400;color:#a89e8e;">(' + groups[f].length + ')</span></div>' });
+                groups[f].forEach(function (en) { items.push({ en: en, idx: idxOf.get(en) }); });
               });
-              viList.innerHTML = html.join('');
             } else {
-              viList.innerHTML = entries.map(inlineCardHtml).join('');
+              entries.forEach(function (en, i) { items.push({ en: en, idx: i }); });
             }
+            vbPagedRender(viList, sig, items, function (it) { return it.head || inlineCardHtml(it.en, it.idx); });
           }
 
           if (viList) {
@@ -64651,7 +64730,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
               renderInlineVocab(); renderVocabBook();
             });
           }
-          if (viSearch) viSearch.addEventListener('input', renderInlineVocab);
+          var viSearchTimer = 0;
+          if (viSearch) viSearch.addEventListener('input', function () { clearTimeout(viSearchTimer); viSearchTimer = setTimeout(renderInlineVocab, 200); });
           if (viSort) viSort.addEventListener('change', renderInlineVocab);
           if (viGroup) viGroup.addEventListener('change', renderInlineVocab);
           if (viCat) viCat.addEventListener('change', function () { viActiveCat = viCat.value; renderInlineVocab(); });
@@ -64678,7 +64758,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
               var sub = document.getElementById('subtitles');
               var es = document.getElementById('emptyState');
               var ss = document.getElementById('scrollSentinel');
-              if (sub) sub.style.display = 'none';
+              if (sub) { if (sub.style.display !== 'none') sub.__savedScroll = sub.scrollTop; sub.style.display = 'none'; }
               if (es) es.style.display = 'none';
               if (ss) ss.style.display = 'none';
               vi.hidden = false;
@@ -64691,7 +64771,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
               var sub = document.getElementById('subtitles');
               var es = document.getElementById('emptyState');
               var ss = document.getElementById('scrollSentinel');
-              if (sub) sub.style.display = '';
+              if (sub) {
+                sub.style.display = '';
+                if (typeof sub.__savedScroll === 'number') { sub.scrollTop = sub.__savedScroll; sub.__savedScroll = null; }
+                if (!sub.querySelector('.row') && AppState.filteredData.length) renderNextBatch();
+              }
               if (es) es.style.display = '';
               if (ss) ss.style.display = '';
             }
@@ -65001,7 +65085,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var sub = document.getElementById('subtitles');
                 var es = document.getElementById('emptyState');
                 var ss = document.getElementById('scrollSentinel');
-                if (sub) sub.style.display = 'none';
+                if (sub) { if (sub.style.display !== 'none') sub.__savedScroll = sub.scrollTop; sub.style.display = 'none'; }
                 if (es) es.style.display = 'none';
                 if (ss) ss.style.display = 'none';
                 ri.hidden = false;
@@ -65013,7 +65097,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 var sub = document.getElementById('subtitles');
                 var es = document.getElementById('emptyState');
                 var ss = document.getElementById('scrollSentinel');
-                if (sub) sub.style.display = '';
+                if (sub) {
+                  sub.style.display = '';
+                  if (typeof sub.__savedScroll === 'number') { sub.scrollTop = sub.__savedScroll; sub.__savedScroll = null; }
+                  if (!sub.querySelector('.row') && AppState.filteredData.length) renderNextBatch();
+                }
                 if (es) es.style.display = '';
                 if (ss) ss.style.display = '';
               }
