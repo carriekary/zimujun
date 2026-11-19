@@ -297,7 +297,8 @@
         }
 
         main { padding: calc(var(--header-height) + 12px) var(--container-padding) 12px; max-width: var(--max-width); margin: 0 auto; }
-        #subtitles { display: block; position: relative; max-height: calc(100vh - 150px); overflow-y: auto; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; /* iOS 內框慣性滾動 */ }
+        #subtitles { display: block; position: relative; max-height: calc(100vh - 150px); overflow-y: auto; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; overflow-anchor: none; /* 關閉瀏覽器滾動錨定：避免與手動 spacer 補償搶寫 scrollTop 造成回跳 */ }
+        #subtitles * { overflow-anchor: none; }
         /* 滑窗虛擬化佔位條：裁掉上方行時把高度累積到 top-spacer、補回時扣掉，
            讓總高度不變、scrollTop 完全不用動 → 視覺位置不跳、也不與 rAF 緩動搶寫 scrollTop（消除震動） */
         .sub-spacer-top, .sub-spacer-bottom { display: block; width: 100%; height: 0; flex: none; pointer-events: none; }
@@ -60718,7 +60719,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         var kuroGen = 0;   // 斷詞器釋放世代：手機播放中釋放時 +1，讓「釋放前已在載入」的那次完成後作廢，不會又把字典留回記憶體
         // 手機播放中釋放斷詞器：kuromoji 字典 trie＋連線矩陣常駐數十 MB，與音訊緩衝疊加會把分頁記憶體擠爆→被系統殺掉重載（跳回首頁）。
         // 播放時先釋放、暫停後按需重建；注音在播放期間暫時退化為純文字，暫停即恢復。大屏不呼叫此函式。
-        function releaseKuroMobile() { kuroGen++; kuro = null; isKuroshiroReady = false; kuroLoading = null; }
+        function releaseKuroMobile() { kuroGen++; kuro = null; isKuroshiroReady = false; kuroLoading = null; try { LOANWORDS = null; } catch (e) {} }   // 一併釋放外來語字典（5.8 萬條、常駐約 10MB）：播放中只留音訊，暫停後 getLoanwords() 按需重建
         // 暫停後「延遲一點」再重建：單句練習會快速 play/pause 交替，若每次暫停都立刻重載字典會反复抖動。
         // 1.2s 內又開始播就取消重建；只有真正停下來的暫停才重建斷詞器、恢復可見行注音。
         var _kuroRebuildTimer = 0;
@@ -61667,7 +61668,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     if (tk !== MP.token) return;
                     if (!(window.Hls && window.Hls.isSupported && window.Hls.isSupported())) { medErr('这个浏览器不支援 .m3u8（HLS）。'); return; }
                     try { if (MP.hls) MP.hls.destroy(); } catch (e) { }
-                    MP.hls = new window.Hls({ lowLatencyMode: false });
+                    // 手機（含 Android）：hls.js 預設緩衝 60MB／600s，音訊緩衝與斷詞器／DOM 疊加會擠爆分頁→跳回首頁。
+                    // 改成小緩衝（約 12MB／最多 30s）：仍正常播放、只是少預緩一點，大幅降低播放時的記憶體峰值。大屏照舊預設。
+                    var _hlsCfg = { lowLatencyMode: false };
+                    if (isMobileView()) { _hlsCfg.maxBufferLength = 12; _hlsCfg.maxMaxBufferLength = 30; _hlsCfg.maxBufferSize = 12 * 1000 * 1000; _hlsCfg.maxBufferHole = 0.5; }
+                    MP.hls = new window.Hls(_hlsCfg);
                     MP.hls.loadSource(url); MP.hls.attachMedia(v);
                     v.oncanplay = ok; v.onloadeddata = ok;
                     setStage();
@@ -63471,35 +63476,39 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var box = subBox(); if (!box) return;
             var items = AppState.filteredData.slice(from, to);
             var html = items.map(createSubtitleRowHTML).join('');
+            // spacer 補償一律用「scrollHeight 實際差值」（含 margin 折疊），而非 getBoundingClientRect 高度（不含 margin）。
+            // 後者每行漏算 6px margin，增刪行累積後總高漂移、瀏覽器夾制 scrollTop → 滑動時字幕往回跳。實際差值可保證總高不變。
+            var shBefore = box.scrollHeight;
             if (prepend) {
                 var first = box.querySelector('.row');
                 if (first) first.insertAdjacentHTML('beforebegin', html);
                 else box.insertAdjacentHTML('beforeend', html);
-                // 量剛插入行的總高，從 top-spacer 扣除 → 總高度不變、scrollTop 不動，視覺位置自動保持
-                var ins = box.querySelectorAll('.row');
-                var addedH = 0;
-                for (var k = 0; k < ins.length; k++) {
-                    var di = parseInt(ins[k].getAttribute('data-index'), 10);
-                    if (di >= from && di < to) addedH += ins[k].getBoundingClientRect().height;
-                }
-                _topPad = Math.max(0, _topPad - addedH);
-                _applyPads();
-                SUB_WIN_START = from;
             } else {
                 box.insertAdjacentHTML('beforeend', html);
-                SUB_WIN_END = to;
-                AppState.renderedCount = to;
-                _enforceDomCap();   // 硬性 DOM 行數上限（向前補載後也檢查）
             }
-            // 新行筆記框對齊
+            // 新行筆記框對齊：必須在量測高度「之前」resize，否則 spacer 扣到的是筆記撐高前的舊高度 → 漂移
             if (AppState.notesVisible) {
                 var newRows = box.querySelectorAll('.row');
-                var startK = prepend ? 0 : Math.max(0, newRows.length - (to - from));
+                var loK = prepend ? 0 : Math.max(0, newRows.length - (to - from));
+                var hiK = prepend ? Math.min(newRows.length, to - from) : newRows.length;
                 var nbs = [];
-                for (var j = startK; j < newRows.length; j++) {
+                for (var j = loK; j < hiK; j++) {
                     var nb = newRows[j].querySelector('.note-box'); if (nb) nbs.push(nb);
                 }
                 autoResizeTextareasBatch(nbs);
+            }
+            if (prepend) {
+                // 量剛插入行的實際總高（含 margin），從 top-spacer 扣除 → 總高度不變、scrollTop 不動，視覺位置自動保持
+                var addedH = box.scrollHeight - shBefore;
+                if (addedH < 0) addedH = 0;
+                _topPad = Math.max(0, _topPad - addedH);
+                if (from === 0) _topPad = 0;   // 視窗已到第 0 行：上方無裁切行，spacer 必為 0（消除邊界 margin 折疊殘留）
+                _applyPads();
+                SUB_WIN_START = from;
+            } else {
+                SUB_WIN_END = to;
+                AppState.renderedCount = to;
+                _enforceDomCap();   // 硬性 DOM 行數上限（向前補載後也檢查）
             }
         }
         // 播放／跳句時：確保目標句所在的視窗 [idx-60, idx+30) 已在 DOM（不足就向前或往回補）
@@ -63539,22 +63548,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             if (SUB_WIN_START >= lo) return;
             var viewTop = (box.scrollHeight > box.clientHeight + 4) ? box.getBoundingClientRect().top : 0;
             var rows = box.querySelectorAll('.row');
-            var toRemove = [], minIdx = Infinity, removedH = 0;
+            var toRemove = [], minIdx = Infinity;
             for (var i = 0; i < rows.length; i++) {
                 var idx = parseInt(rows[i].getAttribute('data-index'), 10);
                 if (idx < lo) {
                     var r = rows[i].getBoundingClientRect();
                     if (r.bottom < viewTop - 8) {           // 完全在視窗上方才刪，避免畫面跳動
                         try { var nb = rows[i].querySelector('.note-box'); if (nb) saveNote(nb); } catch (e2) { }
-                        removedH += r.height;
                         toRemove.push(rows[i]);
                     } else { if (idx < minIdx) minIdx = idx; }
                 } else { if (idx < minIdx) minIdx = idx; break; }
             }
             if (toRemove.length) {
+                // 佔位 spacer：用 scrollHeight 實際差值（含 margin 折疊）補回被刪行高度，總高度不變 → scrollTop 完全不用動、
+                // 視覺位置不跳、不與 rAF 搶寫。getBoundingClientRect 高度不含 margin，每行漏 6px 會累積成總高漂移、
+                // 瀏覽器夾制 scrollTop 造成滑動回跳，故改量實際差值。
+                var shBefore = box.scrollHeight;
                 for (var t = 0; t < toRemove.length; t++) box.removeChild(toRemove[t]);
-                // 佔位 spacer：把刪掉的高度加到 top-spacer，總高度不變 → scrollTop 完全不用動，視覺位置不跳、不與 rAF 搶寫
-                _topPad += removedH;
+                var freed = shBefore - box.scrollHeight;
+                _topPad += (freed > 0 ? freed : 0);
                 _applyPads();
                 if (minIdx !== Infinity && minIdx > SUB_WIN_START) SUB_WIN_START = minIdx;
             }
@@ -63572,7 +63584,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 if (r.bottom >= viewTop - 8) { topIdx = parseInt(rows[i].getAttribute('data-index'), 10); break; }
             }
             if (topIdx === Infinity) return;
-            trimAbove(topIdx + SUB_KEEP_ABOVE);
+            trimAbove(topIdx);
         }
         // 裁掉「當前句下方、且已滾出視窗下方」的多餘行。與 trimAbove 對稱，但「不」需要 bottom-spacer：
         // 刪的是視窗下方的行，scrollHeight 由底部縮短，scrollTop 與可見內容完全不受影響（不會跳動）。
@@ -63646,9 +63658,20 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             var box = subBox(); if (!box) return;
             if (SUB_WIN_START <= 0) return;
             // spacer 方案下裁行不減 scrollTop，往回滾時會先看到 top-spacer 空白。故以「scrollTop 接近 top-spacer 高度」
-            // 作為補回觸發點（而非固定 120px），讓用戶一滾到空白邊緣就即時把上方行補回、spacer 同步縮短。
-            if (box.scrollTop < _topPad + 120) {
-                renderRange(Math.max(0, SUB_WIN_START - SUB_CHUNK), SUB_WIN_START, true);
+            // 作為補回觸發點，讓用戶一滾到空白邊緣就即時把上方行補回、spacer 同步縮短。
+            // 快速往上捲／一下跳到頂時，單次只補 50 行會來不及覆蓋視窗 → 停在空白 spacer（看似字幕跳回開頭／消失）。
+            // 改為連續補到「視窗頂部已落在真實行上」或回到第 0 行為止；單次上限 6 批避免一次灌爆 DOM，
+            // 仍不足則排一次後續 scroll work 接續補（每輪都有裁切保持 DOM 有界，winStart 嚴格遞減必終止）。
+            var guard = 0;
+            while (SUB_WIN_START > 0 && box.scrollTop < _topPad + 120 && guard < 6) {
+                var prevStart = SUB_WIN_START;
+                var from = Math.max(0, SUB_WIN_START - SUB_CHUNK);
+                renderRange(from, SUB_WIN_START, true);
+                guard++;
+                if (SUB_WIN_START === prevStart || from === 0) break;
+            }
+            if (SUB_WIN_START > 0 && box.scrollTop < _topPad + 120) {
+                setTimeout(function () { try { box.dispatchEvent(new Event('scroll')); } catch (e) { } }, 0);
             }
         }
 
@@ -64030,6 +64053,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           if (AppState.furiganaEnabled) refillFuriganaDOM();
           // 手機（含 Android）：注音字典「用到才載」——首次點開注音時觸發載入（播放中則延後到暫停後，見 initKuromoji 防護）；大屏已預載
           if (isMobileView() && AppState.furiganaEnabled) { try { initKuromoji(); } catch (e) { } }
+          // 手機關閉注音時一併釋放斷詞器＋外來語字典（兩者常駐數十 MB），避免與音訊／DOM 疊加把分頁記憶體擠爆→跳回首頁；重新開啟會按需重建
+          if (isMobileView() && !AppState.furiganaEnabled) { try { releaseKuroMobile(); } catch (e) { } }
           document.querySelectorAll('.note-box').forEach(autoResizeTextarea);
         });
 
